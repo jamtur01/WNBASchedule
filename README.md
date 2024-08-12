@@ -5,7 +5,7 @@ This Spoon provides a convenient way to view upcoming WNBA games directly from y
 ## Features
 
 - Displays upcoming WNBA games for the next two weeks
-- Shows game information including date, time, teams, and location
+- Shows game information, including date, time, teams, and location
 - Sorts games in chronological order
 - Updates time to Eastern Time (ET)
 - Accessible via a menu bar item
@@ -14,7 +14,6 @@ This Spoon provides a convenient way to view upcoming WNBA games directly from y
 
 - [Hammerspoon](https://www.hammerspoon.org/) (latest version recommended)
 - macOS (tested on the latest version, but should work on recent versions)
-- Internet connection (to fetch the schedule data)
 
 ## Installation
 
@@ -38,12 +37,11 @@ This Spoon provides a convenient way to view upcoming WNBA games directly from y
 
 ## Customization
 
-You can modify the `init.lua` file within the `WNBASchedule.spoon` directory to customize the Spoon's behavior. For example, you could change the menu bar text or adjust how many days of games are fetched.
+You can modify the `init.lua` file within the `WNBASchedule.spoon` directory to customize the Spoon's behavior.
 
 ## Troubleshooting
 
-- If you don't see the menu bar item, ensure that the Spoon is correctly loaded in your Hammerspoon configuration.
-- If no games are displayed, check your internet connection and try reloading the Hammerspoon configuration.
+- If you don't see the menu bar item, ensure the Spoon is correctly loaded in your Hammerspoon configuration.
 - For any other issues, check the Hammerspoon Console for error messages.
 
 ## Contributing
@@ -56,7 +54,7 @@ This Spoon is released under the MIT License. See the LICENSE file for details.
 
 ## Acknowledgments
 
-- Thanks to the Hammerspoon team for creating and maintaining such a powerful tool.
+- Thanks to the Hammerspoon team for creating and maintaining it.
 - Data is sourced from ESPN's API.
 
 ## Version History
