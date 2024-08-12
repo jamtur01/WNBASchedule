@@ -10,8 +10,8 @@ obj.license = "MIT - https://opensource.org/licenses/MIT"
 
 function obj:init()
     self.menubar = nil
-    self.numGames = 1  -- Default to showing 1 game
-    self.favoriteTeams = {}  -- List of teams to follow
+    self:loadFavoriteTeams()
+    self:loadNumGames()
     return self
 end
 
@@ -102,6 +102,22 @@ local function isFavoriteTeam(game, favoriteTeams)
     return false
 end
 
+function obj:saveFavoriteTeams()
+    hs.settings.set("favoriteTeams", self.favoriteTeams)
+end
+
+function obj:loadFavoriteTeams()
+    self.favoriteTeams = hs.settings.get("favoriteTeams") or {}
+end
+
+function obj:saveNumGames()
+    hs.settings.set("numGames", self.numGames)
+end
+
+function obj:loadNumGames()
+    self.numGames = hs.settings.get("numGames") or 1  -- Default to showing 1 game
+end
+
 function obj:displaySchedule()
     local scheduleData = fetchSchedule()
     if not scheduleData then 
@@ -161,6 +177,7 @@ function obj:setFavoriteTeams()
                 table.insert(teams, team:match("^%s*(.-)%s*$"))  -- Trim whitespace
             end
             self.favoriteTeams = teams
+            self:saveFavoriteTeams()  -- Save the new favorite teams
             hs.notify.new({title="WNBA Schedule", informativeText="Favorite teams set to: " .. table.concat(teams, ", ")}):send()
         end
     end)
@@ -178,7 +195,7 @@ function obj:start()
         self.menubar:delete()
     end
     self.menubar = hs.menubar.new()
-    self.menubar:setTitle("WNBA")
+    self.menubar:setTitle("W")
     self.menubar:setMenu({
         {title = "Show Schedule", fn = function() self:displaySchedule() end},
         {title = "Set Favorite Teams", fn = function() self:setFavoriteTeams() end},
@@ -191,6 +208,7 @@ function obj:setNumGames()
     hs.chooser.new(function(choice)
         if choice then
             self.numGames = tonumber(choice.text)
+            self:saveNumGames()  -- Save the new number of games to show
             hs.notify.new({title="WNBA Schedule", informativeText="Number of games to show set to " .. self.numGames}):send()
         end
     end)
