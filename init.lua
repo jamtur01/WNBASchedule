@@ -5,7 +5,7 @@ obj.__index = obj
 obj.name = "WNBASchedule"
 obj.version = "2.0"
 obj.author = "James Turnbull <james@lovedthanlost.net>"
-obj.homepage = "https://www.hammerspoon.org"
+obj.homepage = "https://github.com/jamtur01/WNBASchedule.spoon"
 obj.license = "MIT - https://opensource.org/licenses/MIT"
 
 function obj:init()
