@@ -115,7 +115,7 @@ function obj:saveNumGames()
 end
 
 function obj:loadNumGames()
-    self.numGames = hs.settings.get("numGames") or 1  -- Default to showing 1 game
+    self.numGames = hs.settings.get("numGames") or 5
 end
 
 function obj:updateMenu()
