@@ -118,7 +118,7 @@ function obj:loadNumGames()
     self.numGames = hs.settings.get("numGames") or 1  -- Default to showing 1 game
 end
 
-function obj:displaySchedule()
+function obj:updateMenu()
     local scheduleData = fetchSchedule()
     if not scheduleData then 
         hs.notify.new({title="WNBA Schedule Error", informativeText="Failed to fetch WNBA schedule"}):send()
@@ -134,6 +134,8 @@ function obj:displaySchedule()
     
     sortGames(games)
     
+    local menuItems = {}
+    
     local displayedGames = 0
     for i = 1, #games do
         if isFavoriteTeam(games[i], self.favoriteTeams) then
@@ -141,22 +143,15 @@ function obj:displaySchedule()
             local game = games[i]
             local gameDate = formatGameDate(game.date)
             local gameTime = formatGameTime(game.time)
-            local notificationText = string.format("%s vs %s at %s\n%s, %s", 
-                game.away, game.home, game.home, gameDate, gameTime)
-            
-            hs.timer.doAfter(displayedGames * 2, function()  -- Delay each notification by 2 seconds
-                local notification = hs.notify.new(function()
-                    hs.urlevent.openURL(game.url)
-                end)
-                :title("Upcoming WNBA Game")
-                :subTitle(gameDate)
-                :informativeText(notificationText)
-                :actionButtonTitle("Open")
-                :hasActionButton(true)
-                :withdrawAfter(0)  -- Don't automatically withdraw
-                
-                notification:send()
-            end)
+            local title = string.format("%s vs %s", game.away, game.home)
+            local subtitle = string.format("%s at %s", gameDate, gameTime)
+
+            -- Combine team names, date, and time in the title
+            table.insert(menuItems, {
+                title = string.format("%s - %s", title, subtitle),
+                fn = function() hs.urlevent.openURL(game.url) end,
+                tooltip = subtitle  -- Tooltip still available
+            })
             
             if displayedGames >= self.numGames then
                 break
@@ -165,29 +160,13 @@ function obj:displaySchedule()
     end
     
     if displayedGames == 0 then
-        hs.notify.new({title="WNBA Schedule", informativeText="No upcoming games featuring your favorite teams"}):send()
+        table.insert(menuItems, {title = "No upcoming games featuring your favorite teams"})
     end
-end
 
-function obj:setFavoriteTeams()
-    hs.chooser.new(function(choice)
-        if choice then
-            local teams = {}
-            for team in string.gmatch(choice.text, '([^,]+)') do
-                table.insert(teams, team:match("^%s*(.-)%s*$"))  -- Trim whitespace
-            end
-            self.favoriteTeams = teams
-            self:saveFavoriteTeams()  -- Save the new favorite teams
-            hs.notify.new({title="WNBA Schedule", informativeText="Favorite teams set to: " .. table.concat(teams, ", ")}):send()
-        end
+    -- Add the dynamic game schedule to the menubar menu
+    self.menubar:setMenu(function()
+        return menuItems
     end)
-    :choices({
-        {text = "Liberty"}, {text = "Aces"}, {text = "Sky"}, {text = "Sun"}, {text = "Mystics"},
-        {text = "Dream"}, {text = "Fever"}, {text = "Wings"}, {text = "Sparks"}, {text = "Mercury"},
-        {text = "Storm"}, {text = "Lynx"}
-    })
-    :placeholderText("Enter teams (comma separated)")
-    :show()
 end
 
 function obj:start()
@@ -195,28 +174,22 @@ function obj:start()
         self.menubar:delete()
     end
     self.menubar = hs.menubar.new()
-    self.menubar:setTitle("W")
-    self.menubar:setMenu({
-        {title = "Show Schedule", fn = function() self:displaySchedule() end},
-        {title = "Set Favorite Teams", fn = function() self:setFavoriteTeams() end},
-        {title = "-"},
-        {title = "Set Number of Games", fn = function() self:setNumGames() end}
-    })
-end
+    
+    local logoPath = hs.spoons.resourcePath("wnba-logo.png")
+    local logoImage = hs.image.imageFromPath(logoPath)
 
-function obj:setNumGames()
-    hs.chooser.new(function(choice)
-        if choice then
-            self.numGames = tonumber(choice.text)
-            self:saveNumGames()  -- Save the new number of games to show
-            hs.notify.new({title="WNBA Schedule", informativeText="Number of games to show set to " .. self.numGames}):send()
-        end
-    end)
-    :choices({
-        {text = "1"}, {text = "2"}, {text = "3"}, {text = "4"}, {text = "5"}
-    })
-    :placeholderText("Select number of games to show")
-    :show()
+    if logoImage then
+        self.menubar:setIcon(logoImage)
+    else
+        -- Fallback to text if the image is not found
+        self.menubar:setTitle("W")
+    end
+
+    -- Initial menu population
+    self:updateMenu()
+    
+    -- Refresh the menu every hour to update games
+    hs.timer.doEvery(3600, function() self:updateMenu() end)
 end
 
 function obj:stop()
