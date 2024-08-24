@@ -175,7 +175,7 @@ function obj:start()
     end
     self.menubar = hs.menubar.new()
     
-    local logoPath = hs.spoons.resourcePath("wnba-logo.png")
+    local logoPath = hs.spoons.resourcePath("basketball-logo.png")
     local logoImage = hs.image.imageFromPath(logoPath)
 
     if logoImage then
