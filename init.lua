@@ -3,26 +3,24 @@ obj.__index = obj
 
 -- Metadata
 obj.name = "WNBASchedule"
-obj.version = "2.0"
+obj.version = "2.1"
 obj.author = "James Turnbull <james@lovedthanlost.net>"
 obj.homepage = "https://github.com/jamtur01/WNBASchedule.spoon"
 obj.license = "MIT - https://opensource.org/licenses/MIT"
 
-function obj:init()
-    self.menubar = nil
-    self:loadFavoriteTeams()
-    self:loadNumGames()
-    return self
-end
+-- Constants
+local DEFAULT_NUM_GAMES = 5
+local SCHEDULE_URL = "https://cdn.espn.com/core/wnba/schedule?dates=%s&userab=18&xhr=1&render=true&device=desktop"
+local REFRESH_INTERVAL = 3600 -- 1 hour
 
+-- Helper functions
 local function fetchSchedule()
     local twoWeeksFromNow = os.time() + (14 * 24 * 60 * 60)
-    local url = string.format("https://cdn.espn.com/core/wnba/schedule?dates=%s&userab=18&xhr=1&render=true&device=desktop",
-                              os.date("%Y%m%d", twoWeeksFromNow))
+    local url = string.format(SCHEDULE_URL, os.date("%Y%m%d", twoWeeksFromNow))
     
     local status, body = hs.http.get(url)
     if status ~= 200 then
-        print("Error fetching schedule:", status)
+        obj.logger.e("Error fetching schedule:", status)
         return nil
     end
     
@@ -50,46 +48,39 @@ local function parseGames(data)
 end
 
 local function formatGameTime(timeString)
-    local year, month, day, hour, min = timeString:match("(%d+)-(%d+)-(%d+)T(%d+):(%d+)")
-    if year and month and day and hour and min then
+    local pattern = "(%d+)-(%d+)-(%d+)T(%d+):(%d+)"
+    local year, month, day, hour, min = timeString:match(pattern)
+    if year then
         local timestamp = os.time({year=year, month=month, day=day, hour=hour, min=min})
-        -- Convert to ET (NYC) time
         local etTime = timestamp - 4 * 3600  -- Adjust for ET (UTC-4)
         return os.date("%I:%M %p ET", etTime)
-    else
-        return "Time TBA"
     end
+    return "Time TBA"
 end
 
 local function getDaySuffix(day)
-    if day >= 11 and day <= 13 then
-        return "th"
-    end
-    local lastDigit = day % 10
+    if day >= 11 and day <= 13 then return "th" end
     local suffixes = {[1] = "st", [2] = "nd", [3] = "rd"}
-    return suffixes[lastDigit] or "th"
+    return suffixes[day % 10] or "th"
 end
 
 local function formatGameDate(dateString)
-    local year, month, day = dateString:match("(%d+)(%d%d)(%d%d)")
-    if year and month and day then
+    local pattern = "(%d%d%d%d)(%d%d)(%d%d)"
+    local year, month, day = dateString:match(pattern)
+    if year then
         local timestamp = os.time({year=year, month=month, day=day})
         local dayOfWeek = os.date("%a", timestamp)
         local monthName = os.date("%b", timestamp)
         local dayNum = tonumber(day)
         local suffix = getDaySuffix(dayNum)
         return string.format("%s %s %d%s", dayOfWeek, monthName, dayNum, suffix)
-    else
-        return "Date Unknown"
     end
+    return "Date Unknown"
 end
 
 local function sortGames(games)
     table.sort(games, function(a, b)
-        if a.date == b.date then
-            return a.time < b.time
-        end
-        return a.date < b.date
+        return a.date == b.date and a.time < b.time or a.date < b.date
     end)
 end
 
@@ -102,20 +93,22 @@ local function isFavoriteTeam(game, favoriteTeams)
     return false
 end
 
-function obj:saveFavoriteTeams()
-    hs.settings.set("favoriteTeams", self.favoriteTeams)
+-- Object methods
+function obj:init()
+    self.menubar = nil
+    self.logger = hs.logger.new('WNBASchedule', 'info')
+    self:loadSettings()
+    return self
 end
 
-function obj:loadFavoriteTeams()
+function obj:loadSettings()
     self.favoriteTeams = hs.settings.get("favoriteTeams") or {}
+    self.numGames = hs.settings.get("numGames") or DEFAULT_NUM_GAMES
 end
 
-function obj:saveNumGames()
+function obj:saveSettings()
+    hs.settings.set("favoriteTeams", self.favoriteTeams)
     hs.settings.set("numGames", self.numGames)
-end
-
-function obj:loadNumGames()
-    self.numGames = hs.settings.get("numGames") or 5
 end
 
 function obj:updateMenu()
@@ -135,22 +128,19 @@ function obj:updateMenu()
     sortGames(games)
     
     local menuItems = {}
-    
     local displayedGames = 0
-    for i = 1, #games do
-        if isFavoriteTeam(games[i], self.favoriteTeams) then
+    
+    for _, game in ipairs(games) do
+        if isFavoriteTeam(game, self.favoriteTeams) then
             displayedGames = displayedGames + 1
-            local game = games[i]
             local gameDate = formatGameDate(game.date)
             local gameTime = formatGameTime(game.time)
-            local title = string.format("%s vs %s", game.away, game.home)
-            local subtitle = string.format("%s at %s", gameDate, gameTime)
+            local title = string.format("%s vs %s - %s at %s", game.away, game.home, gameDate, gameTime)
 
-            -- Combine team names, date, and time in the title
             table.insert(menuItems, {
-                title = string.format("%s - %s", title, subtitle),
+                title = title,
                 fn = function() hs.urlevent.openURL(game.url) end,
-                tooltip = subtitle  -- Tooltip still available
+                tooltip = string.format("%s at %s", gameDate, gameTime)
             })
             
             if displayedGames >= self.numGames then
@@ -159,14 +149,11 @@ function obj:updateMenu()
         end
     end
     
-    if displayedGames == 0 then
+    if #menuItems == 0 then
         table.insert(menuItems, {title = "No upcoming games featuring your favorite teams"})
     end
 
-    -- Add the dynamic game schedule to the menubar menu
-    self.menubar:setMenu(function()
-        return menuItems
-    end)
+    self.menubar:setMenu(menuItems)
 end
 
 function obj:start()
@@ -181,15 +168,12 @@ function obj:start()
     if logoImage then
         self.menubar:setIcon(logoImage)
     else
-        -- Fallback to text if the image is not found
         self.menubar:setTitle("W")
     end
 
-    -- Initial menu population
     self:updateMenu()
     
-    -- Refresh the menu every hour to update games
-    hs.timer.doEvery(3600, function() self:updateMenu() end)
+    hs.timer.doEvery(REFRESH_INTERVAL, function() self:updateMenu() end)
 end
 
 function obj:stop()
