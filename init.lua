@@ -3,7 +3,7 @@ obj.__index = obj
 
 -- Metadata
 obj.name = "WNBASchedule"
-obj.version = "2.2"
+obj.version = "2.3"
 obj.author = "James Turnbull <james@lovedthanlost.net>"
 obj.homepage = "https://github.com/jamtur01/WNBASchedule.spoon"
 obj.license = "MIT - https://opensource.org/licenses/MIT"
