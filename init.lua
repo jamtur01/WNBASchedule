@@ -3,25 +3,18 @@ obj.__index = obj
 
 -- Metadata
 obj.name = "WNBASchedule"
-obj.version = "2.4"
+obj.version = "2.6"
 obj.author = "James Turnbull <james@lovedthanlost.net>"
 obj.homepage = "https://github.com/jamtur01/WNBASchedule.spoon"
 obj.license = "MIT - https://opensource.org/licenses/MIT"
 
 -- Constants
-local DEFAULT_NUM_GAMES = 10
-local SCHEDULE_URL = "https://cdn.espn.com/core/wnba/schedule?dates=%s&userab=18&xhr=1"
+local SCHEDULE_URL = "https://cdn.espn.com/core/wnba/schedule?xhr=1"
 local REFRESH_INTERVAL = 3600
 
 -- Helper functions
 local function fetchSchedule(callback)
-    local twoWeeksFromNow = os.time() + (14 * 24 * 60 * 60)
-    local twoWeeksAgo = os.time() - (14 * 24 * 60 * 60)
-    local dateFrom = os.date("%Y%m%d", twoWeeksAgo)
-    local dateTo = os.date("%Y%m%d", twoWeeksFromNow)
-    local url = string.format(SCHEDULE_URL, dateFrom .. "-" .. dateTo)
-    
-    hs.http.asyncGet(url, nil, function(status, body, headers)
+    hs.http.asyncGet(SCHEDULE_URL, nil, function(status, body, headers)
         if status ~= 200 then
             obj.logger.e("Error fetching schedule:", status)
             callback(nil)
@@ -113,12 +106,10 @@ end
 
 function obj:loadSettings()
     self.favoriteTeams = hs.settings.get("favoriteTeams") or {}
-    self.numGames = hs.settings.get("numGames") or DEFAULT_NUM_GAMES
 end
 
 function obj:saveSettings()
     hs.settings.set("favoriteTeams", self.favoriteTeams)
-    hs.settings.set("numGames", self.numGames)
 end
 
 function obj:updateMenu()
@@ -140,45 +131,63 @@ function obj:updateMenu()
         local menuItems = {}
         local upcomingGames = {}
         local pastGames = {}
+        local liveGames = {}
         
         for _, game in ipairs(games) do
             if isFavoriteTeam(game, self.favoriteTeams) then
                 if game.status == "pre" then
                     table.insert(upcomingGames, game)
                 elseif game.status == "post" then
-                    table.insert(pastGames, 1, game)
+                    table.insert(pastGames, game)
+                elseif game.status == "in" then
+                    table.insert(liveGames, game)
                 end
             end
         end
         
-        table.insert(menuItems, {title = "Past Games", disabled = true})
-        for i = 1, math.min(5, #pastGames) do
-            local game = pastGames[i]
-            local gameDate = formatGameDate(game.date)
-            local title = string.format("%s %d - %s %d (%s)", game.away, game.awayScore, game.home, game.homeScore, gameDate)
-            table.insert(menuItems, {
-                title = title,
-                fn = function() hs.urlevent.openURL(game.url) end,
-                tooltip = gameDate
-            })
+        if #liveGames > 0 then
+            table.insert(menuItems, {title = "Live Games", disabled = true})
+            for _, game in ipairs(liveGames) do
+                local gameDate = formatGameDate(game.date)
+                local title = string.format("%s %s - %s %s (%s)", game.away, game.awayScore, game.home, game.homeScore, gameDate)
+                table.insert(menuItems, {
+                    title = title,
+                    fn = function() hs.urlevent.openURL(game.url) end,
+                    tooltip = gameDate
+                })
+            end
+            table.insert(menuItems, {title = "-"})
         end
         
-        table.insert(menuItems, {title = "-"})
-        
-        table.insert(menuItems, {title = "Upcoming Games", disabled = true})
-        for i = 1, math.min(self.numGames, #upcomingGames) do
-            local game = upcomingGames[i]
-            local gameDate = formatGameDate(game.date)
-            local gameTime = formatGameTime(game.time)
-            local title = string.format("%s vs %s - %s at %s", game.away, game.home, gameDate, gameTime)
-            table.insert(menuItems, {
-                title = title,
-                fn = function() hs.urlevent.openURL(game.url) end,
-                tooltip = string.format("%s at %s", gameDate, gameTime)
-            })
+        if #upcomingGames > 0 then
+            table.insert(menuItems, {title = "Upcoming Games", disabled = true})
+            for _, game in ipairs(upcomingGames) do
+                local gameDate = formatGameDate(game.date)
+                local gameTime = formatGameTime(game.time)
+                local title = string.format("%s vs %s - %s at %s", game.away, game.home, gameDate, gameTime)
+                table.insert(menuItems, {
+                    title = title,
+                    fn = function() hs.urlevent.openURL(game.url) end,
+                    tooltip = string.format("%s at %s", gameDate, gameTime)
+                })
+            end
+            table.insert(menuItems, {title = "-"})
         end
         
-        if #menuItems == 3 then 
+        if #pastGames > 0 then
+            table.insert(menuItems, {title = "Past Games", disabled = true})
+            for _, game in ipairs(pastGames) do
+                local gameDate = formatGameDate(game.date)
+                local title = string.format("%s %s - %s %s (%s)", game.away, game.awayScore, game.home, game.homeScore, gameDate)
+                table.insert(menuItems, {
+                    title = title,
+                    fn = function() hs.urlevent.openURL(game.url) end,
+                    tooltip = gameDate
+                })
+            end
+        end
+        
+        if #menuItems == 0 then 
             table.insert(menuItems, {title = "No games found for your favorite teams"})
         end
 
