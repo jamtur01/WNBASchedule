@@ -9,7 +9,7 @@ obj.homepage = "https://github.com/jamtur01/WNBASchedule.spoon"
 obj.license = "MIT - https://opensource.org/licenses/MIT"
 
 -- Constants
-local SCHEDULE_URL = "https://cdn.espn.com/core/wnba/schedule?xhr=1"
+local SCHEDULE_URL = "https://cdn.espn.com/core/wnba/schedule?xhr=1&limit=100"
 local REFRESH_INTERVAL = 3600
 
 -- Helper functions
