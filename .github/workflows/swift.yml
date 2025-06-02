@@ -36,4 +36,4 @@ jobs:
       with:
         name: WNBASchedule
         path: WNBASchedule.zip
-        retention-days: 7
+        retention-days: 7  # Artifacts will be available for 7 days before being automatically deleted

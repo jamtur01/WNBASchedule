@@ -36,11 +36,25 @@ A native Swift menu bar application that displays WNBA schedule information for 
 open WNBASchedule.app
 ```
 
+4. (Optional) Drag the app to your Applications folder
+
 ## Development
+
+### Project Structure
+
+```
+WNBASchedule/
+├── Sources/WNBASchedule/      # Application source code
+├── Tests/WNBAScheduleTests/   # Test suite
+├── Info/Info.plist            # App configuration
+├── .github/workflows/         # CI/CD workflows
+├── build.sh                   # Build script
+└── bump-version.sh            # Version update script
+```
 
 ### Testing
 
-Run the test suite with:
+Run tests with Swift's test command:
 
 ```bash
 swift test
@@ -49,12 +63,34 @@ swift test
 ### CI/CD
 
 The GitHub workflow automatically:
+
 1. Builds the project
 2. Runs tests on push and pull requests to the main branch
 3. Creates a binary application bundle (.app)
 4. Uploads the binary as an artifact that can be downloaded from the GitHub Actions page
 
 You can download the latest binary from the "Actions" tab in the GitHub repository.
+
+### Versioning
+
+The app follows [Semantic Versioning](https://semver.org/) (MAJOR.MINOR.PATCH).
+
+Version information is stored in:
+- `Sources/WNBASchedule/Version.swift`
+- `Info/Info.plist`
+
+To update the version:
+
+```bash
+./bump-version.sh X.Y.Z
+```
+
+This script updates version numbers in all necessary files. After running:
+
+1. Review the changes: `git diff`
+2. Commit the changes: `git commit -am "Bump version to X.Y.Z"`
+3. Create a tag: `git tag vX.Y.Z`
+4. Push changes and tag: `git push && git push --tags`
 
 ## Team Abbreviations
 
@@ -77,6 +113,16 @@ This application uses the NBA API to fetch WNBA schedule data:
 ```
 https://content-api-prod.nba.com/public/1/leagues/wnba/schedule?addEvents=true&seasonYear=2025
 ```
+
+## Contributing
+
+Contributions are welcome! Please follow these steps:
+
+1. Fork the repository
+2. Create a new branch for your feature or bugfix
+3. Make your changes
+4. Run tests to ensure everything works
+5. Submit a pull request
 
 ## License
 

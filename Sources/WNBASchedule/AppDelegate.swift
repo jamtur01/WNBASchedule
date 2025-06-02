@@ -1,5 +1,6 @@
 import AppKit
 import Foundation
+// Import Version.swift for version information
 
 class AppDelegate: NSObject, NSApplicationDelegate, @unchecked Sendable {
     private var statusItem: NSStatusItem?
@@ -252,6 +253,22 @@ class AppDelegate: NSObject, NSApplicationDelegate, @unchecked Sendable {
                 )
                 
                 menu.addItem(refreshItem)
+                
+                // Add version information
+                let versionItem = NSMenuItem(title: "Version", action: nil, keyEquivalent: "")
+                versionItem.isEnabled = false
+                
+                let versionAttributes: [NSAttributedString.Key: Any] = [
+                    .font: NSFont.systemFont(ofSize: 13, weight: .medium),
+                    .foregroundColor: NSColor.darkGray
+                ]
+                
+                versionItem.attributedTitle = NSAttributedString(
+                    string: "Version \(AppVersion.version)",
+                    attributes: versionAttributes
+                )
+                
+                menu.addItem(versionItem)
                 
                 // Add quit option with styling
                 let quitItem = NSMenuItem(title: "Quit", action: #selector(NSApplication.terminate(_:)), keyEquivalent: "q")

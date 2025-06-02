@@ -3,7 +3,11 @@
 # Exit on error
 set -e
 
-echo "Building WNBASchedule..."
+# Extract version from Version.swift
+VERSION=$(grep -m 1 "static let version = " Sources/WNBASchedule/Version.swift | cut -d '"' -f 2)
+BUILD=$(grep -m 1 "static let build = " Sources/WNBASchedule/Version.swift | cut -d '"' -f 2)
+
+echo "Building WNBASchedule version $VERSION (build $BUILD)..."
 swift build -c release
 
 echo "Creating application bundle..."
