@@ -1,6 +1,5 @@
 import AppKit
 import Foundation
-// Import Version.swift for version information
 
 class AppDelegate: NSObject, NSApplicationDelegate, @unchecked Sendable {
     private var statusItem: NSStatusItem?
@@ -43,10 +42,10 @@ class AppDelegate: NSObject, NSApplicationDelegate, @unchecked Sendable {
     @objc func updateMenu() {
         guard let scheduleManager = scheduleManager else { return }
         
-        Task {
+        Task { [self] in
             do {
                 // Fetch the games
-                let games = try await scheduleManager.fetchGames(forTeam: favoriteTeam)
+                let games = try await scheduleManager.fetchGames(forTeam: self.favoriteTeam)
                 
                 // Create the menu
                 let menu = NSMenu()
@@ -264,7 +263,7 @@ class AppDelegate: NSObject, NSApplicationDelegate, @unchecked Sendable {
                 ]
                 
                 versionItem.attributedTitle = NSAttributedString(
-                    string: "Version \(AppVersion.version)",
+                    string: "Version 1.0.0",
                     attributes: versionAttributes
                 )
                 
