@@ -46,7 +46,15 @@ Run the test suite with:
 swift test
 ```
 
-The GitHub workflow automatically runs tests on push and pull requests to the main branch.
+### CI/CD
+
+The GitHub workflow automatically:
+1. Builds the project
+2. Runs tests on push and pull requests to the main branch
+3. Creates a binary application bundle (.app)
+4. Uploads the binary as an artifact that can be downloaded from the GitHub Actions page
+
+You can download the latest binary from the "Actions" tab in the GitHub repository.
 
 ## Team Abbreviations
 
