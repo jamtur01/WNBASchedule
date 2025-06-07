@@ -94,9 +94,8 @@ class AppDelegate: NSObject, NSApplicationDelegate, @unchecked Sendable {
                         let homeTeam = game.home
                         let awayTeam = game.visitor
                         
-                        let dateFormatter = DateFormatter()
-                        dateFormatter.dateStyle = .medium
-                        dateFormatter.timeStyle = .none
+                        // Use shared date formatter
+                        let dateFormatter = DateFormatter.sharedScheduleFormatter
                         let date = dateFormatter.string(from: game.localGameTime)
                         let item = NSMenuItem(title: "", action: nil, keyEquivalent: "")
                         
@@ -188,14 +187,12 @@ class AppDelegate: NSObject, NSApplicationDelegate, @unchecked Sendable {
                         let homeTeam = game.home
                         let awayTeam = game.visitor
                         
-                        let dateFormatter = DateFormatter()
-                        dateFormatter.dateStyle = .medium
-                        dateFormatter.timeStyle = .none
+                        // Use shared date formatter
+                        let dateFormatter = DateFormatter.sharedScheduleFormatter
                         let date = dateFormatter.string(from: game.localGameTime)
                         
-                        let timeFormatter = DateFormatter()
-                        timeFormatter.dateStyle = .none
-                        timeFormatter.timeStyle = .short
+                        // Use shared time formatter
+                        let timeFormatter = DateFormatter.sharedTimeFormatter
                         let time = timeFormatter.string(from: game.localGameTime)
                                                 
                         let item = NSMenuItem(title: "", action: nil, keyEquivalent: "")
@@ -263,7 +260,7 @@ class AppDelegate: NSObject, NSApplicationDelegate, @unchecked Sendable {
                 ]
                 
                 versionItem.attributedTitle = NSAttributedString(
-                    string: "Version 1.0.0",
+                    string: "Version \(Version.version)",
                     attributes: versionAttributes
                 )
                 

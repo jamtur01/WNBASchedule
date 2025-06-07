@@ -68,38 +68,8 @@ struct Game: Codable, Identifiable {
         return Date(timeIntervalSince1970: Double(timestamp) / 1000.0)
     }
     
-    var isHomeGame: Bool {
-        // Check if the game is a home game for the specified team
-        return false
-    }
-    
     var isCompleted: Bool {
         return state == 3
-    }
-    
-    var isLive: Bool {
-        return state == 2
-    }
-    
-    var isUpcoming: Bool {
-        return state == 1
-    }
-    
-    var winner: Team? {
-        guard isCompleted else { return nil }
-        guard let homeScore = home.score, let visitorScore = visitor.score else { return nil }
-        
-        if homeScore > visitorScore {
-            return home
-        } else if visitorScore > homeScore {
-            return visitor
-        }
-        return nil // Tie
-    }
-    
-    // Convenience property to get the id safely
-    var safeId: Int {
-        return id ?? 0
     }
 }
 

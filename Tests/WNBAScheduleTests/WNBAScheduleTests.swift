@@ -12,83 +12,6 @@ final class WNBAScheduleTests: XCTestCase {
         XCTAssertEqual(awayTeam.fullName, "Las Vegas Aces")
     }
     
-    func testWinner() {
-        // Test the winner logic with different scores
-        let homeTeam = Team(tid: 1, abbr: "NYL", city: "New York", name: "Liberty", score: 85, losses: 2, wins: 10)
-        let awayTeam = Team(tid: 2, abbr: "LVA", city: "Las Vegas", name: "Aces", score: 80, losses: 3, wins: 9)
-        
-        let game = Game(
-            id: 1,
-            type: "game",
-            gid: "1234",
-            title: "Test Game",
-            easternTime: "2025-05-01T19:00:00Z",
-            homeTime: "2025-05-01T19:00:00Z",
-            visitorTime: "2025-05-01T19:00:00Z",
-            utcTime: "2025-05-01T23:00:00Z",
-            timestamp: 1746226800000,
-            home: homeTeam,
-            visitor: awayTeam,
-            providers: nil,
-            state: 3,
-            arenaName: "Barclays Center",
-            arenaState: "NY",
-            arenaCity: "Brooklyn",
-            gameStatusText: "Final",
-            gameLabel: "",
-            gameSubLabel: "",
-            seriesText: "",
-            seriesGameNumber: "",
-            ifNecessary: false,
-            gameSubtype: "",
-            name: "test-game",
-            themeNightLabel: "",
-            ticketUrl: "",
-            isLeaguePassGame: true,
-            leaguePassVideoLink: "https://example.com"
-        )
-        
-        // Home team should be the winner
-        XCTAssertEqual(game.winner?.abbr, "NYL")
-        
-        // Create a game where away team wins
-        let homeTeam2 = Team(tid: 1, abbr: "NYL", city: "New York", name: "Liberty", score: 75, losses: 2, wins: 10)
-        let awayTeam2 = Team(tid: 2, abbr: "LVA", city: "Las Vegas", name: "Aces", score: 80, losses: 3, wins: 9)
-        
-        let game2 = Game(
-            id: 2,
-            type: "game",
-            gid: "1235",
-            title: "Test Game 2",
-            easternTime: "2025-05-02T19:00:00Z",
-            homeTime: "2025-05-02T19:00:00Z",
-            visitorTime: "2025-05-02T19:00:00Z",
-            utcTime: "2025-05-02T23:00:00Z",
-            timestamp: 1746313200000,
-            home: homeTeam2,
-            visitor: awayTeam2,
-            providers: nil,
-            state: 3,
-            arenaName: "Barclays Center",
-            arenaState: "NY",
-            arenaCity: "Brooklyn",
-            gameStatusText: "Final",
-            gameLabel: "",
-            gameSubLabel: "",
-            seriesText: "",
-            seriesGameNumber: "",
-            ifNecessary: false,
-            gameSubtype: "",
-            name: "test-game-2",
-            themeNightLabel: "",
-            ticketUrl: "",
-            isLeaguePassGame: true,
-            leaguePassVideoLink: "https://example.com"
-        )
-        
-        // Away team should be the winner
-        XCTAssertEqual(game2.winner?.abbr, "LVA")
-    }
     
     func testMarkedGame() {
         // This is a simple test to ensure the MarkedGame struct works as expected
@@ -131,7 +54,6 @@ final class WNBAScheduleTests: XCTestCase {
         XCTAssertTrue(markedGame.isHomeGame)
         XCTAssertEqual(markedGame.game.home.abbr, "NYL")
         XCTAssertEqual(markedGame.game.visitor.abbr, "LVA")
-        XCTAssertEqual(markedGame.game.winner?.abbr, "NYL")
     }
     
     func testRobustDateParsing() {
@@ -180,7 +102,6 @@ final class WNBAScheduleTests: XCTestCase {
 
     static var allTests = [
         ("testGameModel", testGameModel),
-        ("testWinner", testWinner),
         ("testMarkedGame", testMarkedGame),
         ("testRobustDateParsing", testRobustDateParsing),
     ]
