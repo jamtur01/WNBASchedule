@@ -26,14 +26,76 @@ jobs:
     steps:
     - uses: actions/checkout@v4
     
-    - name: Create application bundle
+    - name: Set up signing certificate
+      env:
+        MACOS_CERTIFICATE_P12: ${{ secrets.MACOS_CERTIFICATE_P12 }}
+        MACOS_CERTIFICATE_PASSWORD: ${{ secrets.MACOS_CERTIFICATE_PASSWORD }}
       run: |
-        chmod +x ./build.sh
-        ./build.sh
+        # Turn our base64-encoded certificate back to a regular .p12 file
+        echo "$MACOS_CERTIFICATE_P12" | base64 --decode > certificate.p12
+        
+        # Create a new keychain
+        security create-keychain -p "temporary-password" build.keychain 
+        security default-keychain -s build.keychain
+        security unlock-keychain -p "temporary-password" build.keychain
+        security import certificate.p12 -k build.keychain -P "$MACOS_CERTIFICATE_PASSWORD" -T /usr/bin/codesign
+        security set-key-partition-list -S apple-tool:,apple:,codesign: -s -k "temporary-password" build.keychain
     
-    - name: Create ZIP archive
+    - name: Build application
       run: |
-        zip -r WNBASchedule.zip WNBASchedule.app
+        swift build -c release
+        
+        # Create application bundle
+        APP_DIR="WNBASchedule.app"
+        CONTENTS_DIR="$APP_DIR/Contents"
+        MACOS_DIR="$CONTENTS_DIR/MacOS"
+        RESOURCES_DIR="$CONTENTS_DIR/Resources"
+        
+        # Create directory structure
+        mkdir -p "$MACOS_DIR"
+        mkdir -p "$RESOURCES_DIR"
+        
+        # Copy executable
+        cp .build/release/WNBASchedule "$MACOS_DIR/"
+        
+        # Copy Info.plist
+        cp Info/Info.plist "$CONTENTS_DIR/"
+        
+        # Copy resources
+        cp Sources/WNBASchedule/Resources/basketball-icon.txt "$RESOURCES_DIR/"
+    
+    - name: Code sign the app
+      env:
+        MACOS_CODESIGN_IDENTITY: ${{ secrets.MACOS_CODESIGN_IDENTITY }}
+      run: |
+        # Sign with hardened runtime
+        /usr/bin/codesign --force --options runtime --sign "$MACOS_CODESIGN_IDENTITY" "WNBASchedule.app" --deep
+    
+    - name: Notarize the app
+      env:
+        APPLE_ID: ${{ secrets.APPLE_ID }}
+        MACOS_API_ISSUER_ID: ${{ secrets.MACOS_API_ISSUER_ID }}
+        APPLE_APP_SPECIFIC_PASSWORD: ${{ secrets.APPLE_APP_SPECIFIC_PASSWORD }}
+      run: |
+        # Create keychain profile for notarization
+        xcrun notarytool store-credentials "notarytool-profile" \
+          --apple-id "$APPLE_ID" \
+          --team-id "$MACOS_API_ISSUER_ID" \
+          --password "$APPLE_APP_SPECIFIC_PASSWORD"
+        
+        # Create a zip for notarization
+        ditto -c -k --keepParent "WNBASchedule.app" "notarization.zip"
+        
+        # Submit for notarization and wait for the result
+        xcrun notarytool submit "notarization.zip" --keychain-profile "notarytool-profile" --wait
+        
+        # Staple the ticket to the app
+        xcrun stapler staple "WNBASchedule.app" || echo "Stapling failed, but continuing..."
+    
+    - name: Create final ZIP archive
+      run: |
+        # Use ditto to preserve file attributes and permissions
+        ditto -c -k --keepParent WNBASchedule.app WNBASchedule.zip
     
     - name: Extract version from tag
       id: get_version
