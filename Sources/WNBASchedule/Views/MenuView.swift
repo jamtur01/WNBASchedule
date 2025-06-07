@@ -1,6 +1,7 @@
 import SwiftUI
 import AppKit
 import SwiftDate
+import LaunchAtLogin
 
 // MARK: - Menu View
 struct MenuView: View {
@@ -47,6 +48,12 @@ struct MenuView: View {
                 
                 Divider()
             }
+            
+            // Launch at Login toggle
+            LaunchAtLogin.Toggle()
+                .padding(.vertical, 4)
+            
+            Divider()
             
             // Menu Actions on a single line with distinct styling
             HStack {
