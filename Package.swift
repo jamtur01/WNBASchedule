@@ -9,11 +9,15 @@ let package = Package(
     products: [
         .executable(name: "WNBASchedule", targets: ["WNBASchedule"])
     ],
-    dependencies: [],
+    dependencies: [
+        .package(url: "https://github.com/malcommac/SwiftDate.git", from: "6.3.1"),
+    ],
     targets: [
         .executableTarget(
             name: "WNBASchedule",
-            dependencies: [],
+            dependencies: [
+                "SwiftDate"
+            ],
             resources: [
                 .process("Resources")
             ]),

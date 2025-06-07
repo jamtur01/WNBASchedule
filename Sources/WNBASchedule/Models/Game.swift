@@ -1,4 +1,5 @@
 import Foundation
+import SwiftDate
 
 struct ScheduleResponse: Codable {
     let results: Results
@@ -47,25 +48,37 @@ struct Game: Codable, Identifiable {
     }
     
     var localGameTime: Date {
-        // First try with ISO8601DateFormatter with expanded options
-        let formatter = ISO8601DateFormatter()
-        formatter.formatOptions = [.withInternetDateTime, .withFractionalSeconds]
-        
-        if let date = formatter.date(from: utcTime) {
-            return date
+        // Using SwiftDate for better date parsing
+        if let date = utcTime.toDate("yyyy-MM-dd'T'HH:mm:ss.SSS'Z'", region: Region.UTC) {
+            return date.date
         }
         
-        // If that fails, try with DateFormatter
-        let backupFormatter = DateFormatter()
-        backupFormatter.dateFormat = "yyyy-MM-dd'T'HH:mm:ss'Z'"
-        backupFormatter.timeZone = TimeZone(abbreviation: "UTC")
-        
-        if let date = backupFormatter.date(from: utcTime) {
-            return date
+        if let date = utcTime.toDate("yyyy-MM-dd'T'HH:mm:ss'Z'", region: Region.UTC) {
+            return date.date
         }
         
         // If all else fails, use the timestamp (milliseconds since epoch)
         return Date(timeIntervalSince1970: Double(timestamp) / 1000.0)
+    }
+    
+    // Add a convenience method to get the game time as a DateInRegion
+    var gameTimeInRegion: DateInRegion {
+        return localGameTime.toSwiftDate()
+    }
+    
+    // Format the game date for display
+    var formattedGameDate: String {
+        return gameTimeInRegion.toString(.custom("EEE MMM d, yyyy"))
+    }
+    
+    // Format the game time for display
+    var formattedGameTime: String {
+        return gameTimeInRegion.toString(.custom("h:mm a"))
+    }
+    
+    // Format both date and time
+    var formattedDateTime: String {
+        return "\(formattedGameDate) at \(formattedGameTime)"
     }
     
     var isCompleted: Bool {
