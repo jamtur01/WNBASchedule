@@ -4,7 +4,7 @@ import PackageDescription
 let package = Package(
     name: "WNBASchedule",
     platforms: [
-        .macOS(.v12)
+        .macOS(.v12) // SwiftUI requires macOS 10.15+, but we're already requiring macOS 12
     ],
     products: [
         .executable(name: "WNBASchedule", targets: ["WNBASchedule"])
