@@ -108,32 +108,41 @@ struct PreviousGameRow: View {
         return (game.home.score ?? 0) > (game.visitor.score ?? 0)
     }
     
+    private func openGameURL() {
+        if let url = URL(string: "https://www.wnba.com/game/\(game.gid)/") {
+            NSWorkspace.shared.open(url)
+        }
+    }
+    
     var body: some View {
-        HStack(alignment: .center) {
-            // Date
-            Text(game.formattedGameDate)
-                .font(.system(size: 13))
-                .foregroundColor(.gray)
-                .frame(width: 180, alignment: .leading) // Match the width of upcoming games
-            
-            // Game Score
-            HStack(spacing: 5) {
-                // Away Team
-                Text("\(game.visitor.abbr) \(game.visitor.score ?? 0)")
-                    .font(.system(size: 13, weight: .bold))
-                    .foregroundColor(homeWon ? .red : .green)
-                
-                // Separator
-                Text("@")
+        Button(action: openGameURL) {
+            HStack(alignment: .center) {
+                // Date
+                Text(game.formattedGameDate)
                     .font(.system(size: 13))
                     .foregroundColor(.gray)
+                    .frame(width: 180, alignment: .leading) // Match the width of upcoming games
                 
-                // Home Team
-                Text("\(game.home.abbr) \(game.home.score ?? 0)")
-                    .font(.system(size: 13, weight: .bold))
-                    .foregroundColor(homeWon ? .green : .red)
+                // Game Score
+                HStack(spacing: 5) {
+                    // Away Team
+                    Text("\(game.visitor.abbr) \(game.visitor.score ?? 0)")
+                        .font(.system(size: 13, weight: .bold))
+                        .foregroundColor(homeWon ? .red : .green)
+                    
+                    // Separator
+                    Text("@")
+                        .font(.system(size: 13))
+                        .foregroundColor(.gray)
+                    
+                    // Home Team
+                    Text("\(game.home.abbr) \(game.home.score ?? 0)")
+                        .font(.system(size: 13, weight: .bold))
+                        .foregroundColor(homeWon ? .green : .red)
+                }
             }
         }
+        .buttonStyle(PlainButtonStyle()) // Keep the original appearance
         .padding(.vertical, 2)
     }
 }
@@ -142,31 +151,40 @@ struct PreviousGameRow: View {
 struct UpcomingGameRow: View {
     let game: Game
     
+    private func openGameURL() {
+        if let url = URL(string: "https://www.wnba.com/game/\(game.gid)/") {
+            NSWorkspace.shared.open(url)
+        }
+    }
+    
     var body: some View {
         // Use the same layout as PreviousGameRow for consistency
-        HStack(alignment: .center) {
-            // Date with time on the same line
-            Text("\(game.formattedGameDate) \(game.formattedGameTime)")
-                .font(.system(size: 13))
-                .foregroundColor(.gray)
-                .frame(width: 180, alignment: .leading) // Wider frame to accommodate the time
-            
-            // Game Matchup
-            HStack(spacing: 5) {
-                // Away Team
-                Text(game.visitor.abbr)
-                    .font(.system(size: 13, weight: .bold))
-                
-                // Separator
-                Text("@")
+        Button(action: openGameURL) {
+            HStack(alignment: .center) {
+                // Date with time on the same line
+                Text("\(game.formattedGameDate) \(game.formattedGameTime)")
                     .font(.system(size: 13))
                     .foregroundColor(.gray)
+                    .frame(width: 180, alignment: .leading) // Wider frame to accommodate the time
                 
-                // Home Team
-                Text(game.home.abbr)
-                    .font(.system(size: 13, weight: .bold))
+                // Game Matchup
+                HStack(spacing: 5) {
+                    // Away Team
+                    Text(game.visitor.abbr)
+                        .font(.system(size: 13, weight: .bold))
+                    
+                    // Separator
+                    Text("@")
+                        .font(.system(size: 13))
+                        .foregroundColor(.gray)
+                    
+                    // Home Team
+                    Text(game.home.abbr)
+                        .font(.system(size: 13, weight: .bold))
+                }
             }
         }
+        .buttonStyle(PlainButtonStyle()) // Keep the original appearance
         .padding(.vertical, 2)
     }
 }
