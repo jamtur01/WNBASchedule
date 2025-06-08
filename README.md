@@ -1,6 +1,6 @@
 # WNBASchedule
 
-A native Swift menu bar application that displays WNBA schedule information for the New York Liberty (NYL) team, including:
+Menu bar application that displays WNBA schedule information for the New York Liberty (NYL) team, including:
 
 - Previous 10 games with win/loss records and scores
 - Upcoming 5 games
@@ -14,7 +14,6 @@ A native Swift menu bar application that displays WNBA schedule information for 
 - Filters games for a specific team (default: New York Liberty)
 - Shows past game results with scores and win/loss status (color-coded for winners and losers)
 - Shows upcoming games with dates and times in the user's local timezone
-- Robust date parsing to handle various time formats
 
 ## Requirements
 
@@ -59,17 +58,6 @@ Run tests with Swift's test command:
 ```bash
 swift test
 ```
-
-### CI/CD
-
-The GitHub workflow automatically:
-
-1. Builds the project
-2. Runs tests on push and pull requests to the main branch
-3. Creates a binary application bundle (.app)
-4. Uploads the binary as an artifact that can be downloaded from the GitHub Actions page
-
-You can download the latest binary from the "Actions" tab in the GitHub repository.
 
 ### Versioning
 
