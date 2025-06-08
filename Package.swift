@@ -19,9 +19,6 @@ let package = Package(
             dependencies: [
                 "SwiftDate",
                 .product(name: "LaunchAtLogin", package: "LaunchAtLogin-Modern")
-            ],
-            resources: [
-                .process("Resources")
             ]),
         .testTarget(
             name: "WNBAScheduleTests",
