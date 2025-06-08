@@ -91,7 +91,7 @@ jobs:
           body: |
             # WNBASchedule ${{ steps.get_version.outputs.VERSION }}
 
-            A native Swift menu bar application that displays WNBA schedule information for the New York Liberty team.
+            A native Swift menu bar application that displays WNBA schedule information.
 
             ## Installation
 
