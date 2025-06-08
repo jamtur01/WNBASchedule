@@ -101,6 +101,11 @@ final class WNBAScheduleTests: XCTestCase {
     }
     
     func testGameDateFormatting() {
+        // Set up mock user preferences to ensure consistent timezone behavior
+        let mockUserPreferences = UserPreferences()
+        mockUserPreferences.useLocalTimeZone = false // Force Eastern time
+        DependencyContainer.shared.configureMockServices(userPreferences: mockUserPreferences)
+        
         // Create a game with a known timestamp
         let timestamp: Int64 = 1746226800000 // May 1, 2025 23:00:00 UTC
         let game = createTestGame(timestamp: timestamp)
@@ -111,9 +116,13 @@ final class WNBAScheduleTests: XCTestCase {
         // Test date properties
         XCTAssertEqual(game.localGameTime.timeIntervalSince1970, expectedDate.timeIntervalSince1970)
         
-        // Test formatted date strings
-        // Use Eastern Time to match the app's display logic
-        let easternRegion = expectedDate.in(region: Region(zone: Zones.americaNewYork))
+        // Test formatted date strings using Eastern Time
+        let easternRegion = expectedDate.in(region: Region(
+            calendar: Calendars.gregorian,
+            zone: Zones.americaNewYork,
+            locale: Locales.english
+        ))
+        
         XCTAssertEqual(game.formattedGameDate, easternRegion.toString(.custom("EEE MMM d, yyyy")))
         XCTAssertEqual(game.formattedGameTime, easternRegion.toString(.custom("h.mm a")))
         XCTAssertEqual(game.formattedDateTime, "\(game.formattedGameDate) at \(game.formattedGameTime)")

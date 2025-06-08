@@ -161,13 +161,17 @@ struct Game: Codable, Identifiable {
     
     /// Formatted game time for display
     var formattedGameTime: String {
-        let region = Region(calendar: Calendars.gregorian, zone: gameTimeInRegion.region.timeZone, locale: Locales.english)
+        let region = Region(
+            calendar: Calendars.gregorian,
+            zone: gameTimeInRegion.region.timeZone,
+            locale: Locales.english
+        )
         return gameTimeInRegion.date.in(region: region).toString(.custom("h.mm a"))
     }
     
     /// Formatted date and time
     var formattedDateTime: String {
-        return gameTimeInRegion.date.toScheduleTimeString()
+        return "\(formattedGameDate) at \(formattedGameTime)"
     }
     
     /// Whether the game is completed
