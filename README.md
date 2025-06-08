@@ -1,7 +1,8 @@
-# New York Liberty WNBA Schedule
+# WNBA Schedule
 
-Menu bar application that displays WNBA schedule information for the New York Liberty, including:
+Menu bar application that displays WNBA schedule information for the all the teams, including:
 
+- Allows you specify one team or view all teams
 - Previous 10 games with win/loss records and scores
 - Upcoming 5 games
 - Game times displayed in the user's local timezone (with ET as the default)
@@ -11,7 +12,7 @@ Menu bar application that displays WNBA schedule information for the New York Li
 - Lives in your menu bar for easy access
 - Automatically refreshes data every hour
 - Fetches real-time WNBA schedule data from the NBA API
-- Filters games for a specific team (default: New York Liberty)
+- Filters games for a specific team or shows all teams
 - Shows past game results with scores and win/loss status (color-coded for winners and losers)
 - Shows upcoming games with dates and times in the user's local timezone
 
@@ -94,6 +95,7 @@ This script updates version numbers in all necessary files. After running:
 - ATL - Atlanta Dream
 - PHX - Phoenix Mercury
 - LAS - Los Angeles Sparks
+- GSV - Golden State Valkyries
 
 ## Data Source
 
