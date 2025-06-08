@@ -27,7 +27,15 @@ final class WNBAScheduleTests: XCTestCase {
         XCTAssertEqual(awayTeam.recordString, "9-3")
         
         // Test team with missing record
-        let teamWithoutRecord = Team(tid: 3, abbr: "CON", city: "Connecticut", name: "Sun", score: nil, losses: nil, wins: nil)
+        let teamWithoutRecord = Team(
+            tid: 3,
+            abbr: "CON",
+            city: "Connecticut",
+            name: "Sun",
+            score: nil,
+            losses: nil,
+            wins: nil
+        )
         XCTAssertNil(teamWithoutRecord.recordString)
         
         // Test primary color (this depends on TeamManager)
@@ -99,14 +107,15 @@ final class WNBAScheduleTests: XCTestCase {
         
         // Get the expected date
         let expectedDate = Date(timeIntervalSince1970: Double(timestamp) / 1000.0)
-        let expectedRegion = expectedDate.toSwiftDate()
         
         // Test date properties
         XCTAssertEqual(game.localGameTime.timeIntervalSince1970, expectedDate.timeIntervalSince1970)
         
         // Test formatted date strings
-        XCTAssertEqual(game.formattedGameDate, expectedRegion.toString(.custom("EEE MMM d, yyyy")))
-        XCTAssertEqual(game.formattedGameTime, expectedRegion.toString(.custom("h:mm a")))
+        // Use Eastern Time to match the app's display logic
+        let easternRegion = expectedDate.in(region: Region(zone: Zones.americaNewYork))
+        XCTAssertEqual(game.formattedGameDate, easternRegion.toString(.custom("EEE MMM d, yyyy")))
+        XCTAssertEqual(game.formattedGameTime, easternRegion.toString(.custom("h:mm a")))
         XCTAssertEqual(game.formattedDateTime, "\(game.formattedGameDate) at \(game.formattedGameTime)")
     }
     
@@ -134,9 +143,21 @@ final class WNBAScheduleTests: XCTestCase {
         let expectedDate2 = Date(timeIntervalSince1970: 1746226800.0)
         
         // We now prioritize timestamp over string parsing
-        XCTAssertEqual(gameWithMilliseconds.localGameTime.timeIntervalSince1970, expectedDate1.timeIntervalSince1970, accuracy: 0.001)
-        XCTAssertEqual(gameWithSeconds.localGameTime.timeIntervalSince1970, expectedDate2.timeIntervalSince1970, accuracy: 0.001)
-        XCTAssertEqual(gameWithInvalidFormat.localGameTime.timeIntervalSince1970, expectedDate2.timeIntervalSince1970, accuracy: 0.001)
+        XCTAssertEqual(
+            gameWithMilliseconds.localGameTime.timeIntervalSince1970,
+            expectedDate1.timeIntervalSince1970,
+            accuracy: 0.001
+        )
+        XCTAssertEqual(
+            gameWithSeconds.localGameTime.timeIntervalSince1970,
+            expectedDate2.timeIntervalSince1970,
+            accuracy: 0.001
+        )
+        XCTAssertEqual(
+            gameWithInvalidFormat.localGameTime.timeIntervalSince1970,
+            expectedDate2.timeIntervalSince1970,
+            accuracy: 0.001
+        )
     }
     
     // MARK: - MarkedGame Tests
@@ -251,8 +272,24 @@ final class WNBAScheduleTests: XCTestCase {
         visitor: Team? = nil,
         state: Int = 3
     ) -> Game {
-        let homeTeam = home ?? Team(tid: 1, abbr: "NYL", city: "New York", name: "Liberty", score: 85, losses: 2, wins: 10)
-        let awayTeam = visitor ?? Team(tid: 2, abbr: "LVA", city: "Las Vegas", name: "Aces", score: 80, losses: 3, wins: 9)
+        let homeTeam = home ?? Team(
+            tid: 1,
+            abbr: "NYL",
+            city: "New York",
+            name: "Liberty",
+            score: 85,
+            losses: 2,
+            wins: 10
+        )
+        let awayTeam = visitor ?? Team(
+            tid: 2,
+            abbr: "LVA",
+            city: "Las Vegas",
+            name: "Aces",
+            score: 80,
+            losses: 3,
+            wins: 9
+        )
         
         return Game(
             gid: gid,
@@ -286,6 +323,5 @@ final class WNBAScheduleTests: XCTestCase {
         )
     }
     
-
     // MARK: - End of Tests
 }

@@ -45,37 +45,16 @@ jobs:
           security import certificate.p12 -k build.keychain -P "$MACOS_CERTIFICATE_PASSWORD" -T /usr/bin/codesign
           security set-key-partition-list -S apple-tool:,apple:,codesign: -s -k "temporary-password" build.keychain
 
-      - name: Build universal binary
+      - name: Build app bundle (universal, with resources)
         run: |
-          swift build -c release --arch arm64
-          swift build -c release --arch x86_64
-
-          mkdir -p .build/universal
-          lipo -create \
-            .build/arm64-apple-macosx/release/WNBASchedule \
-            .build/x86_64-apple-macosx/release/WNBASchedule \
-            -output .build/universal/WNBASchedule
-
-          lipo -info .build/universal/WNBASchedule
-
-      - name: Build application bundle
-        run: |
-          APP_DIR="WNBASchedule.app"
-          CONTENTS_DIR="$APP_DIR/Contents"
-          MACOS_DIR="$CONTENTS_DIR/MacOS"
-          RESOURCES_DIR="$CONTENTS_DIR/Resources"
-
-          mkdir -p "$MACOS_DIR"
-          mkdir -p "$RESOURCES_DIR"
-
-          cp .build/universal/WNBASchedule "$MACOS_DIR/"
-          cp Info/Info.plist "$CONTENTS_DIR/"
+          chmod +x ./build.sh
+          CI=1 ./build.sh
 
       - name: Code sign the app
         env:
           MACOS_CODESIGN_IDENTITY: ${{ secrets.MACOS_CODESIGN_IDENTITY }}
         run: |
-          /usr/bin/codesign --force --options runtime --sign "$MACOS_CODESIGN_IDENTITY" WNBASchedule.app --deep
+          /usr/bin/codesign --force --options runtime --entitlements Info/WNBASchedule.entitlements --sign "$MACOS_CODESIGN_IDENTITY" WNBASchedule.app --deep
 
       - name: Notarize the app
         env:

@@ -23,44 +23,67 @@ struct UpcomingGameRowInfo {
 // Extension to make NSAttributedString creation cleaner
 extension NSAttributedString {
     /// Create an attributed string with the given text and attributes
-    static func styled(_ text: String,
-                      font: NSFont,
-                      color: NSColor,
-                      alignment: NSTextAlignment = .left,
-                      indent: CGFloat = 0,
-                      tabStops: [NSTextTab]? = nil) -> NSAttributedString {
+    static func styled(
+        _ text: String,
+        font: NSFont,
+        color: NSColor,
+        alignment: NSTextAlignment = .left,
+        indent: CGFloat = 0,
+        tabStops: [NSTextTab]? = nil
+    ) -> NSAttributedString {
         let paragraphStyle = NSMutableParagraphStyle()
         paragraphStyle.alignment = alignment
         paragraphStyle.firstLineHeadIndent = indent
-        
+
         if let tabStops = tabStops {
             paragraphStyle.tabStops = tabStops
         }
-        
+
         let attributes: [NSAttributedString.Key: Any] = [
             .font: font,
             .foregroundColor: color,
             .paragraphStyle: paragraphStyle
         ]
-        
+
         return NSAttributedString(string: text, attributes: attributes)
     }
     
     /// Create a header style attributed string
-    static func header(_ text: String, color: NSColor = NSColor(red: 0.0, green: 0.5, blue: 0.4, alpha: 1.0)) -> NSAttributedString {
-        return styled(text, font: .boldSystemFont(ofSize: 14), color: color, alignment: .left, indent: 8)
+    static func header(
+        _ text: String,
+        color: NSColor = NSColor(red: 0.0, green: 0.5, blue: 0.4, alpha: 1.0)
+    ) -> NSAttributedString {
+        return styled(
+            text,
+            font: .boldSystemFont(ofSize: 14),
+            color: color,
+            alignment: .left,
+            indent: 8
+        )
     }
     
     /// Create a date style attributed string with tab stops for alignment
     static func date(_ text: String) -> NSAttributedString {
         let tabStops = [NSTextTab(textAlignment: .left, location: 180)]
-        return styled(text, font: .systemFont(ofSize: 13, weight: .medium), color: .darkGray, alignment: .left, tabStops: tabStops)
+        return styled(
+            text,
+            font: .systemFont(ofSize: 13, weight: .medium),
+            color: .darkGray,
+            alignment: .left,
+            tabStops: tabStops
+        )
     }
     
     /// Create a team style attributed string
     static func team(_ text: String, isWinner: Bool) -> NSAttributedString {
-        let color = isWinner ? NSColor(red: 0.0, green: 0.6, blue: 0.0, alpha: 1.0) : NSColor(red: 0.8, green: 0.0, blue: 0.0, alpha: 1.0)
-        return styled(text, font: .boldSystemFont(ofSize: 13), color: color)
+        let color = isWinner
+            ? NSColor(red: 0.0, green: 0.6, blue: 0.0, alpha: 1.0)
+            : NSColor(red: 0.8, green: 0.0, blue: 0.0, alpha: 1.0)
+        return styled(
+            text,
+            font: .boldSystemFont(ofSize: 13),
+            color: color
+        )
     }
     
     /// Create a separator style attributed string

@@ -3,7 +3,7 @@ import LaunchAtLogin
 
 extension Image {
     static func loadFromBundle(named name: String) -> Image {
-        if let url = Bundle.module.url(forResource: name, withExtension: "png"),
+        if let url = Bundle.main.url(forResource: name, withExtension: "png"),
            let nsImage = NSImage(contentsOf: url) {
             return Image(nsImage: nsImage)
         }
@@ -40,13 +40,16 @@ struct AllTeamsMenuView: View {
                     .padding(.top, 5)
                     .fixedSize(horizontal: true, vertical: false)
                 Spacer(minLength: 8)
-                Button(action: {
-                    showingTeamPicker.toggle()
-                }) {
-                    Image(systemName: "gear")
-                        .font(.system(size: 12))
-                        .foregroundColor(.gray)
-                }
+                Button(
+                    action: {
+                        showingTeamPicker.toggle()
+                    },
+                    label: {
+                        Image(systemName: "gear")
+                            .font(.system(size: 12))
+                            .foregroundColor(.gray)
+                    }
+                )
                 .buttonStyle(PlainButtonStyle())
             }
 
@@ -93,28 +96,34 @@ struct AllTeamsMenuView: View {
             // Menu Actions
             HStack {
                 HStack(spacing: 8) {
-                    Button(action: {
-                        refreshAction()
-                    }) {
-                        Text("action.refresh".localized)
-                            .foregroundColor(.white)
-                            .padding(.horizontal, 10)
-                            .padding(.vertical, 4)
-                            .background(Color(hex: "#FA4616") ?? .orange)
-                            .cornerRadius(4)
-                    }
+                    Button(
+                        action: {
+                            refreshAction()
+                        },
+                        label: {
+                            Text("action.refresh".localized)
+                                .foregroundColor(.white)
+                                .padding(.horizontal, 10)
+                                .padding(.vertical, 4)
+                                .background(Color(hex: "#FA4616") ?? .orange)
+                                .cornerRadius(4)
+                        }
+                    )
                     .buttonStyle(PlainButtonStyle())
 
-                    Button(action: {
-                        NSApplication.shared.terminate(nil)
-                    }) {
-                        Text("action.quit".localized)
-                            .foregroundColor(.white)
-                            .padding(.horizontal, 10)
-                            .padding(.vertical, 4)
-                            .background(Color.gray)
-                            .cornerRadius(4)
-                    }
+                    Button(
+                        action: {
+                            NSApplication.shared.terminate(nil)
+                        },
+                        label: {
+                            Text("action.quit".localized)
+                                .foregroundColor(.white)
+                                .padding(.horizontal, 10)
+                                .padding(.vertical, 4)
+                                .background(Color.gray)
+                                .cornerRadius(4)
+                        }
+                    )
                     .buttonStyle(PlainButtonStyle())
                 }
 

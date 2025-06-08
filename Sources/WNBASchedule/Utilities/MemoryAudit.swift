@@ -10,7 +10,7 @@ final class MemoryAudit {
     static let shared = MemoryAudit()
     
     /// The logger for memory-related logs
-    private let logger = Logger(subsystem: "com.wnbaschedule", category: "MemoryAudit")
+    private let logger = Logger(subsystem: "net.kartar.wnbaschedule", category: "MemoryAudit")
     
     /// Dictionary to track object allocations
     private var trackedObjects = [ObjectIdentifier: WeakReference]()
@@ -83,11 +83,9 @@ final class MemoryAudit {
         }
         
         // Log potential leaks
-        for (_, reference) in trackedObjects {
-            if reference.object != nil {
-                leakedObjects += 1
-                logger.warning("Potential memory leak: \(reference.description)")
-            }
+        for (_, reference) in trackedObjects where reference.object != nil {
+            leakedObjects += 1
+            logger.warning("Potential memory leak: \(reference.description)")
         }
         
         logger.info("Memory audit completed: \(leakedObjects) potential leaks out of \(totalObjects) tracked objects")
@@ -133,7 +131,8 @@ final class MemoryAudit {
     
     // MARK: - Private Methods
     
-    @objc private func didReceiveMemoryWarning() {
+    @objc
+    private func didReceiveMemoryWarning() {
         logger.warning("Received memory warning! Current usage: \(self.formatMemorySize(self.currentMemoryUsage()))")
         performAudit()
     }

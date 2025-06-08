@@ -7,9 +7,9 @@ import XCTest
 final class NBAClientTests: XCTestCase {
     // MARK: - Properties
     
-    private var mockCache: MockAPICache!
-    private var mockURLSession: MockURLSession!
-    private var client: NBAClient!
+    private var mockCache: MockAPICache?
+    private var mockURLSession: MockURLSession?
+    private var client: NBAClient?
     
     // MARK: - Setup & Teardown
     
@@ -17,7 +17,9 @@ final class NBAClientTests: XCTestCase {
         super.setUp()
         mockCache = MockAPICache()
         mockURLSession = MockURLSession()
-        client = NBAClient(baseURL: "https://test.api.com", session: mockURLSession, cache: mockCache)
+        if let mockURLSession = mockURLSession, let mockCache = mockCache {
+            client = NBAClient(baseURL: "https://test.api.com", session: mockURLSession, cache: mockCache)
+        }
     }
     
     override func tearDown() {
@@ -33,6 +35,10 @@ final class NBAClientTests: XCTestCase {
         // Setup mock cache data
         let mockData = createMockScheduleData()
         let cacheKey = "schedule_2025"
+        guard let mockCache = mockCache, let client = client else {
+            XCTFail("Mocks not initialized")
+            return
+        }
         mockCache.mockData[cacheKey] = mockData
         
         // Execute
@@ -44,15 +50,19 @@ final class NBAClientTests: XCTestCase {
         XCTAssertEqual(response.results.schedule.first?.gid, "1022500001")
         
         // Verify no network request was made
-        XCTAssertNil(mockURLSession.lastRequest)
+        XCTAssertNil(mockURLSession?.lastRequest)
     }
     
     func testFetchScheduleFromNetwork() async throws {
         // Setup mock network response
         let mockData = createMockScheduleData()
+        guard let mockURLSession = mockURLSession, let client = client, let mockCache = mockCache else {
+            XCTFail("Mocks not initialized")
+            return
+        }
         mockURLSession.mockData = mockData
         mockURLSession.mockResponse = HTTPURLResponse(
-            url: URL(string: "https://test.api.com")!,
+            url: URL(string: "https://test.api.com") ?? URL(fileURLWithPath: "/"),
             statusCode: 200,
             httpVersion: nil,
             headerFields: nil
@@ -73,7 +83,15 @@ final class NBAClientTests: XCTestCase {
     
     func testFetchScheduleWithNetworkError() async {
         // Setup mock network error
-        mockURLSession.mockError = NSError(domain: "test", code: -1, userInfo: [NSLocalizedDescriptionKey: "Network error"])
+        guard let mockURLSession = mockURLSession, let client = client else {
+            XCTFail("Mocks not initialized")
+            return
+        }
+        mockURLSession.mockError = NSError(
+            domain: "test",
+            code: -1,
+            userInfo: [NSLocalizedDescriptionKey: "Network error"]
+        )
         
         // Execute and verify
         do {
@@ -93,9 +111,13 @@ final class NBAClientTests: XCTestCase {
     
     func testFetchScheduleWithInvalidResponse() async {
         // Setup mock invalid response
+        guard let mockURLSession = mockURLSession, let client = client else {
+            XCTFail("Mocks not initialized")
+            return
+        }
         mockURLSession.mockData = createMockScheduleData()
         mockURLSession.mockResponse = HTTPURLResponse(
-            url: URL(string: "https://test.api.com")!,
+            url: URL(string: "https://test.api.com") ?? URL(fileURLWithPath: "/"),
             statusCode: 404,
             httpVersion: nil,
             headerFields: nil
@@ -118,9 +140,14 @@ final class NBAClientTests: XCTestCase {
     
     func testFetchScheduleWithDecodingError() async {
         // Setup mock invalid data
-        mockURLSession.mockData = "invalid json".data(using: .utf8)!
+        guard let mockURLSession = mockURLSession, let client = client else {
+            XCTFail("Mocks not initialized")
+            return
+        }
+        let invalidData = Data("invalid json".utf8)
+        mockURLSession.mockData = invalidData
         mockURLSession.mockResponse = HTTPURLResponse(
-            url: URL(string: "https://test.api.com")!,
+            url: URL(string: "https://test.api.com") ?? URL(fileURLWithPath: "/"),
             statusCode: 200,
             httpVersion: nil,
             headerFields: nil
@@ -143,17 +170,21 @@ final class NBAClientTests: XCTestCase {
     
     func testFetchScheduleWithServerError() async {
         // Setup mock server error
-        mockURLSession.mockData = createMockScheduleData()
-        mockURLSession.mockResponse = HTTPURLResponse(
-            url: URL(string: "https://test.api.com")!,
-            statusCode: 500,
-            httpVersion: nil,
-            headerFields: nil
-        )
+        mockURLSession?.mockData = createMockScheduleData()
+        if let url = URL(string: "https://test.api.com") {
+            mockURLSession?.mockResponse = HTTPURLResponse(
+                url: url,
+                statusCode: 500,
+                httpVersion: nil,
+                headerFields: nil
+            )
+        } else {
+            XCTFail("Invalid URL string for mock response")
+        }
         
         // Execute and verify
         do {
-            _ = try await client.fetchSchedule(season: "2025")
+            _ = try await client?.fetchSchedule(season: "2025")
             XCTFail("Expected error but got success")
         } catch let error as NBAClientError {
             if case .serverError = error {
@@ -168,17 +199,21 @@ final class NBAClientTests: XCTestCase {
     
     func testFetchScheduleWithRateLimitedError() async {
         // Setup mock rate limited response
-        mockURLSession.mockData = createMockScheduleData()
-        mockURLSession.mockResponse = HTTPURLResponse(
-            url: URL(string: "https://test.api.com")!,
-            statusCode: 429,
-            httpVersion: nil,
-            headerFields: nil
-        )
+        mockURLSession?.mockData = createMockScheduleData()
+        if let url = URL(string: "https://test.api.com") {
+            mockURLSession?.mockResponse = HTTPURLResponse(
+                url: url,
+                statusCode: 429,
+                httpVersion: nil,
+                headerFields: nil
+            )
+        } else {
+            XCTFail("Invalid URL string for mock response")
+        }
         
         // Execute and verify
         do {
-            _ = try await client.fetchSchedule(season: "2025")
+            _ = try await client?.fetchSchedule(season: "2025")
             XCTFail("Expected error but got success")
         } catch let error as NBAClientError {
             if case .rateLimited = error {
@@ -235,7 +270,11 @@ final class NBAClientTests: XCTestCase {
             }
         }
         """
-        return json.data(using: .utf8)!
+        guard let data = json.data(using: .utf8) else {
+            XCTFail("Failed to convert JSON string to Data")
+            return Data()
+        }
+        return data
     }
 }
 

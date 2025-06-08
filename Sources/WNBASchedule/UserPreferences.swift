@@ -76,7 +76,7 @@ class UserPreferences {
     private let useLocalTimeZoneKey = "useLocalTimeZone"
     private let preferredLanguageKey = "preferredLanguage"
     
-    private let logger = Logger(subsystem: "com.wnbaschedule", category: "UserPreferences")
+    private let logger = Logger(subsystem: "net.kartar.wnbaschedule", category: "UserPreferences")
     
     // MARK: - Initialization
     
@@ -106,7 +106,9 @@ class UserPreferences {
         
         logger.info("""
             Loaded user preferences: team=\(self.favoriteTeam), language=\(self.preferredLanguage), \
-            pastGames=\(self.pastGamesToShow), upcomingGames=\(self.upcomingGamesToShow), allTeamsDays=\(self.allTeamsDaysToShow)
+            pastGames=\(self.pastGamesToShow), \
+            upcomingGames=\(self.upcomingGamesToShow), \
+            allTeamsDays=\(self.allTeamsDaysToShow)
             """)
     }
     
@@ -125,7 +127,9 @@ class UserPreferences {
         
         logger.info("""
             Saved user preferences: team=\(self.favoriteTeam), language=\(self.preferredLanguage), \
-            pastGames=\(self.pastGamesToShow), upcomingGames=\(self.upcomingGamesToShow), allTeamsDays=\(self.allTeamsDaysToShow)
+            pastGames=\(self.pastGamesToShow), \
+            upcomingGames=\(self.upcomingGamesToShow), \
+            allTeamsDays=\(self.allTeamsDaysToShow)
             """)
     }
     

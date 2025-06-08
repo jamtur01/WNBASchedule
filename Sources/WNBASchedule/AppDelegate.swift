@@ -18,15 +18,17 @@ class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate, @unchecked S
     // Constants
     private let refreshInterval: TimeInterval = 3600 // 1 hour
     private let memoryAuditInterval: TimeInterval = 1800 // 30 minutes
-    private let logger = Logger(subsystem: "com.wnbaschedule", category: "AppDelegate")
+    private let logger = Logger(subsystem: "net.kartar.wnbaschedule", category: "AppDelegate")
     
     // Memory audit timer
     private var memoryAuditTimer: Timer?
     
     // MARK: - Initialization
-    init(scheduleManager: ScheduleManagerProtocol = DependencyContainer.shared.scheduleManager,
-         userPreferences: UserPreferences = DependencyContainer.shared.userPreferences,
-         apiCache: APICacheProtocol = DependencyContainer.shared.apiCache) {
+    init(
+        scheduleManager: ScheduleManagerProtocol = DependencyContainer.shared.scheduleManager,
+        userPreferences: UserPreferences = DependencyContainer.shared.userPreferences,
+        apiCache: APICacheProtocol = DependencyContainer.shared.apiCache
+    ) {
         self.scheduleManager = scheduleManager
         self.userPreferences = userPreferences
         self.apiCache = apiCache
@@ -103,7 +105,9 @@ class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate, @unchecked S
         )
         
         // Make sure timer fires even when scrolling
-        RunLoop.current.add(timer!, forMode: .common)
+        if let timer = timer {
+            RunLoop.current.add(timer, forMode: .common)
+        }
     }
     
     private func invalidateTimer() {
@@ -125,7 +129,9 @@ class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate, @unchecked S
         )
         
         // Make sure timer fires even when scrolling
-        RunLoop.current.add(memoryAuditTimer!, forMode: .common)
+        if let memoryAuditTimer = memoryAuditTimer {
+            RunLoop.current.add(memoryAuditTimer, forMode: .common)
+        }
         
         // Perform an initial audit
         performMemoryAudit()
@@ -136,7 +142,8 @@ class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate, @unchecked S
         memoryAuditTimer = nil
     }
     
-    @objc private func performMemoryAudit() {
+    @objc
+    private func performMemoryAudit() {
         // Log current memory usage
         let memoryUsage = MemoryAudit.shared.currentMemoryUsage()
         logger.info("Current memory usage: \(MemoryAudit.shared.formatMemorySize(memoryUsage))")
@@ -145,7 +152,8 @@ class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate, @unchecked S
         MemoryAudit.shared.performAudit()
     }
     
-    @objc func updateMenu() {
+    @objc
+    func updateMenu() {
         Task { [weak self] in
             guard let self = self else { return }
             await self.fetchGamesAndUpdateMenu()
@@ -165,7 +173,14 @@ class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate, @unchecked S
                 let now = Date()
                 let calendar = Calendar.current
                 let startOfToday = calendar.startOfDay(for: now)
-                let endDate = calendar.date(byAdding: .day, value: userPreferences.allTeamsDaysToShow, to: startOfToday)!
+                guard let endDate = calendar.date(
+                    byAdding: .day,
+                    value: userPreferences.allTeamsDaysToShow,
+                    to: startOfToday
+                ) else {
+                    logger.error("Failed to calculate end date for filtering games.")
+                    return
+                }
                 let filteredGames = allGames.filter { game in
                     let gameDate = calendar.startOfDay(for: game.localGameTime)
                     return gameDate >= startOfToday && gameDate < endDate
@@ -291,7 +306,8 @@ class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate, @unchecked S
         self.statusItem?.menu = menu
     }
     
-    @objc private func teamSelected(_ sender: NSMenuItem) {
+    @objc
+    private func teamSelected(_ sender: NSMenuItem) {
         guard let teamAbbr = sender.representedObject as? String else { return }
         changeTeam(to: teamAbbr)
     }

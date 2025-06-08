@@ -23,7 +23,7 @@ class ScheduleManager: ScheduleManagerProtocol {
     
     private let client: NBAClientProtocol
     private let userPreferences: UserPreferences
-    private let logger = Logger(subsystem: "com.wnbaschedule", category: "ScheduleManager")
+    private let logger = Logger(subsystem: "net.kartar.wnbaschedule", category: "ScheduleManager")
     
     // MARK: - Initialization
     
@@ -83,7 +83,9 @@ class ScheduleManager: ScheduleManagerProtocol {
         let recentPastGames = Array(sortedPastGames.prefix(pastGamesToShow))
         let nextUpcomingGames = Array(sortedUpcomingGames.prefix(upcomingGamesToShow))
         
-        logger.info("Filtered \(teamGames.count) games for team \(teamAbbr): \(recentPastGames.count) past, \(nextUpcomingGames.count) upcoming")
+        logger.info(
+            "Team \(teamAbbr): \(teamGames.count) games, \(recentPastGames.count) past, \(nextUpcomingGames.count) upc"
+        )
         
         return FilteredGames(
             pastGames: recentPastGames,

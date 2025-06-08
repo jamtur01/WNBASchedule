@@ -22,7 +22,7 @@ let package = Package(
                 .product(name: "LaunchAtLogin", package: "LaunchAtLogin-Modern")
             ],
             resources: [
-                .process("Resources")
+                .copy("Resources")
             ]
         ),
         .testTarget(

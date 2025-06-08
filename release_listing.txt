@@ -1,0 +1,27 @@
+total 0
+drwxr-xr-x 7 james staff 224 Jun  8 17:10 Contents
+total 8
+drwxr-xr-x 3 james staff   96 Jun  8 17:09 _CodeSignature
+-rw-r--r-- 1 james staff 1675 Jun  8 17:10 CodeResources
+-rw-r--r-- 1 james staff  560 Jun  8 17:09 Info.plist
+drwxr-xr-x 3 james staff   96 Jun  8 17:09 MacOS
+drwxr-xr-x 5 james staff  160 Jun  8 17:09 Resources
+-rw-r--r-- 1 james staff 1675 Jun  8 17:10 WNBASchedule2.app/Contents/CodeResources
+total 4
+-rw-r--r-- 1 james staff 3188 Jun  8 17:09 CodeResources
+-rw-r--r-- 1 james staff 3188 Jun  8 17:09 WNBASchedule2.app/Contents/_CodeSignature/CodeResources
+total 3708
+-rwxr-xr-x 1 james staff 3796464 Jun  8 17:09 WNBASchedule
+-rwxr-xr-x 1 james staff 3796464 Jun  8 17:09 WNBASchedule2.app/Contents/MacOS/WNBASchedule
+total 48
+drwxr-xr-x 3 james staff    96 Jun  8 17:09 en.lproj
+drwxr-xr-x 3 james staff    96 Jun  8 17:09 es.lproj
+-rw-r--r-- 1 james staff 46721 Jun  8 17:09 wnbalogo.png
+total 4
+-rw-r--r-- 1 james staff 1831 Jun  8 17:09 Localizable.strings
+-rw-r--r-- 1 james staff 1831 Jun  8 17:09 WNBASchedule2.app/Contents/Resources/en.lproj/Localizable.strings
+total 4
+-rw-r--r-- 1 james staff 2017 Jun  8 17:09 Localizable.strings
+-rw-r--r-- 1 james staff 2017 Jun  8 17:09 WNBASchedule2.app/Contents/Resources/es.lproj/Localizable.strings
+-rw-r--r-- 1 james staff 46721 Jun  8 17:09 WNBASchedule2.app/Contents/Resources/wnbalogo.png
+-rw-r--r-- 1 james staff 560 Jun  8 17:09 WNBASchedule2.app/Contents/Info.plist

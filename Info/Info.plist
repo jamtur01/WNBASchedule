@@ -3,13 +3,13 @@
 <plist version="1.0">
 <dict>
     <key>CFBundleIdentifier</key>
-    <string>com.example.WNBASchedule</string>
+    <string>net.kartar.WNBASchedule</string>
     <key>CFBundleName</key>
     <string>WNBASchedule</string>
     <key>CFBundleVersion</key>
-    <string>1.3.0</string>
+    <string>1.5.0</string>
     <key>CFBundleShortVersionString</key>
-    <string>1.3.0</string>
+    <string>1.5.0</string>
     <key>LSMinimumSystemVersion</key>
     <string>12.0</string>
     <key>LSUIElement</key>

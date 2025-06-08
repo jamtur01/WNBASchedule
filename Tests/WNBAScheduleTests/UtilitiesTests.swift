@@ -115,8 +115,7 @@ final class UtilitiesTests: XCTestCase {
         // Clean up
         memoryAudit.stopTracking(retainedObject)
     }
-    
-    
+
     func testCurrentMemoryUsage() {
         let memoryAudit = MemoryAudit.shared
         

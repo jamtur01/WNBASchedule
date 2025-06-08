@@ -120,7 +120,7 @@ struct Game: Codable, Identifiable {
     
     /// The game time in the user's local timezone
     var localGameTime: Date {
-        let logger = Logger(subsystem: "com.wnbaschedule", category: "Game")
+        let logger = Logger(subsystem: "net.kartar.wnbaschedule", category: "Game")
         
         // Use the timestamp as primary source
         // NBA API provides timestamps in milliseconds
@@ -128,7 +128,9 @@ struct Game: Codable, Identifiable {
         
         if let date = utcTime.toISODate(region: Region.UTC) {
             if abs(date.date.timeIntervalSince(timestampDate)) > 300 { // 5 minute difference
-                logger.warning("Significant difference between timestamp date (\(timestampDate)) and UTC string date (\(date.date))")
+                logger.warning(
+                    "Timestamp (\(timestampDate)) and UTC date (\(date.date)) differ by more than 5 minutes"
+                )
             }
             return timestampDate
         } else {
@@ -147,7 +149,7 @@ struct Game: Codable, Identifiable {
             return localGameTime.toSwiftDate()
         } else {
             // Use Eastern time (NBA's default)
-            let region = Region.init(zone: Zones.americaNewYork)
+            let region = Region(zone: Zones.americaNewYork)
             return localGameTime.in(region: region)
         }
     }
@@ -242,11 +244,11 @@ extension Game {
             )
         }
         if let providers = providers {
-            if let p = providers.first(where: { !$0.broadcasterVideoLink.isEmpty }) {
+            if let provider = providers.first(where: { !$0.broadcasterVideoLink.isEmpty }) {
                 return BroadcastProviderInfo(
-                    displayName: p.broadcasterDisplay,
-                    abbreviation: p.broadcasterAbbreviation,
-                    videoLink: p.broadcasterVideoLink
+                    displayName: provider.broadcasterDisplay,
+                    abbreviation: provider.broadcasterAbbreviation,
+                    videoLink: provider.broadcasterVideoLink
                 )
             }
         }

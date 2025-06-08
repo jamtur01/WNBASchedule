@@ -4,7 +4,7 @@ import os.log
 /// A utility for handling localization in the app
 enum Localization {
     /// The logger for localization-related logs
-    private static let logger = Logger(subsystem: "com.wnbaschedule", category: "Localization")
+    private static let logger = Logger(subsystem: "net.kartar.wnbaschedule", category: "Localization")
     
     /// Returns a localized string for the given key
     /// - Parameters:
@@ -12,8 +12,8 @@ enum Localization {
     ///   - comment: A comment to provide context for translators
     /// - Returns: The localized string
     static func string(for key: String, comment: String = "") -> String {
-        // Use Bundle.module for localization (for Swift Package resources)
-        let localizedString = Bundle.module.localizedString(forKey: key, value: nil, table: nil)
+        // Use Bundle.main for localization (resources copied to app bundle)
+        let localizedString = Bundle.main.localizedString(forKey: key, value: nil, table: nil)
         
         // Log if we're falling back to the key (indicates missing translation)
         if localizedString == key {

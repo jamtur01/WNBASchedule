@@ -39,7 +39,7 @@ class APICache: APICacheProtocol {
     /// Current memory cache size in bytes
     private var currentMemoryCacheSize: Int = 0
     
-    private let logger = Logger(subsystem: "com.wnbaschedule", category: "APICache")
+    private let logger = Logger(subsystem: "net.kartar.wnbaschedule", category: "APICache")
     
     // MARK: - Cache Entry
     
@@ -268,8 +268,12 @@ class APICache: APICacheProtocol {
     }
     
     private func cacheDirectoryURL() -> URL {
-        let cacheDirectory = FileManager.default.urls(for: .cachesDirectory, in: .userDomainMask).first!
-        return cacheDirectory.appendingPathComponent("com.wnbaschedule.apicache", isDirectory: true)
+        guard let cacheDirectory = FileManager.default.urls(for: .cachesDirectory, in: .userDomainMask).first else {
+            logger.error("Could not find caches directory; using temporary directory for cache.")
+            return URL(fileURLWithPath: NSTemporaryDirectory(), isDirectory: true)
+                .appendingPathComponent("net.kartar.wnbaschedule.apicache", isDirectory: true)
+        }
+        return cacheDirectory.appendingPathComponent("net.kartar.wnbaschedule.apicache", isDirectory: true)
     }
     
     private func cacheFileURL(for key: String) -> URL {

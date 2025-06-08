@@ -54,7 +54,7 @@ class NBAClient: NBAClientProtocol {
     private let baseURL: String
     private let session: URLSessionProtocol
     private let cache: APICacheProtocol
-    private let logger = Logger(subsystem: "com.wnbaschedule", category: "NBAClient")
+    private let logger = Logger(subsystem: "net.kartar.wnbaschedule", category: "NBAClient")
     
     // Cache configuration
     private let cacheExpirationInterval: TimeInterval = 3600 // 1 hour
@@ -166,8 +166,7 @@ class NBAClient: NBAClientProtocol {
                 // Calculate delay with exponential backoff
                 let delay = retryDelay * pow(2.0, Double(retryCount))
                 logger.info("Retrying request (attempt \(retryCount + 1) of \(self.maxRetries)) after \(delay) seconds")
-                
-                
+                        
                 // Wait before retrying
                 try await Task.sleep(nanoseconds: UInt64(delay * 1_000_000_000))
                 

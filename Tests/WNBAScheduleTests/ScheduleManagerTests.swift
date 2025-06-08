@@ -4,9 +4,9 @@ import XCTest
 final class ScheduleManagerTests: XCTestCase {
     // MARK: - Properties
     
-    private var mockClient: MockNBAClient!
-    private var mockUserPreferences: MockUserPreferences!
-    private var scheduleManager: ScheduleManager!
+    private var mockClient: MockNBAClient?
+    private var mockUserPreferences: MockUserPreferences?
+    private var scheduleManager: ScheduleManager?
     
     // MARK: - Setup & Teardown
     
@@ -14,7 +14,9 @@ final class ScheduleManagerTests: XCTestCase {
         super.setUp()
         mockClient = MockNBAClient()
         mockUserPreferences = MockUserPreferences()
-        scheduleManager = ScheduleManager(client: mockClient, userPreferences: mockUserPreferences)
+        if let mockClient = mockClient, let mockUserPreferences = mockUserPreferences {
+            scheduleManager = ScheduleManager(client: mockClient, userPreferences: mockUserPreferences)
+        }
     }
     
     override func tearDown() {
@@ -30,13 +32,17 @@ final class ScheduleManagerTests: XCTestCase {
         // Setup test data
         let teamAbbr = "NYL"
         let mockResponse = createMockScheduleResponse()
-        mockClient.mockScheduleResponse = mockResponse
+        mockClient?.mockScheduleResponse = mockResponse
         
         // Execute
+        guard let scheduleManager = scheduleManager else {
+            XCTFail("scheduleManager not initialized")
+            return
+        }
         let games = try await scheduleManager.fetchGames(forTeam: teamAbbr)
         
         // Verify
-        XCTAssertEqual(mockClient.lastFetchedSeason, String(Calendar.current.component(.year, from: Date())))
+        XCTAssertEqual(mockClient?.lastFetchedSeason, String(Calendar.current.component(.year, from: Date())))
         XCTAssertEqual(games.pastGames.count, 1)
         XCTAssertEqual(games.upcomingGames.count, 1)
         
@@ -54,13 +60,17 @@ final class ScheduleManagerTests: XCTestCase {
         let teamAbbr = "NYL"
         let season = "2024"
         let mockResponse = createMockScheduleResponse()
-        mockClient.mockScheduleResponse = mockResponse
+        mockClient?.mockScheduleResponse = mockResponse
         
         // Execute
+        guard let scheduleManager = scheduleManager else {
+            XCTFail("scheduleManager not initialized")
+            return
+        }
         let games = try await scheduleManager.fetchGames(forTeam: teamAbbr, season: season)
         
         // Verify
-        XCTAssertEqual(mockClient.lastFetchedSeason, season)
+        XCTAssertEqual(mockClient?.lastFetchedSeason, season)
         XCTAssertEqual(games.pastGames.count, 1)
         XCTAssertEqual(games.upcomingGames.count, 1)
     }
@@ -68,12 +78,16 @@ final class ScheduleManagerTests: XCTestCase {
     func testFilterGamesRespectsPastGamesLimit() async throws {
         // Setup test data with multiple past games
         let teamAbbr = "NYL"
-        mockUserPreferences.pastGamesToShow = 2
+        mockUserPreferences?.pastGamesToShow = 2
         
         let mockResponse = createMockScheduleResponseWithMultiplePastGames(count: 5)
-        mockClient.mockScheduleResponse = mockResponse
+        mockClient?.mockScheduleResponse = mockResponse
         
         // Execute
+        guard let scheduleManager = scheduleManager else {
+            XCTFail("scheduleManager not initialized")
+            return
+        }
         let games = try await scheduleManager.fetchGames(forTeam: teamAbbr)
         
         // Verify
@@ -83,12 +97,16 @@ final class ScheduleManagerTests: XCTestCase {
     func testFilterGamesRespectsUpcomingGamesLimit() async throws {
         // Setup test data with multiple upcoming games
         let teamAbbr = "NYL"
-        mockUserPreferences.upcomingGamesToShow = 3
+        mockUserPreferences?.upcomingGamesToShow = 3
         
         let mockResponse = createMockScheduleResponseWithMultipleUpcomingGames(count: 5)
-        mockClient.mockScheduleResponse = mockResponse
+        mockClient?.mockScheduleResponse = mockResponse
         
         // Execute
+        guard let scheduleManager = scheduleManager else {
+            XCTFail("scheduleManager not initialized")
+            return
+        }
         let games = try await scheduleManager.fetchGames(forTeam: teamAbbr)
         
         // Verify
@@ -99,13 +117,20 @@ final class ScheduleManagerTests: XCTestCase {
         // Setup test data
         let teamAbbr = "NYL"
         let mockResponse = createMockScheduleResponse()
-        mockClient.mockScheduleResponse = mockResponse
+        mockClient?.mockScheduleResponse = mockResponse
         
         // Execute
+        guard let scheduleManager = scheduleManager else {
+            XCTFail("scheduleManager not initialized")
+            return
+        }
         let games = try await scheduleManager.fetchGames(forTeam: teamAbbr)
-        
+
         // Verify MarkedGame properties for home game
-        let homeGame = games.pastGames.first!
+        guard let homeGame = games.pastGames.first else {
+            XCTFail("No past games found")
+            return
+        }
         XCTAssertTrue(homeGame.isHomeGame)
         XCTAssertTrue(homeGame.teamIsHome)
         XCTAssertFalse(homeGame.teamIsAway)
@@ -113,9 +138,12 @@ final class ScheduleManagerTests: XCTestCase {
         XCTAssertEqual(homeGame.teamScore, 85)
         XCTAssertEqual(homeGame.opponentScore, 80)
         XCTAssertTrue(homeGame.teamWon)
-        
+
         // Verify MarkedGame properties for away game
-        let awayGame = games.upcomingGames.first!
+        guard let awayGame = games.upcomingGames.first else {
+            XCTFail("No upcoming games found")
+            return
+        }
         XCTAssertFalse(awayGame.isHomeGame)
         XCTAssertFalse(awayGame.teamIsHome)
         XCTAssertTrue(awayGame.teamIsAway)
@@ -130,8 +158,10 @@ final class ScheduleManagerTests: XCTestCase {
             id: 1,
             gid: "1022500001",
             timestamp: Date().addingTimeInterval(-86400).timeIntervalSince1970 * 1000, // Yesterday
-            home: createTeam(abbr: "NYL", score: 85),
-            visitor: createTeam(abbr: "LVA", score: 80),
+            teams: (
+                home: createTeam(abbr: "NYL", score: 85),
+                visitor: createTeam(abbr: "LVA", score: 80)
+            ),
             state: 3 // Completed
         )
         
@@ -140,8 +170,10 @@ final class ScheduleManagerTests: XCTestCase {
             id: 2,
             gid: "1022500002",
             timestamp: Date().addingTimeInterval(86400).timeIntervalSince1970 * 1000, // Tomorrow
-            home: createTeam(abbr: "CON", score: nil),
-            visitor: createTeam(abbr: "NYL", score: nil),
+            teams: (
+                home: createTeam(abbr: "CON", score: nil),
+                visitor: createTeam(abbr: "NYL", score: nil)
+            ),
             state: 0 // Upcoming
         )
         
@@ -157,8 +189,10 @@ final class ScheduleManagerTests: XCTestCase {
                 id: i,
                 gid: "1022500\(i)",
                 timestamp: Date().addingTimeInterval(Double(-86400 * (i + 1))).timeIntervalSince1970 * 1000,
-                home: createTeam(abbr: "NYL", score: 85 + i),
-                visitor: createTeam(abbr: "LVA", score: 80),
+                teams: (
+                    home: createTeam(abbr: "NYL", score: 85 + i),
+                    visitor: createTeam(abbr: "LVA", score: 80)
+                ),
                 state: 3 // Completed
             )
             games.append(game)
@@ -176,8 +210,10 @@ final class ScheduleManagerTests: XCTestCase {
                 id: i,
                 gid: "1022500\(i)",
                 timestamp: Date().addingTimeInterval(Double(86400 * (i + 1))).timeIntervalSince1970 * 1000,
-                home: createTeam(abbr: "CON", score: nil),
-                visitor: createTeam(abbr: "NYL", score: nil),
+                teams: (
+                    home: createTeam(abbr: "CON", score: nil),
+                    visitor: createTeam(abbr: "NYL", score: nil)
+                ),
                 state: 0 // Upcoming
             )
             games.append(game)
@@ -186,19 +222,25 @@ final class ScheduleManagerTests: XCTestCase {
         return ScheduleResponse(results: Results(schedule: games))
     }
     
-    private func createGame(id: Int, gid: String, timestamp: TimeInterval, home: Team, visitor: Team, state: Int) -> Game {
+    private func createGame(
+        id: Int,
+        gid: String,
+        timestamp: TimeInterval,
+        teams: (home: Team, visitor: Team),
+        state: Int
+    ) -> Game {
         let date = Date(timeIntervalSince1970: timestamp / 1000)
         let formatter = ISO8601DateFormatter()
         formatter.formatOptions = [.withInternetDateTime]
         let utcTime = formatter.string(from: date)
-        
+
         return Game(
             gid: gid,
             easternTime: utcTime,
             utcTime: utcTime,
             timestamp: Int64(timestamp),
-            home: home,
-            visitor: visitor,
+            home: teams.home,
+            visitor: teams.visitor,
             state: state,
             id: id,
             type: "game",

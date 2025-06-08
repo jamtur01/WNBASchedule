@@ -71,13 +71,16 @@ struct MenuView: View {
                     .padding(.top, 5)
                     .fixedSize(horizontal: true, vertical: false)
                     Spacer(minLength: 8)
-                    Button(action: {
-                        showingTeamPicker.toggle()
-                    }) {
-                        Image(systemName: "gear")
-                            .font(.system(size: 12))
-                            .foregroundColor(.gray)
-                    }
+                    Button(
+                        action: {
+                            showingTeamPicker.toggle()
+                        },
+                        label: {
+                            Image(systemName: "gear")
+                                .font(.system(size: 12))
+                                .foregroundColor(.gray)
+                        }
+                    )
                     .buttonStyle(PlainButtonStyle())
                 }
                 // Team picker (shown when settings button is clicked)
@@ -134,43 +137,56 @@ struct MenuView: View {
                     // Buttons next to each other
                     HStack(spacing: 8) {
                         // "All Teams" button
-                        Button(action: {
-                            changeTeamAction("ALL")
-                        }) {
-                            Text("All Teams".localized)
-                                .font(.system(size: 13, weight: .bold))
-                                .foregroundColor(teamAbbreviation == "ALL" ? .white : Color(hex: "#FA4616"))
-                                .padding(.horizontal, 10)
-                                .padding(.vertical, 5)
-                                .background(teamAbbreviation == "ALL" ? Color(hex: "#FA4616")! : Color(hex: "#FA4616")!.opacity(0.15))
-                                .cornerRadius(5)
-                        }
+                        Button(
+                            action: {
+                                changeTeamAction("ALL")
+                            },
+                            label: {
+                                Text("All Teams".localized)
+                                    .font(.system(size: 13, weight: .bold))
+                                    .foregroundColor(teamAbbreviation == "ALL" ? .white : Color(hex: "#FA4616"))
+                                    .padding(.horizontal, 10)
+                                    .padding(.vertical, 5)
+                                    .background(
+                                        teamAbbreviation == "ALL"
+                                            ? (Color(hex: "#FA4616") ?? .orange)
+                                            : (Color(hex: "#FA4616") ?? .orange).opacity(0.15)
+                                    )
+                                    .cornerRadius(5)
+                            }
+                        )
                         .buttonStyle(PlainButtonStyle())
 
                         // Refresh button - positive action (blue)
-                        Button(action: {
-                            refreshAction()
-                        }) {
-                            Text("action.refresh".localized)
-                                .foregroundColor(.white)
-                                .padding(.horizontal, 10)
-                                .padding(.vertical, 4)
-                                .background(teamColor)
-                                .cornerRadius(4)
-                        }
+                        Button(
+                            action: {
+                                refreshAction()
+                            },
+                            label: {
+                                Text("action.refresh".localized)
+                                    .foregroundColor(.white)
+                                    .padding(.horizontal, 10)
+                                    .padding(.vertical, 4)
+                                    .background(teamColor)
+                                    .cornerRadius(4)
+                            }
+                        )
                         .buttonStyle(PlainButtonStyle()) // Remove default button styling
 
                         // Quit button - more subtle (gray)
-                        Button(action: {
-                            NSApplication.shared.terminate(nil)
-                        }) {
-                            Text("action.quit".localized)
-                                .foregroundColor(.white)
-                                .padding(.horizontal, 10)
-                                .padding(.vertical, 4)
-                                .background(Color.gray)
-                                .cornerRadius(4)
-                        }
+                        Button(
+                            action: {
+                                NSApplication.shared.terminate(nil)
+                            },
+                            label: {
+                                Text("action.quit".localized)
+                                    .foregroundColor(.white)
+                                    .padding(.horizontal, 10)
+                                    .padding(.vertical, 4)
+                                    .background(Color.gray)
+                                    .cornerRadius(4)
+                            }
+                        )
                         .buttonStyle(PlainButtonStyle()) // Remove default button styling
                     }
 
@@ -190,9 +206,6 @@ struct MenuView: View {
         }
     }
 }
-    
-
-            
 
 // MARK: - Team Picker View
 struct TeamPickerView: View {
@@ -223,25 +236,28 @@ struct TeamPickerView: View {
             ScrollView(.vertical, showsIndicators: true) {
                 VStack(alignment: .leading, spacing: 4) {
                     ForEach(filteredTeams, id: \.abbreviation) { team in
-                        Button(action: {
-                            onTeamSelected(team.abbreviation)
-                        }) {
-                            HStack {
-                                Text(team.fullName)
-                                    .font(.system(size: 13))
-                                    .foregroundColor(.primary)
-                                Spacer()
-                                if team.abbreviation == selectedTeam {
-                                    Image(systemName: "checkmark")
-                                        .font(.system(size: 10))
-                                        .foregroundColor(.blue)
+                        Button(
+                            action: {
+                                onTeamSelected(team.abbreviation)
+                            },
+                            label: {
+                                HStack {
+                                    Text(team.fullName)
+                                        .font(.system(size: 13))
+                                        .foregroundColor(.primary)
+                                    Spacer()
+                                    if team.abbreviation == selectedTeam {
+                                        Image(systemName: "checkmark")
+                                            .font(.system(size: 10))
+                                            .foregroundColor(.blue)
+                                    }
                                 }
+                                .padding(.vertical, 7)
+                                .padding(.horizontal, 8)
+                                .background(team.abbreviation == selectedTeam ? Color.blue.opacity(0.18) : Color.clear)
+                                .cornerRadius(6)
                             }
-                            .padding(.vertical, 7)
-                            .padding(.horizontal, 8)
-                            .background(team.abbreviation == selectedTeam ? Color.blue.opacity(0.18) : Color.clear)
-                            .cornerRadius(6)
-                        }
+                        )
                         .buttonStyle(PlainButtonStyle())
                     }
                 }
@@ -345,15 +361,20 @@ struct UpcomingGameRow: View {
             Spacer(minLength: 2)
 
             // Broadcast icon as a separate button (if available)
-            if let provider = game.primaryBroadcastProvider, !provider.videoLink.isEmpty, let url = URL(string: provider.videoLink) {
-                Button(action: {
-                    NSWorkspace.shared.open(url)
-                }) {
-                    Image(systemName: provider.isLeaguePass ? "play.tv" : "tv")
-                        .foregroundColor(.purple)
-                        .font(.system(size: 18))
-                        .frame(width: 20, alignment: .trailing)
-                }
+            if let provider = game.primaryBroadcastProvider,
+               !provider.videoLink.isEmpty,
+               let url = URL(string: provider.videoLink) {
+                Button(
+                    action: {
+                        NSWorkspace.shared.open(url)
+                    },
+                    label: {
+                        Image(systemName: provider.isLeaguePass ? "play.tv" : "tv")
+                            .foregroundColor(.purple)
+                            .font(.system(size: 18))
+                            .frame(width: 20, alignment: .trailing)
+                    }
+                )
                 .buttonStyle(PlainButtonStyle())
             } else {
                 // Reserve width for alignment
