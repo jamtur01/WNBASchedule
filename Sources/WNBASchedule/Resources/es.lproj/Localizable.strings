@@ -11,7 +11,7 @@
 "app.version" = "v%@";
 
 // MARK: - Menu
-"menu.title" = "CALENDARIO DE %@";
+"menu.title" = "%@ Calendario";
 "menu.section.previous" = "PARTIDOS ANTERIORES";
 "menu.section.upcoming" = "PRÓXIMOS PARTIDOS";
 "menu.no_games" = "No se encontraron partidos para %@";
@@ -46,3 +46,18 @@
 "error.cache" = "Error de caché: %@";
 "error.rate_limited" = "Limitado por la API";
 "error.server" = "Error del servidor: %@";
+// === Añadido para consistencia de localización UI ===
+"WNBA" = "WNBA";
+"SCHEDULE" = "CALENDARIO";
+"PREVIOUS_GAMES" = "PARTIDOS ANTERIORES";
+"UPCOMING_GAMES" = "PRÓXIMOS PARTIDOS";
+"ALL_TEAMS" = "Todos los equipos";
+"REFRESH" = "Actualizar";
+"QUIT" = "Salir";
+"VERSION_FORMAT" = "v%@";
+"SELECT_TEAM" = "Seleccionar equipo";
+"AT" = "vs";
+"WNBA_ALL_TEAMS" = "WNBA: TODOS LOS EQUIPOS";
+"NO_GAMES_SCHEDULED" = "No hay partidos programados en este rango.";
+// Añadido para la localización del título "Todos los equipos"
+"menu.title.all_teams" = "WNBA Todos los equipos";

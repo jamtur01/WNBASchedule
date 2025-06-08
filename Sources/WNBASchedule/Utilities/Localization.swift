@@ -12,7 +12,8 @@ enum Localization {
     ///   - comment: A comment to provide context for translators
     /// - Returns: The localized string
     static func string(for key: String, comment: String = "") -> String {
-        let localizedString = NSLocalizedString(key, comment: comment)
+        // Use Bundle.module for localization (for Swift Package resources)
+        let localizedString = Bundle.module.localizedString(forKey: key, value: nil, table: nil)
         
         // Log if we're falling back to the key (indicates missing translation)
         if localizedString == key {

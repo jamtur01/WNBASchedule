@@ -32,7 +32,7 @@ struct AllTeamsMenuView: View {
                     .resizable()
                     .aspectRatio(contentMode: .fit)
                     .frame(width: 26, height: 26)
-                Text("WNBA: ALL TEAMS")
+                Text("menu.title.all_teams".localized)
                     .font(.system(size: 16, weight: .bold))
                     .foregroundColor(Color(hex: "#FA4616") ?? .orange)
                     .lineLimit(1)
@@ -67,7 +67,7 @@ struct AllTeamsMenuView: View {
 
             // Upcoming Games Section
             if !upcomingGames.isEmpty {
-                Text("UPCOMING GAMES")
+                Text("menu.section.upcoming".localized)
                     .font(.system(size: 14, weight: .bold))
                     .foregroundColor(Color(hex: "#FA4616") ?? .orange)
                     .padding(.top, 5)
@@ -78,7 +78,7 @@ struct AllTeamsMenuView: View {
 
                 Divider()
             } else {
-                Text("No games scheduled in this range.")
+                Text("No hay partidos programados en este rango.")
                     .font(.system(size: 13))
                     .foregroundColor(.gray)
                     .padding(.top, 8)
@@ -96,7 +96,7 @@ struct AllTeamsMenuView: View {
                     Button(action: {
                         refreshAction()
                     }) {
-                        Text("Refresh")
+                        Text("action.refresh".localized)
                             .foregroundColor(.white)
                             .padding(.horizontal, 10)
                             .padding(.vertical, 4)
@@ -108,7 +108,7 @@ struct AllTeamsMenuView: View {
                     Button(action: {
                         NSApplication.shared.terminate(nil)
                     }) {
-                        Text("Quit")
+                        Text("action.quit".localized)
                             .foregroundColor(.white)
                             .padding(.horizontal, 10)
                             .padding(.vertical, 4)
@@ -120,7 +120,7 @@ struct AllTeamsMenuView: View {
 
                 Spacer()
 
-                Text("v\(Version.version)")
+                Text(String(format: "app.version".localized, Version.version))
                     .font(.system(size: 9))
                     .foregroundColor(.gray.opacity(0.6))
             }

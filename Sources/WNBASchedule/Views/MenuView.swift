@@ -58,13 +58,18 @@ struct MenuView: View {
             VStack(alignment: .leading, spacing: 5) {
                 // Title Row
                 HStack(alignment: .center, spacing: 8) {
-                    Text("\(teamInfo?.fullName.uppercased() ?? "WNBA") SCHEDULE")
-                        .font(.system(size: 16, weight: .bold))
-                        .foregroundColor(teamColor)
-                        .lineLimit(1)
-                        .layoutPriority(1)
-                        .padding(.top, 5)
-                        .fixedSize(horizontal: true, vertical: false)
+                    Text(
+                        String(
+                            format: "menu.title".localized,
+                            teamInfo?.fullName ?? "WNBA"
+                        )
+                    )
+                    .font(.system(size: 16, weight: .bold))
+                    .foregroundColor(teamColor)
+                    .lineLimit(1)
+                    .layoutPriority(1)
+                    .padding(.top, 5)
+                    .fixedSize(horizontal: true, vertical: false)
                     Spacer(minLength: 8)
                     Button(action: {
                         showingTeamPicker.toggle()
@@ -92,7 +97,7 @@ struct MenuView: View {
 
                 // Previous Games Section
                 if !games.pastGames.isEmpty {
-                    Text("PREVIOUS GAMES")
+                    Text("menu.section.previous".localized)
                         .font(.system(size: 14, weight: .bold))
                         .foregroundColor(teamColor)
                         .padding(.top, 5)
@@ -106,7 +111,7 @@ struct MenuView: View {
 
                 // Upcoming Games Section
                 if !games.upcomingGames.isEmpty {
-                    Text("UPCOMING GAMES")
+                    Text("menu.section.upcoming".localized)
                         .font(.system(size: 14, weight: .bold))
                         .foregroundColor(teamColor)
                         .padding(.top, 5)
@@ -132,7 +137,7 @@ struct MenuView: View {
                         Button(action: {
                             changeTeamAction("ALL")
                         }) {
-                            Text("All Teams")
+                            Text("All Teams".localized)
                                 .font(.system(size: 13, weight: .bold))
                                 .foregroundColor(teamAbbreviation == "ALL" ? .white : Color(hex: "#FA4616"))
                                 .padding(.horizontal, 10)
@@ -146,7 +151,7 @@ struct MenuView: View {
                         Button(action: {
                             refreshAction()
                         }) {
-                            Text("Refresh")
+                            Text("action.refresh".localized)
                                 .foregroundColor(.white)
                                 .padding(.horizontal, 10)
                                 .padding(.vertical, 4)
@@ -159,7 +164,7 @@ struct MenuView: View {
                         Button(action: {
                             NSApplication.shared.terminate(nil)
                         }) {
-                            Text("Quit")
+                            Text("action.quit".localized)
                                 .foregroundColor(.white)
                                 .padding(.horizontal, 10)
                                 .padding(.vertical, 4)
@@ -172,7 +177,7 @@ struct MenuView: View {
                     Spacer()
 
                     // Version as a small, subtle text on the far right
-                    Text("v\(Version.version)")
+                    Text(String(format: "app.version".localized, Version.version))
                         .font(.system(size: 9))
                         .foregroundColor(.gray.opacity(0.6))
                 }
@@ -211,7 +216,7 @@ struct TeamPickerView: View {
 
     var body: some View {
         VStack(alignment: .leading, spacing: 8) {
-            Text("Select Team")
+            Text("menu.select_team".localized)
                 .font(.system(size: 13, weight: .bold))
                 .padding(.bottom, 3)
 
@@ -279,7 +284,7 @@ struct PreviousGameRow: View {
                     Text("\(game.visitor.abbr) \(game.visitor.score ?? 0)")
                         .font(.system(size: 13, weight: .bold))
                         .foregroundColor(homeWon ? .red : .green)
-                    Text("at")
+                    Text("vs")
                         .font(.system(size: 13))
                         .foregroundColor(.gray)
                     Text("\(game.home.abbr) \(game.home.score ?? 0)")
@@ -322,7 +327,7 @@ struct UpcomingGameRow: View {
                         Text(game.visitor.abbr)
                             .font(.system(size: 13, weight: .bold))
                             .foregroundColor(.primary)
-                        Text("at")
+                        Text("vs")
                             .font(.system(size: 13))
                             .foregroundColor(.gray)
                         Text(game.home.abbr)

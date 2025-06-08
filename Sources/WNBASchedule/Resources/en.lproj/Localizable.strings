@@ -11,7 +11,7 @@
 "app.version" = "v%@";
 
 // MARK: - Menu
-"menu.title" = "%@ SCHEDULE";
+"menu.title" = "%@ Schedule";
 "menu.section.previous" = "PREVIOUS GAMES";
 "menu.section.upcoming" = "UPCOMING GAMES";
 "menu.no_games" = "No games found for %@";
@@ -46,3 +46,18 @@
 "error.cache" = "Cache error: %@";
 "error.rate_limited" = "Rate limited by the API";
 "error.server" = "Server error: %@";
+// === Added for UI localization consistency ===
+"WNBA" = "WNBA";
+"SCHEDULE" = "SCHEDULE";
+"PREVIOUS_GAMES" = "PREVIOUS GAMES";
+"UPCOMING_GAMES" = "UPCOMING GAMES";
+"ALL_TEAMS" = "All Teams";
+"REFRESH" = "Refresh";
+"QUIT" = "Quit";
+"VERSION_FORMAT" = "v%@";
+"SELECT_TEAM" = "Select Team";
+"AT" = "at";
+"WNBA_ALL_TEAMS" = "WNBA: ALL TEAMS";
+"NO_GAMES_SCHEDULED" = "No games scheduled in this range.";
+// Added for All Teams menu title localization
+"menu.title.all_teams" = "WNBA All Teams";
