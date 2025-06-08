@@ -91,3 +91,5 @@ Icon
 !.vscode/launch.json
 !.vscode/extensions.json
 *.code-workspace
+
+WNBASchedule.app
