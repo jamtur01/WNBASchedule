@@ -269,47 +269,54 @@ struct UpcomingGameRow: View {
     }
     
     var body: some View {
-        Button(action: openGameURL) {
-            HStack(alignment: .center, spacing: 0) {
-                // Date/time left-aligned, gray, fixed width (match previous games)
-                Text("\(game.formattedGameDate) \(game.formattedGameTime)")
-                    .font(.system(size: 13))
-                    .foregroundColor(.gray)
-                    .frame(width: 160, alignment: .leading)
-
-                Spacer(minLength: 2)
-
-                // Matchup centered, bold, black, wide enough to never wrap
-                HStack(spacing: 5) {
-                    Text(game.visitor.abbr)
-                        .font(.system(size: 13, weight: .bold))
-                        .foregroundColor(.primary)
-                    Text("at")
+        HStack(alignment: .center, spacing: 0) {
+            // Main row (date/time + matchup): opens main WNBA game link
+            Button(action: openGameURL) {
+                HStack(spacing: 0) {
+                    Text("\(game.formattedGameDate) \(game.formattedGameTime)")
                         .font(.system(size: 13))
                         .foregroundColor(.gray)
-                    Text(game.home.abbr)
-                        .font(.system(size: 13, weight: .bold))
-                        .foregroundColor(.primary)
+                        .frame(width: 160, alignment: .leading)
+
+                    Spacer(minLength: 2)
+
+                    HStack(spacing: 5) {
+                        Text(game.visitor.abbr)
+                            .font(.system(size: 13, weight: .bold))
+                            .foregroundColor(.primary)
+                        Text("at")
+                            .font(.system(size: 13))
+                            .foregroundColor(.gray)
+                        Text(game.home.abbr)
+                            .font(.system(size: 13, weight: .bold))
+                            .foregroundColor(.primary)
+                    }
+                    .frame(width: 110, alignment: .center)
+                    .lineLimit(1)
+                    .truncationMode(.tail)
                 }
-                .frame(width: 110, alignment: .center)
-                .lineLimit(1)
-                .truncationMode(.tail)
+            }
+            .buttonStyle(PlainButtonStyle())
+            // End main row
 
-                Spacer(minLength: 2)
+            Spacer(minLength: 2)
 
-                // Broadcast icon right-aligned if present
-                if let provider = game.primaryBroadcastProvider {
+            // Broadcast icon as a separate button (if available)
+            if let provider = game.primaryBroadcastProvider, !provider.videoLink.isEmpty, let url = URL(string: provider.videoLink) {
+                Button(action: {
+                    NSWorkspace.shared.open(url)
+                }) {
                     Image(systemName: provider.isLeaguePass ? "play.tv" : "tv")
                         .foregroundColor(.purple)
                         .font(.system(size: 18))
                         .frame(width: 20, alignment: .trailing)
-                } else {
-                    // Reserve width for alignment
-                    Color.clear.frame(width: 20)
                 }
+                .buttonStyle(PlainButtonStyle())
+            } else {
+                // Reserve width for alignment
+                Color.clear.frame(width: 20)
             }
         }
-        .buttonStyle(PlainButtonStyle())
         .padding(.vertical, 2)
     }
 }
