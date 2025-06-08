@@ -19,16 +19,17 @@ struct TeamManager {
     static let allTeams: [TeamInfo] = [
         TeamInfo(abbreviation: "ATL", fullName: "Atlanta Dream", city: "Atlanta", nickname: "Dream", primaryColor: "#C8102E"),
         TeamInfo(abbreviation: "CHI", fullName: "Chicago Sky", city: "Chicago", nickname: "Sky", primaryColor: "#418FDE"),
-        TeamInfo(abbreviation: "CON", fullName: "Connecticut Sun", city: "Connecticut", nickname: "Sun", primaryColor: "#DC4405"),
-        TeamInfo(abbreviation: "DAL", fullName: "Dallas Wings", city: "Dallas", nickname: "Wings", primaryColor: "#0C2340"),
-        TeamInfo(abbreviation: "IND", fullName: "Indiana Fever", city: "Indiana", nickname: "Fever", primaryColor: "#FFCD00"),
+        TeamInfo(abbreviation: "CON", fullName: "Connecticut Sun", city: "Connecticut", nickname: "Sun", primaryColor: "#FC4C02"),
+        TeamInfo(abbreviation: "DAL", fullName: "Dallas Wings", city: "Dallas", nickname: "Wings", primaryColor: "#C4D600"),
+        TeamInfo(abbreviation: "GSV", fullName: "Golden State Valkyries", city: "San Francisco", nickname: "Valkyries", primaryColor: "#AD96DC"),
+        TeamInfo(abbreviation: "IND", fullName: "Indiana Fever", city: "Indiana", nickname: "Fever", primaryColor: "#041E42"),
         TeamInfo(abbreviation: "LAS", fullName: "Los Angeles Sparks", city: "Los Angeles", nickname: "Sparks", primaryColor: "#702F8A"),
-        TeamInfo(abbreviation: "LVA", fullName: "Las Vegas Aces", city: "Las Vegas", nickname: "Aces", primaryColor: "#000000"),
-        TeamInfo(abbreviation: "MIN", fullName: "Minnesota Lynx", city: "Minnesota", nickname: "Lynx", primaryColor: "#0C2340"),
-        TeamInfo(abbreviation: "NYL", fullName: "New York Liberty", city: "New York", nickname: "Liberty", primaryColor: "#006BB6"),
-        TeamInfo(abbreviation: "PHX", fullName: "Phoenix Mercury", city: "Phoenix", nickname: "Mercury", primaryColor: "#201747"),
+        TeamInfo(abbreviation: "LVA", fullName: "Las Vegas Aces", city: "Las Vegas", nickname: "Aces", primaryColor: "#010101"),
+        TeamInfo(abbreviation: "MIN", fullName: "Minnesota Lynx", city: "Minnesota", nickname: "Lynx", primaryColor: "#236192"),
+        TeamInfo(abbreviation: "NYL", fullName: "New York Liberty", city: "New York", nickname: "Liberty", primaryColor: "#6ECEB2"),
+        TeamInfo(abbreviation: "PHX", fullName: "Phoenix Mercury", city: "Phoenix", nickname: "Mercury", primaryColor: "#211747"),
         TeamInfo(abbreviation: "SEA", fullName: "Seattle Storm", city: "Seattle", nickname: "Storm", primaryColor: "#2C5234"),
-        TeamInfo(abbreviation: "WAS", fullName: "Washington Mystics", city: "Washington", nickname: "Mystics", primaryColor: "#0C2340")
+        TeamInfo(abbreviation: "WAS", fullName: "Washington Mystics", city: "Washington", nickname: "Mystics", primaryColor: "#C8102E")
     ]
     
     /// Get team information by abbreviation
