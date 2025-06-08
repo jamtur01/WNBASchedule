@@ -82,15 +82,15 @@ class AppDelegate: NSObject, NSApplicationDelegate, @unchecked Sendable {
             } catch {
                 print("Error updating menu: \(error.localizedDescription)")
                 
-                // Create an error menu
-                let menu = NSMenu()
-                menu.addItem(NSMenuItem(title: "Error fetching WNBA schedule", action: nil, keyEquivalent: ""))
-                menu.addItem(NSMenuItem.separator())
-                menu.addItem(NSMenuItem(title: "Refresh", action: #selector(self.updateMenu), keyEquivalent: "r"))
-                menu.addItem(NSMenuItem.separator())
-                menu.addItem(NSMenuItem(title: "Quit", action: #selector(NSApplication.terminate(_:)), keyEquivalent: "q"))
-                
                 Task { @MainActor in
+                    // Create an error menu
+                    let menu = NSMenu()
+                    menu.addItem(NSMenuItem(title: "Error fetching WNBA schedule", action: nil, keyEquivalent: ""))
+                    menu.addItem(NSMenuItem.separator())
+                    menu.addItem(NSMenuItem(title: "Refresh", action: #selector(self.updateMenu), keyEquivalent: "r"))
+                    menu.addItem(NSMenuItem.separator())
+                    menu.addItem(NSMenuItem(title: "Quit", action: #selector(NSApplication.terminate(_:)), keyEquivalent: "q"))
+                    
                     self.statusItem?.menu = menu
                 }
             }
