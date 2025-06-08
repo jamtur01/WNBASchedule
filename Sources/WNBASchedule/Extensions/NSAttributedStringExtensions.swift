@@ -1,10 +1,34 @@
 import AppKit
 import Foundation
 
+/// Information for creating a game row
+struct GameRowInfo {
+    let date: String
+    let awayTeam: String
+    let awayScore: Int?
+    let homeTeam: String
+    let homeScore: Int?
+    let homeWon: Bool
+}
+
+/// Information for creating an upcoming game row
+struct UpcomingGameRowInfo {
+    let date: String
+    let time: String
+    let awayTeam: String
+    let homeTeam: String
+    let broadcast: String?
+}
+
 // Extension to make NSAttributedString creation cleaner
 extension NSAttributedString {
     /// Create an attributed string with the given text and attributes
-    static func styled(_ text: String, font: NSFont, color: NSColor, alignment: NSTextAlignment = .left, indent: CGFloat = 0, tabStops: [NSTextTab]? = nil) -> NSAttributedString {
+    static func styled(_ text: String,
+                      font: NSFont,
+                      color: NSColor,
+                      alignment: NSTextAlignment = .left,
+                      indent: CGFloat = 0,
+                      tabStops: [NSTextTab]? = nil) -> NSAttributedString {
         let paragraphStyle = NSMutableParagraphStyle()
         paragraphStyle.alignment = alignment
         paragraphStyle.firstLineHeadIndent = indent
@@ -55,7 +79,7 @@ extension NSAttributedString {
     }
     
     /// Create a game row with proper alignment
-    static func gameRow(date: String, awayTeam: String, awayScore: Int?, homeTeam: String, homeScore: Int?, homeWon: Bool) -> NSAttributedString {
+    static func gameRow(gameInfo: GameRowInfo) -> NSAttributedString {
         let tabStops = [NSTextTab(textAlignment: .left, location: 180)]
         
         let paragraphStyle = NSMutableParagraphStyle()
@@ -65,7 +89,7 @@ extension NSAttributedString {
         
         // Date with tab
         mutableString.append(NSAttributedString(
-            string: "\(date)\t",
+            string: "\(gameInfo.date)\t",
             attributes: [
                 .font: NSFont.systemFont(ofSize: 13, weight: .medium),
                 .foregroundColor: NSColor.darkGray,
@@ -74,9 +98,12 @@ extension NSAttributedString {
         ))
         
         // Away team with score
-        let awayColor = homeWon ? NSColor(red: 0.8, green: 0.0, blue: 0.0, alpha: 1.0) : NSColor(red: 0.0, green: 0.6, blue: 0.0, alpha: 1.0)
+        let awayColor = gameInfo.homeWon ?
+            NSColor(red: 0.8, green: 0.0, blue: 0.0, alpha: 1.0) :
+            NSColor(red: 0.0, green: 0.6, blue: 0.0, alpha: 1.0)
+            
         mutableString.append(NSAttributedString(
-            string: "\(awayTeam) \(awayScore ?? 0)",
+            string: "\(gameInfo.awayTeam) \(gameInfo.awayScore ?? 0)",
             attributes: [
                 .font: NSFont.boldSystemFont(ofSize: 13),
                 .foregroundColor: awayColor
@@ -93,9 +120,12 @@ extension NSAttributedString {
         ))
         
         // Home team with score
-        let homeColor = homeWon ? NSColor(red: 0.0, green: 0.6, blue: 0.0, alpha: 1.0) : NSColor(red: 0.8, green: 0.0, blue: 0.0, alpha: 1.0)
+        let homeColor = gameInfo.homeWon ?
+            NSColor(red: 0.0, green: 0.6, blue: 0.0, alpha: 1.0) :
+            NSColor(red: 0.8, green: 0.0, blue: 0.0, alpha: 1.0)
+            
         mutableString.append(NSAttributedString(
-            string: "\(homeTeam) \(homeScore ?? 0)",
+            string: "\(gameInfo.homeTeam) \(gameInfo.homeScore ?? 0)",
             attributes: [
                 .font: NSFont.boldSystemFont(ofSize: 13),
                 .foregroundColor: homeColor
@@ -106,7 +136,7 @@ extension NSAttributedString {
     }
     
     /// Create an upcoming game row with proper alignment
-    static func upcomingGameRow(date: String, time: String, awayTeam: String, homeTeam: String, broadcast: String? = nil) -> NSAttributedString {
+    static func upcomingGameRow(gameInfo: UpcomingGameRowInfo) -> NSAttributedString {
         let tabStops = [NSTextTab(textAlignment: .left, location: 180)]
         
         let paragraphStyle = NSMutableParagraphStyle()
@@ -116,7 +146,7 @@ extension NSAttributedString {
         
         // Date and time with tab
         mutableString.append(NSAttributedString(
-            string: "\(date) at \(time)\t",
+            string: "\(gameInfo.date) at \(gameInfo.time)\t",
             attributes: [
                 .font: NSFont.systemFont(ofSize: 13, weight: .medium),
                 .foregroundColor: NSColor.darkGray,
@@ -126,7 +156,7 @@ extension NSAttributedString {
         
         // Away team
         mutableString.append(NSAttributedString(
-            string: "\(awayTeam)",
+            string: "\(gameInfo.awayTeam)",
             attributes: [
                 .font: NSFont.boldSystemFont(ofSize: 13),
                 .foregroundColor: NSColor.black
@@ -144,7 +174,7 @@ extension NSAttributedString {
         
         // Home team
         mutableString.append(NSAttributedString(
-            string: "\(homeTeam)",
+            string: "\(gameInfo.homeTeam)",
             attributes: [
                 .font: NSFont.boldSystemFont(ofSize: 13),
                 .foregroundColor: NSColor.black
@@ -152,7 +182,7 @@ extension NSAttributedString {
         ))
         
         // Broadcast info if available
-        if let broadcast = broadcast {
+        if let broadcast = gameInfo.broadcast {
             mutableString.append(NSAttributedString(
                 string: " • \(broadcast)",
                 attributes: [

@@ -1,0 +1,48 @@
+/* 
+  Localizable.strings
+  WNBASchedule
+
+  Created on 6/8/2025.
+  
+*/
+
+// MARK: - General
+"app.name" = "Calendario WNBA";
+"app.version" = "v%@";
+
+// MARK: - Menu
+"menu.title" = "CALENDARIO DE %@";
+"menu.section.previous" = "PARTIDOS ANTERIORES";
+"menu.section.upcoming" = "PRÓXIMOS PARTIDOS";
+"menu.no_games" = "No se encontraron partidos para %@";
+"menu.settings" = "Configuración";
+"menu.select_team" = "Seleccionar equipo";
+
+// MARK: - Actions
+"action.refresh" = "Actualizar";
+"action.quit" = "Salir";
+"action.launch_at_login" = "Iniciar al arrancar";
+
+// MARK: - Game Status
+"game.status.upcoming" = "Próximo";
+"game.status.in_progress" = "En progreso";
+"game.status.halftime" = "Medio tiempo";
+"game.status.final" = "Final";
+"game.status.unknown" = "Desconocido";
+
+// MARK: - Accessibility
+"accessibility.schedule_for" = "Calendario de %@";
+"accessibility.refresh_button" = "Actualizar calendario";
+"accessibility.quit_button" = "Salir de la aplicación";
+"accessibility.settings_button" = "Abrir configuración";
+"accessibility.version" = "Versión %@";
+"accessibility.game" = "%@. %@";
+
+// MARK: - Errors
+"error.fetch_schedule" = "Error al obtener el calendario WNBA";
+"error.parse_date" = "Error al analizar la fecha";
+"error.network" = "Error de red: %@";
+"error.decode" = "Error al decodificar datos: %@";
+"error.cache" = "Error de caché: %@";
+"error.rate_limited" = "Limitado por la API";
+"error.server" = "Error del servidor: %@";

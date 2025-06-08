@@ -1,18 +1,59 @@
 import Foundation
+import os.log
+import SwiftUI
 
-class ScheduleManager {
-    private let client: NBAClient
+/// Protocol for schedule management functionality
+protocol ScheduleManagerProtocol {
+    /// Fetches games for a specific team
+    /// - Parameter teamAbbr: The team abbreviation (e.g., "NYL")
+    /// - Returns: Filtered games for the team
+    func fetchGames(forTeam teamAbbr: String) async throws -> FilteredGames
     
-    init(client: NBAClient) {
+    /// Fetches games for a specific team and season
+    /// - Parameters:
+    ///   - teamAbbr: The team abbreviation (e.g., "NYL")
+    ///   - season: The season year (e.g., "2025")
+    /// - Returns: Filtered games for the team in the specified season
+    func fetchGames(forTeam teamAbbr: String, season: String) async throws -> FilteredGames
+}
+
+/// Manages the fetching and filtering of WNBA games
+class ScheduleManager: ScheduleManagerProtocol {
+    // MARK: - Properties
+    
+    private let client: NBAClientProtocol
+    private let userPreferences: UserPreferences
+    private let logger = Logger(subsystem: "com.wnbaschedule", category: "ScheduleManager")
+    
+    // MARK: - Initialization
+    
+    init(client: NBAClientProtocol, userPreferences: UserPreferences = DependencyContainer.shared.userPreferences) {
         self.client = client
+        self.userPreferences = userPreferences
+        logger.info("ScheduleManager initialized")
     }
     
+    // MARK: - Public Methods
+    
     func fetchGames(forTeam teamAbbr: String) async throws -> FilteredGames {
-        let response = try await client.fetchSchedule()
+        // Use the current season by default
+        let currentYear = Calendar.current.component(.year, from: Date())
+        let season = String(currentYear)
+        
+        return try await fetchGames(forTeam: teamAbbr, season: season)
+    }
+    
+    func fetchGames(forTeam teamAbbr: String, season: String) async throws -> FilteredGames {
+        logger.info("Fetching games for team \(teamAbbr) in season \(season)")
+        
+        let response = try await client.fetchSchedule(season: season)
         return filterGames(from: response.results.schedule, forTeam: teamAbbr)
     }
     
+    // MARK: - Private Methods
+    
     private func filterGames(from allGames: [Game], forTeam teamAbbr: String) -> FilteredGames {
+        // Filter games for the specified team
         let teamGames = allGames.filter { game in
             game.home.abbr == teamAbbr || game.visitor.abbr == teamAbbr
         }
@@ -35,10 +76,14 @@ class ScheduleManager {
         // Sort upcoming games by date (earliest first)
         let sortedUpcomingGames = upcomingGames.sorted { $0.game.localGameTime < $1.game.localGameTime }
         
-        // Configure the number of games to display
-        let maxPastGames = 10 // Display up to 10 past games
-        let recentPastGames = Array(sortedPastGames.prefix(maxPastGames))
-        let nextUpcomingGames = Array(sortedUpcomingGames.prefix(5))
+        // Use user preferences for the number of games to display
+        let pastGamesToShow = userPreferences.pastGamesToShow
+        let upcomingGamesToShow = userPreferences.upcomingGamesToShow
+        
+        let recentPastGames = Array(sortedPastGames.prefix(pastGamesToShow))
+        let nextUpcomingGames = Array(sortedUpcomingGames.prefix(upcomingGamesToShow))
+        
+        logger.info("Filtered \(teamGames.count) games for team \(teamAbbr): \(recentPastGames.count) past, \(nextUpcomingGames.count) upcoming")
         
         return FilteredGames(
             pastGames: recentPastGames,
@@ -47,12 +92,83 @@ class ScheduleManager {
     }
 }
 
+/// Represents filtered games for a team
 struct FilteredGames {
     let pastGames: [MarkedGame]
     let upcomingGames: [MarkedGame]
+    
+    var isEmpty: Bool {
+        return pastGames.isEmpty && upcomingGames.isEmpty
+    }
+    
+    var hasUpcomingGames: Bool {
+        return !upcomingGames.isEmpty
+    }
+    
+    var hasPastGames: Bool {
+        return !pastGames.isEmpty
+    }
 }
 
-struct MarkedGame {
+/// Represents a game marked as home or away for a specific team
+struct MarkedGame: Identifiable {
     let game: Game
     let isHomeGame: Bool
+    
+    var id: String {
+        return game.gid
+    }
+    
+    var teamIsHome: Bool {
+        return isHomeGame
+    }
+    
+    var teamIsAway: Bool {
+        return !isHomeGame
+    }
+    
+    var opponentTeam: Team {
+        return isHomeGame ? game.visitor : game.home
+    }
+    
+    var teamScore: Int? {
+        return isHomeGame ? game.home.score : game.visitor.score
+    }
+    
+    var opponentScore: Int? {
+        return isHomeGame ? game.visitor.score : game.home.score
+    }
+    
+    var teamWon: Bool {
+        guard let teamScore = teamScore, let opponentScore = opponentScore else {
+            return false
+        }
+        return teamScore > opponentScore
+    }
+    
+    /// Determines if the opponent won the game
+    var opponentWon: Bool {
+        guard let teamScore = teamScore, let opponentScore = opponentScore else {
+            return false
+        }
+        return opponentScore > teamScore
+    }
+    
+    /// Get the color for the team name and score
+    func getTeamColor(teamColor: Color) -> Color {
+        // Only apply win/loss colors for completed games
+        if !game.isCompleted {
+            return teamColor
+        }
+        return teamWon ? teamColor : .red
+    }
+    
+    /// Get the color for the opponent name and score
+    func getOpponentColor() -> Color {
+        // Only apply win/loss colors for completed games
+        if !game.isCompleted {
+            return .gray
+        }
+        return opponentWon ? .green : .red
+    }
 }

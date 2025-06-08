@@ -1,0 +1,48 @@
+/* 
+  Localizable.strings
+  WNBASchedule
+
+  Created on 6/8/2025.
+  
+*/
+
+// MARK: - General
+"app.name" = "WNBA Schedule";
+"app.version" = "v%@";
+
+// MARK: - Menu
+"menu.title" = "%@ SCHEDULE";
+"menu.section.previous" = "PREVIOUS GAMES";
+"menu.section.upcoming" = "UPCOMING GAMES";
+"menu.no_games" = "No games found for %@";
+"menu.settings" = "Settings";
+"menu.select_team" = "Select Team";
+
+// MARK: - Actions
+"action.refresh" = "Refresh";
+"action.quit" = "Quit";
+"action.launch_at_login" = "Launch at login";
+
+// MARK: - Game Status
+"game.status.upcoming" = "Upcoming";
+"game.status.in_progress" = "In Progress";
+"game.status.halftime" = "Halftime";
+"game.status.final" = "Final";
+"game.status.unknown" = "Unknown";
+
+// MARK: - Accessibility
+"accessibility.schedule_for" = "%@ Schedule";
+"accessibility.refresh_button" = "Refresh schedule";
+"accessibility.quit_button" = "Quit application";
+"accessibility.settings_button" = "Open settings";
+"accessibility.version" = "Version %@";
+"accessibility.game" = "%@. %@";
+
+// MARK: - Errors
+"error.fetch_schedule" = "Error fetching WNBA schedule";
+"error.parse_date" = "Failed to parse date";
+"error.network" = "Network error: %@";
+"error.decode" = "Failed to decode data: %@";
+"error.cache" = "Cache error: %@";
+"error.rate_limited" = "Rate limited by the API";
+"error.server" = "Server error: %@";

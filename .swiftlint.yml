@@ -1,0 +1,97 @@
+# SwiftLint configuration file
+
+# Disabled rules
+disabled_rules:
+  - trailing_whitespace # Sometimes whitespace is useful for readability
+  - todo # Allow TODOs in the code
+
+# Opt-in rules
+opt_in_rules:
+  - array_init
+  - attributes
+  - closure_end_indentation
+  - closure_spacing
+  - collection_alignment
+  - contains_over_filter_count
+  - contains_over_filter_is_empty
+  - contains_over_first_not_nil
+  - discouraged_object_literal
+  - empty_count
+  - empty_string
+  - enum_case_associated_values_count
+  - explicit_init
+  - fatal_error_message
+  - first_where
+  - force_unwrapping
+  - implicitly_unwrapped_optional
+  - last_where
+  - legacy_random
+  - literal_expression_end_indentation
+  - multiline_parameters
+  - multiline_parameters_brackets
+  - operator_usage_whitespace
+  - overridden_super_call
+  - pattern_matching_keywords
+  - prefer_self_type_over_type_of_self
+  - redundant_nil_coalescing
+  - redundant_type_annotation
+  - strict_fileprivate
+  - toggle_bool
+  - unneeded_parentheses_in_closure_argument
+  - unused_import
+  - vertical_parameter_alignment_on_call
+  - yoda_condition
+
+# Configured rules
+line_length:
+  warning: 120
+  error: 150
+  ignores_comments: true
+  ignores_urls: true
+
+function_body_length:
+  warning: 60
+  error: 100
+
+type_body_length:
+  warning: 300
+  error: 500
+
+file_length:
+  warning: 500
+  error: 1000
+
+cyclomatic_complexity:
+  warning: 15
+  error: 25
+
+nesting:
+  type_level:
+    warning: 3
+  function_level:
+    warning: 5
+
+identifier_name:
+  min_length: 2
+  excluded:
+    - id
+    - URL
+    - x
+    - y
+    - i
+    - j
+    - k
+    - to
+    - at
+
+# Paths to include/exclude
+included:
+  - Sources
+  - Tests
+excluded:
+  - .build
+  - Pods
+  - DerivedData
+
+# Reporter type
+reporter: "xcode"

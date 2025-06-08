@@ -6,7 +6,17 @@ on:
       - "v*"
 
 jobs:
+  lint:
+    runs-on: macos-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install SwiftLint
+        run: brew install swiftlint
+      - name: Run SwiftLint
+        run: swiftlint --strict
+
   build-and-test:
+    needs: lint
     runs-on: macos-latest
     steps:
       - uses: actions/checkout@v4
