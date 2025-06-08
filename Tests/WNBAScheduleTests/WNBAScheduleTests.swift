@@ -99,7 +99,6 @@ final class WNBAScheduleTests: XCTestCase {
         
         // Get the expected date
         let expectedDate = Date(timeIntervalSince1970: Double(timestamp) / 1000.0)
-        let expectedRegion = expectedDate.toSwiftDate()
         
         // Test date properties
         XCTAssertEqual(game.localGameTime.timeIntervalSince1970, expectedDate.timeIntervalSince1970)
