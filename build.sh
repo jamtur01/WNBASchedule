@@ -51,9 +51,6 @@ cp "$UNIVERSAL_BINARY" "$MACOS_DIR/"
 # Copy Info.plist
 cp Info/Info.plist "$CONTENTS_DIR/"
 
-# Copy resources
-cp Sources/WNBASchedule/Resources/basketball-icon.txt "$RESOURCES_DIR/"
-
 # Sign the application
 if [ -n "$APPLE_DEVELOPER_CERTIFICATE_P12_BASE64" ] && [ -n "$APPLE_DEVELOPER_CERTIFICATE_PASSWORD" ]; then
   echo "Code signing the application with Developer ID..."

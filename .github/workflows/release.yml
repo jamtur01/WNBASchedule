@@ -60,7 +60,6 @@ jobs:
 
           cp .build/universal/WNBASchedule "$MACOS_DIR/"
           cp Info/Info.plist "$CONTENTS_DIR/"
-          cp Sources/WNBASchedule/Resources/basketball-icon.txt "$RESOURCES_DIR/"
 
       - name: Code sign the app
         env:
