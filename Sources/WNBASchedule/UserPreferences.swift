@@ -31,6 +31,15 @@ class UserPreferences {
             }
         }
     }
+
+    /// The number of days to show for "All Teams" (hidden preference, not exposed in UI)
+    var allTeamsDaysToShow: Int {
+        didSet {
+            if oldValue != allTeamsDaysToShow {
+                savePreferences()
+            }
+        }
+    }
     
     /// Whether to show game times in the user's local timezone
     var useLocalTimeZone: Bool {
@@ -56,12 +65,14 @@ class UserPreferences {
     private let defaultFavoriteTeam = "NYL"
     private let defaultPastGamesToShow = 10
     private let defaultUpcomingGamesToShow = 5
+    private let defaultAllTeamsDaysToShow = 4
     private let defaultUseLocalTimeZone = true
     private let defaultPreferredLanguage = "en"
     
     private let favoriteTeamKey = "favoriteTeam"
     private let pastGamesToShowKey = "pastGamesToShow"
     private let upcomingGamesToShowKey = "upcomingGamesToShow"
+    private let allTeamsDaysToShowKey = "allTeamsDaysToShow"
     private let useLocalTimeZoneKey = "useLocalTimeZone"
     private let preferredLanguageKey = "preferredLanguage"
     
@@ -76,6 +87,7 @@ class UserPreferences {
         self.favoriteTeam = userDefaults.string(forKey: favoriteTeamKey) ?? defaultFavoriteTeam
         self.pastGamesToShow = userDefaults.integer(forKey: pastGamesToShowKey)
         self.upcomingGamesToShow = userDefaults.integer(forKey: upcomingGamesToShowKey)
+        self.allTeamsDaysToShow = userDefaults.integer(forKey: allTeamsDaysToShowKey)
         self.useLocalTimeZone = userDefaults.bool(forKey: useLocalTimeZoneKey)
         self.preferredLanguage = userDefaults.string(forKey: preferredLanguageKey) ?? defaultPreferredLanguage
         
@@ -87,10 +99,14 @@ class UserPreferences {
         if self.upcomingGamesToShow == 0 {
             self.upcomingGamesToShow = defaultUpcomingGamesToShow
         }
+
+        if self.allTeamsDaysToShow == 0 {
+            self.allTeamsDaysToShow = defaultAllTeamsDaysToShow
+        }
         
         logger.info("""
             Loaded user preferences: team=\(self.favoriteTeam), language=\(self.preferredLanguage), \
-            pastGames=\(self.pastGamesToShow), upcomingGames=\(self.upcomingGamesToShow)
+            pastGames=\(self.pastGamesToShow), upcomingGames=\(self.upcomingGamesToShow), allTeamsDays=\(self.allTeamsDaysToShow)
             """)
     }
     
@@ -103,12 +119,13 @@ class UserPreferences {
         userDefaults.set(favoriteTeam, forKey: favoriteTeamKey)
         userDefaults.set(pastGamesToShow, forKey: pastGamesToShowKey)
         userDefaults.set(upcomingGamesToShow, forKey: upcomingGamesToShowKey)
+        userDefaults.set(allTeamsDaysToShow, forKey: allTeamsDaysToShowKey)
         userDefaults.set(useLocalTimeZone, forKey: useLocalTimeZoneKey)
         userDefaults.set(preferredLanguage, forKey: preferredLanguageKey)
         
         logger.info("""
             Saved user preferences: team=\(self.favoriteTeam), language=\(self.preferredLanguage), \
-            pastGames=\(self.pastGamesToShow), upcomingGames=\(self.upcomingGamesToShow)
+            pastGames=\(self.pastGamesToShow), upcomingGames=\(self.upcomingGamesToShow), allTeamsDays=\(self.allTeamsDaysToShow)
             """)
     }
     
@@ -117,6 +134,7 @@ class UserPreferences {
         favoriteTeam = defaultFavoriteTeam
         pastGamesToShow = defaultPastGamesToShow
         upcomingGamesToShow = defaultUpcomingGamesToShow
+        allTeamsDaysToShow = defaultAllTeamsDaysToShow
         useLocalTimeZone = defaultUseLocalTimeZone
         preferredLanguage = defaultPreferredLanguage
         

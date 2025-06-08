@@ -1,0 +1,134 @@
+import SwiftUI
+import LaunchAtLogin
+
+extension Image {
+    static func loadFromBundle(named name: String) -> Image {
+        if let url = Bundle.module.url(forResource: name, withExtension: "png"),
+           let nsImage = NSImage(contentsOf: url) {
+            return Image(nsImage: nsImage)
+        }
+        
+        // Fallback to system image
+        return Image(systemName: "sportscourt")
+    }
+}
+
+struct AllTeamsMenuView: View {
+    let upcomingGames: [Game]
+    let refreshAction: () -> Void
+    let changeTeamAction: (String) -> Void
+
+    @State private var showingTeamPicker = false
+
+    private var daysRange: Int {
+        DependencyContainer.shared.userPreferences.allTeamsDaysToShow
+    }
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 5) {
+            // Title Row
+            HStack(alignment: .center, spacing: 8) {
+                Image.loadFromBundle(named: "wnbalogo")
+                    .resizable()
+                    .aspectRatio(contentMode: .fit)
+                    .frame(width: 26, height: 26)
+                Text("WNBA: ALL TEAMS")
+                    .font(.system(size: 16, weight: .bold))
+                    .foregroundColor(Color(hex: "#FA4616") ?? .orange)
+                    .lineLimit(1)
+                    .layoutPriority(1)
+                    .padding(.top, 5)
+                    .fixedSize(horizontal: true, vertical: false)
+                Spacer(minLength: 8)
+                Button(action: {
+                    showingTeamPicker.toggle()
+                }) {
+                    Image(systemName: "gear")
+                        .font(.system(size: 12))
+                        .foregroundColor(.gray)
+                }
+                .buttonStyle(PlainButtonStyle())
+            }
+
+            // Team picker (shown when settings button is clicked)
+            if showingTeamPicker {
+                TeamPickerView(
+                    selectedTeam: "ALL",
+                    onTeamSelected: { newTeam in
+                        changeTeamAction(newTeam)
+                        showingTeamPicker = false
+                    }
+                )
+                .transition(.opacity)
+                .animation(.easeInOut, value: showingTeamPicker)
+            }
+
+            Divider()
+
+            // Upcoming Games Section
+            if !upcomingGames.isEmpty {
+                Text("UPCOMING GAMES")
+                    .font(.system(size: 14, weight: .bold))
+                    .foregroundColor(Color(hex: "#FA4616") ?? .orange)
+                    .padding(.top, 5)
+
+                ForEach(upcomingGames, id: \.gid) { game in
+                    UpcomingGameRow(game: game)
+                }
+
+                Divider()
+            } else {
+                Text("No games scheduled in this range.")
+                    .font(.system(size: 13))
+                    .foregroundColor(.gray)
+                    .padding(.top, 8)
+            }
+
+            // Launch at Login toggle
+            LaunchAtLogin.Toggle()
+                .padding(.vertical, 4)
+
+            Divider()
+
+            // Menu Actions
+            HStack {
+                HStack(spacing: 8) {
+                    Button(action: {
+                        refreshAction()
+                    }) {
+                        Text("Refresh")
+                            .foregroundColor(.white)
+                            .padding(.horizontal, 10)
+                            .padding(.vertical, 4)
+                            .background(Color(hex: "#FA4616") ?? .orange)
+                            .cornerRadius(4)
+                    }
+                    .buttonStyle(PlainButtonStyle())
+
+                    Button(action: {
+                        NSApplication.shared.terminate(nil)
+                    }) {
+                        Text("Quit")
+                            .foregroundColor(.white)
+                            .padding(.horizontal, 10)
+                            .padding(.vertical, 4)
+                            .background(Color.gray)
+                            .cornerRadius(4)
+                    }
+                    .buttonStyle(PlainButtonStyle())
+                }
+
+                Spacer()
+
+                Text("v\(Version.version)")
+                    .font(.system(size: 9))
+                    .foregroundColor(.gray.opacity(0.6))
+            }
+            .frame(minWidth: 320)
+            .padding(.top, 8)
+            .padding(.bottom, 16)
+        }
+        .padding(.horizontal, 24)
+        .padding(.top, 8)
+    }
+}

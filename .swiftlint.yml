@@ -38,10 +38,11 @@ opt_in_rules:
   - strict_fileprivate
   - toggle_bool
   - unneeded_parentheses_in_closure_argument
-  - unused_import
   - vertical_parameter_alignment_on_call
   - yoda_condition
 
+analyzer_rules:
+  - unused_import
 # Configured rules
 line_length:
   warning: 120

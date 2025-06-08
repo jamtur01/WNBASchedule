@@ -12,8 +12,7 @@ let package = Package(
     ],
     dependencies: [
         .package(url: "https://github.com/malcommac/SwiftDate.git", from: "6.3.1"),
-        .package(url: "https://github.com/sindresorhus/LaunchAtLogin-Modern", from: "1.0.0"),
-        .package(url: "https://github.com/realm/SwiftLint", from: "0.52.0"),
+        .package(url: "https://github.com/sindresorhus/LaunchAtLogin-Modern", from: "1.0.0")
     ],
     targets: [
         .executableTarget(
@@ -21,7 +20,11 @@ let package = Package(
             dependencies: [
                 "SwiftDate",
                 .product(name: "LaunchAtLogin", package: "LaunchAtLogin-Modern")
-            ]),
+            ],
+            resources: [
+                .process("Resources")
+            ]
+        ),
         .testTarget(
             name: "WNBAScheduleTests",
             dependencies: ["WNBASchedule"]),

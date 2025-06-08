@@ -10,7 +10,7 @@ class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate, @unchecked S
     private var statusItem: NSStatusItem?
     private var scheduleManager: ScheduleManagerProtocol
     private var timer: Timer?
-    private var hostingView: NSHostingView<MenuView>?
+    private var hostingView: NSHostingView<AnyView>?
     private var games: FilteredGames?
     private var userPreferences: UserPreferences
     private var apiCache: APICacheProtocol
@@ -154,13 +154,33 @@ class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate, @unchecked S
     
     private func fetchGamesAndUpdateMenu() async {
         do {
-            // Fetch the games
-            let games = try await scheduleManager.fetchGames(forTeam: userPreferences.favoriteTeam)
-            
-            // Update the UI on the main thread
-            await MainActor.run {
-                self.games = games
-                self.updateMenuUI(with: games)
+            if userPreferences.favoriteTeam == "ALL" {
+                // Fetch all games for the current season
+                let currentYear = Calendar.current.component(.year, from: Date())
+                let season = String(currentYear)
+                let response = try await DependencyContainer.shared.nbaClient.fetchSchedule(season: season)
+                let allGames: [Game] = response.results.schedule
+
+                // Filter for games in the next N days (including today)
+                let now = Date()
+                let calendar = Calendar.current
+                let startOfToday = calendar.startOfDay(for: now)
+                let endDate = calendar.date(byAdding: .day, value: userPreferences.allTeamsDaysToShow, to: startOfToday)!
+                let filteredGames = allGames.filter { game in
+                    let gameDate = calendar.startOfDay(for: game.localGameTime)
+                    return gameDate >= startOfToday && gameDate < endDate
+                }.sorted { $0.localGameTime < $1.localGameTime }
+
+                await MainActor.run {
+                    self.updateMenuUIForAllTeams(upcomingGames: filteredGames)
+                }
+            } else {
+                // Fetch the games for the selected team
+                let games = try await scheduleManager.fetchGames(forTeam: userPreferences.favoriteTeam)
+                await MainActor.run {
+                    self.games = games
+                    self.updateMenuUI(with: games)
+                }
             }
         } catch {
             logger.error("Error updating menu: \(error.localizedDescription)")
@@ -183,14 +203,39 @@ class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate, @unchecked S
             }
         )
         
-        // Create a hosting view for the SwiftUI view
-        let hostingView = NSHostingView(rootView: menuView)
+        // Wrap in AnyView for type erasure
+        let hostingView = NSHostingView(rootView: AnyView(menuView))
         self.hostingView = hostingView
         
         // Size the hosting view to fit its content
         hostingView.frame.size = hostingView.fittingSize
         
         // Remove all items from the existing menu and add the new view
+        if let menu = self.statusItem?.menu {
+            menu.removeAllItems()
+            let customMenuItem = NSMenuItem()
+            customMenuItem.view = hostingView
+            menu.addItem(customMenuItem)
+        }
+    }
+
+    private func updateMenuUIForAllTeams(upcomingGames: [Game]) {
+        // Create a SwiftUI view for "All Teams" mode
+        let menuView = AllTeamsMenuView(
+            upcomingGames: upcomingGames,
+            refreshAction: { [weak self] in
+                self?.updateMenu()
+            },
+            changeTeamAction: { [weak self] newTeam in
+                self?.changeTeam(to: newTeam)
+            }
+        )
+
+        let hostingView = NSHostingView(rootView: AnyView(menuView))
+        self.hostingView = hostingView
+
+        hostingView.frame.size = hostingView.fittingSize
+
         if let menu = self.statusItem?.menu {
             menu.removeAllItems()
             let customMenuItem = NSMenuItem()
