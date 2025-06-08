@@ -1,6 +1,6 @@
-# WNBASchedule
+# New York Liberty WNBA Schedule
 
-Menu bar application that displays WNBA schedule information for the New York Liberty (NYL) team, including:
+Menu bar application that displays WNBA schedule information for the New York Liberty, including:
 
 - Previous 10 games with win/loss records and scores
 - Upcoming 5 games
