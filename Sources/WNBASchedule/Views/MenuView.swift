@@ -148,16 +148,35 @@ struct MenuView: View {
 struct TeamPickerView: View {
     let selectedTeam: String
     let onTeamSelected: (String) -> Void
-    
+
+    @State private var searchText: String = ""
+
+    var filteredTeams: [TeamManager.TeamInfo] {
+        if searchText.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
+            return TeamManager.allTeams
+        } else {
+            return TeamManager.allTeams.filter {
+                $0.fullName.localizedCaseInsensitiveContains(searchText) ||
+                $0.abbreviation.localizedCaseInsensitiveContains(searchText)
+            }
+        }
+    }
+
     var body: some View {
         VStack(alignment: .leading, spacing: 4) {
             Text("Select Team")
                 .font(.system(size: 12, weight: .bold))
                 .padding(.bottom, 2)
-            
+
+            // Search field for filtering teams
+            TextField("Search teams...", text: $searchText)
+                .textFieldStyle(RoundedBorderTextFieldStyle())
+                .font(.system(size: 12))
+                .padding(.bottom, 4)
+
             ScrollView(.vertical, showsIndicators: true) {
                 VStack(alignment: .leading, spacing: 2) {
-                    ForEach(TeamManager.allTeams, id: \.abbreviation) { team in
+                    ForEach(filteredTeams, id: \.abbreviation) { team in
                         Button(action: {
                             onTeamSelected(team.abbreviation)
                         }) {
@@ -165,9 +184,9 @@ struct TeamPickerView: View {
                                 Text(team.fullName)
                                     .font(.system(size: 12))
                                     .foregroundColor(.primary)
-                                
+
                                 Spacer()
-                                
+
                                 if team.abbreviation == selectedTeam {
                                     Image(systemName: "checkmark")
                                         .font(.system(size: 10))
@@ -176,7 +195,7 @@ struct TeamPickerView: View {
                             }
                             .padding(.vertical, 4)
                             .padding(.horizontal, 6)
-                            .background(team.abbreviation == selectedTeam ? Color.gray.opacity(0.1) : Color.clear)
+                            .background(team.abbreviation == selectedTeam ? Color.blue.opacity(0.15) : Color.clear)
                             .cornerRadius(4)
                         }
                         .buttonStyle(PlainButtonStyle())

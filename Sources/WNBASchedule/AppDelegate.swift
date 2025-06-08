@@ -5,7 +5,7 @@ import SwiftDate
 import os.log
 
 // MARK: - AppDelegate
-class AppDelegate: NSObject, NSApplicationDelegate, @unchecked Sendable {
+class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate, @unchecked Sendable {
     // MARK: - Properties
     private var statusItem: NSStatusItem?
     private var scheduleManager: ScheduleManagerProtocol
@@ -13,6 +13,7 @@ class AppDelegate: NSObject, NSApplicationDelegate, @unchecked Sendable {
     private var hostingView: NSHostingView<MenuView>?
     private var games: FilteredGames?
     private var userPreferences: UserPreferences
+    private var apiCache: APICacheProtocol
     
     // Constants
     private let refreshInterval: TimeInterval = 3600 // 1 hour
@@ -24,9 +25,11 @@ class AppDelegate: NSObject, NSApplicationDelegate, @unchecked Sendable {
     
     // MARK: - Initialization
     init(scheduleManager: ScheduleManagerProtocol = DependencyContainer.shared.scheduleManager,
-         userPreferences: UserPreferences = DependencyContainer.shared.userPreferences) {
+         userPreferences: UserPreferences = DependencyContainer.shared.userPreferences,
+         apiCache: APICacheProtocol = DependencyContainer.shared.apiCache) {
         self.scheduleManager = scheduleManager
         self.userPreferences = userPreferences
+        self.apiCache = apiCache
         super.init()
     }
     
@@ -73,6 +76,10 @@ class AppDelegate: NSObject, NSApplicationDelegate, @unchecked Sendable {
             statusButton.font = NSFont.systemFont(ofSize: 18, weight: .semibold)
             updateStatusButtonTooltip()
         }
+        // Set up an empty menu and assign delegate
+        let menu = NSMenu()
+        menu.delegate = self
+        statusItem?.menu = menu
     }
     
     private func updateStatusButtonTooltip() {
@@ -183,14 +190,14 @@ class AppDelegate: NSObject, NSApplicationDelegate, @unchecked Sendable {
         // Size the hosting view to fit its content
         hostingView.frame.size = hostingView.fittingSize
         
-        // Create and set up the menu
-        let menu = NSMenu()
-        let customMenuItem = NSMenuItem()
-        customMenuItem.view = hostingView
-        menu.addItem(customMenuItem)
-        self.statusItem?.menu = menu
+        // Remove all items from the existing menu and add the new view
+        if let menu = self.statusItem?.menu {
+            menu.removeAllItems()
+            let customMenuItem = NSMenuItem()
+            customMenuItem.view = hostingView
+            menu.addItem(customMenuItem)
+        }
     }
-    
     private func showErrorMenu(error: Error) {
         let menu = NSMenu()
         
@@ -218,6 +225,13 @@ class AppDelegate: NSObject, NSApplicationDelegate, @unchecked Sendable {
             item.representedObject = team.abbreviation
             item.target = self
             teamSubmenu.addItem(item)
+            // MARK: - NSMenuDelegate
+            func menuWillOpen(_ menu: NSMenu) {
+                Task { [weak self] in
+                    guard let self = self else { return }
+                    await self.fetchGamesAndUpdateMenu()
+                }
+            }
         }
         
         teamItem.submenu = teamSubmenu
@@ -241,6 +255,7 @@ class AppDelegate: NSObject, NSApplicationDelegate, @unchecked Sendable {
         userPreferences.favoriteTeam = teamAbbreviation
         userPreferences.savePreferences()
         updateStatusButtonTooltip()
+        apiCache.clearCache() // Ensure fresh data is fetched for new team
         updateMenu()
     }
 }
