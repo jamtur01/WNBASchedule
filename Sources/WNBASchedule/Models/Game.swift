@@ -156,17 +156,18 @@ struct Game: Codable, Identifiable {
     
     /// Formatted game date for display
     var formattedGameDate: String {
-        return gameTimeInRegion.toString(.custom("EEE MMM d, yyyy"))
+        return gameTimeInRegion.date.toScheduleString()
     }
     
     /// Formatted game time for display
     var formattedGameTime: String {
-        return gameTimeInRegion.toString(.custom("h:mm a"))
+        let region = Region(calendar: Calendars.gregorian, zone: gameTimeInRegion.region.timeZone, locale: Locales.english)
+        return gameTimeInRegion.date.in(region: region).toString(.custom("h.mm a"))
     }
     
     /// Formatted date and time
     var formattedDateTime: String {
-        return "\(formattedGameDate) at \(formattedGameTime)"
+        return gameTimeInRegion.date.toScheduleTimeString()
     }
     
     /// Whether the game is completed

@@ -115,7 +115,7 @@ final class WNBAScheduleTests: XCTestCase {
         // Use Eastern Time to match the app's display logic
         let easternRegion = expectedDate.in(region: Region(zone: Zones.americaNewYork))
         XCTAssertEqual(game.formattedGameDate, easternRegion.toString(.custom("EEE MMM d, yyyy")))
-        XCTAssertEqual(game.formattedGameTime, easternRegion.toString(.custom("h:mm a")))
+        XCTAssertEqual(game.formattedGameTime, easternRegion.toString(.custom("h.mm a")))
         XCTAssertEqual(game.formattedDateTime, "\(game.formattedGameDate) at \(game.formattedGameTime)")
     }
     

@@ -335,7 +335,7 @@ struct UpcomingGameRow: View {
                     Text("\(game.formattedGameDate) \(game.formattedGameTime)")
                         .font(.system(size: 13))
                         .foregroundColor(.gray)
-                        .frame(width: 160, alignment: .leading)
+                        .frame(width: 180, alignment: .leading)
 
                     Spacer(minLength: 2)
 
