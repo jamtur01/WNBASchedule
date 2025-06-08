@@ -276,7 +276,7 @@ struct UpcomingGameRow: View {
                 Text("\(game.formattedGameDate) \(game.formattedGameTime)")
                     .font(.system(size: 13))
                     .foregroundColor(.gray)
-                    .frame(width: 180, alignment: .leading) // Wider frame to accommodate the time
+                    .frame(width: 150, alignment: .leading) // Slightly narrower to fit icon
                 
                 // Game Matchup
                 HStack(spacing: 5) {
@@ -292,6 +292,14 @@ struct UpcomingGameRow: View {
                     // Home Team
                     Text(game.home.abbr)
                         .font(.system(size: 13, weight: .bold))
+                }
+                
+                // Broadcast Provider Icon (if available)
+                if let provider = game.primaryBroadcastProvider {
+                    Image(systemName: provider.isLeaguePass ? "play.tv" : "tv")
+                        .foregroundColor(provider.isLeaguePass ? .purple : .blue)
+                        .font(.system(size: 13))
+                        .padding(.leading, 6)
                 }
             }
         }

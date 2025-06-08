@@ -222,6 +222,38 @@ struct Game: Codable, Identifiable {
     }
 }
 
+// MARK: - Broadcast Provider Info
+/// Represents the primary broadcast provider info for a game, for UI use
+struct BroadcastProviderInfo {
+    let displayName: String
+    let abbreviation: String
+    let videoLink: String
+    var isLeaguePass: Bool { abbreviation == "WNBA League Pass" }
+}
+
+extension Game {
+    /// Returns the primary broadcast provider info, prioritizing League Pass, then first provider with a video link
+    var primaryBroadcastProvider: BroadcastProviderInfo? {
+        if let leaguePassLink = leaguePassVideoLink, !leaguePassLink.isEmpty {
+            return BroadcastProviderInfo(
+                displayName: "WNBA League Pass",
+                abbreviation: "WNBA League Pass",
+                videoLink: leaguePassLink
+            )
+        }
+        if let providers = providers {
+            if let p = providers.first(where: { !$0.broadcasterVideoLink.isEmpty }) {
+                return BroadcastProviderInfo(
+                    displayName: p.broadcasterDisplay,
+                    abbreviation: p.broadcasterAbbreviation,
+                    videoLink: p.broadcasterVideoLink
+                )
+            }
+        }
+        return nil
+    }
+}
+
 // MARK: - Team Model
 
 /// Represents a WNBA team
