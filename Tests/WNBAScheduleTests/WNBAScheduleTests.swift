@@ -105,8 +105,10 @@ final class WNBAScheduleTests: XCTestCase {
         XCTAssertEqual(game.localGameTime.timeIntervalSince1970, expectedDate.timeIntervalSince1970)
         
         // Test formatted date strings
-        XCTAssertEqual(game.formattedGameDate, expectedRegion.toString(.custom("EEE MMM d, yyyy")))
-        XCTAssertEqual(game.formattedGameTime, expectedRegion.toString(.custom("h:mm a")))
+        // Use Eastern Time to match the app's display logic
+        let easternRegion = expectedDate.in(region: Region(zone: Zones.americaNewYork))
+        XCTAssertEqual(game.formattedGameDate, easternRegion.toString(.custom("EEE MMM d, yyyy")))
+        XCTAssertEqual(game.formattedGameTime, easternRegion.toString(.custom("h:mm a")))
         XCTAssertEqual(game.formattedDateTime, "\(game.formattedGameDate) at \(game.formattedGameTime)")
     }
     
