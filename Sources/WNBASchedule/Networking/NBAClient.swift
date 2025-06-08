@@ -42,9 +42,9 @@ enum NBAClientError: Error, LocalizedError {
 /// Protocol for NBA API client
 protocol NBAClientProtocol {
     /// Fetches the WNBA schedule for a given season
-    /// - Parameter season: The season year (e.g., "2025")
+    /// - Parameter season: The season year (e.g., "2025"). If nil, uses current year.
     /// - Returns: The schedule response
-    func fetchSchedule(season: String) async throws -> ScheduleResponse
+    func fetchSchedule(season: String?) async throws -> ScheduleResponse
 }
 
 /// Client for interacting with the NBA API
@@ -79,16 +79,20 @@ class NBAClient: NBAClientProtocol {
     
     // MARK: - Public Methods
     
-    func fetchSchedule(season: String = "2025") async throws -> ScheduleResponse {
+    func fetchSchedule(season: String? = nil) async throws -> ScheduleResponse {
+        // Use current year if no season is provided
+        let currentYear = Calendar.current.component(.year, from: Date())
+        let selectedSeason = season ?? String(currentYear)
+        
         // Generate cache key
-        let cacheKey = "schedule_\(season)"
+        let cacheKey = "schedule_\(selectedSeason)"
         
         // Try to get from cache first
         if let cachedData = cache.getData(for: cacheKey) {
             do {
                 let decoder = JSONDecoder()
                 let response = try decoder.decode(ScheduleResponse.self, from: cachedData)
-                logger.info("Retrieved schedule from cache for season \(season)")
+                logger.info("Retrieved schedule from cache for season \(selectedSeason)")
                 return response
             } catch {
                 logger.error("Failed to decode cached schedule: \(error.localizedDescription)")
@@ -103,7 +107,7 @@ class NBAClient: NBAClientProtocol {
         
         urlComponents.queryItems = [
             URLQueryItem(name: "addEvents", value: "true"),
-            URLQueryItem(name: "seasonYear", value: season)
+            URLQueryItem(name: "seasonYear", value: selectedSeason)
         ]
         
         guard let url = urlComponents.url else {

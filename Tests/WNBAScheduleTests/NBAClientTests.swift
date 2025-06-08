@@ -81,6 +81,35 @@ final class NBAClientTests: XCTestCase {
         XCTAssertEqual(mockCache.lastStoredData, mockData)
     }
     
+    func testFetchScheduleWithCurrentYear() async throws {
+        // Setup mock network response
+        let mockData = createMockScheduleData()
+        guard let mockURLSession = mockURLSession, let client = client, let mockCache = mockCache else {
+            XCTFail("Mocks not initialized")
+            return
+        }
+        mockURLSession.mockData = mockData
+        mockURLSession.mockResponse = HTTPURLResponse(
+            url: URL(string: "https://test.api.com") ?? URL(fileURLWithPath: "/"),
+            statusCode: 200,
+            httpVersion: nil,
+            headerFields: nil
+        )
+        
+        // Execute with nil season (should use current year)
+        let response = try await client.fetchSchedule(season: nil)
+        
+        // Verify
+        XCTAssertNotNil(mockURLSession.lastRequest)
+        XCTAssertEqual(response.results.schedule.count, 1)
+        XCTAssertEqual(response.results.schedule.first?.gid, "1022500001")
+        
+        // Verify data was cached with current year
+        let currentYear = String(Calendar.current.component(.year, from: Date()))
+        XCTAssertEqual(mockCache.lastStoredKey, "schedule_\(currentYear)")
+        XCTAssertEqual(mockCache.lastStoredData, mockData)
+    }
+    
     func testFetchScheduleWithNetworkError() async {
         // Setup mock network error
         guard let mockURLSession = mockURLSession, let client = client else {

@@ -286,8 +286,9 @@ class MockNBAClient: NBAClientProtocol {
     var lastFetchedSeason: String?
     var error: Error?
     
-    func fetchSchedule(season: String = "2025") async throws -> ScheduleResponse {
-        lastFetchedSeason = season
+    func fetchSchedule(season: String?) async throws -> ScheduleResponse {
+        // If season is nil, use current year (matching NBAClient behavior)
+        lastFetchedSeason = season ?? String(Calendar.current.component(.year, from: Date()))
         
         if let error = error {
             throw error

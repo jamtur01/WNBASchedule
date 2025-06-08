@@ -12,9 +12,9 @@ protocol ScheduleManagerProtocol {
     /// Fetches games for a specific team and season
     /// - Parameters:
     ///   - teamAbbr: The team abbreviation (e.g., "NYL")
-    ///   - season: The season year (e.g., "2025")
+    ///   - season: The season year (e.g., "2025"). If nil, uses current year.
     /// - Returns: Filtered games for the team in the specified season
-    func fetchGames(forTeam teamAbbr: String, season: String) async throws -> FilteredGames
+    func fetchGames(forTeam teamAbbr: String, season: String?) async throws -> FilteredGames
 }
 
 /// Manages the fetching and filtering of WNBA games
@@ -36,15 +36,13 @@ class ScheduleManager: ScheduleManagerProtocol {
     // MARK: - Public Methods
     
     func fetchGames(forTeam teamAbbr: String) async throws -> FilteredGames {
-        // Use the current season by default
-        let currentYear = Calendar.current.component(.year, from: Date())
-        let season = String(currentYear)
-        
-        return try await fetchGames(forTeam: teamAbbr, season: season)
+        // Use the current season by default (let NBAClient handle it)
+        return try await fetchGames(forTeam: teamAbbr, season: nil)
     }
     
-    func fetchGames(forTeam teamAbbr: String, season: String) async throws -> FilteredGames {
-        logger.info("Fetching games for team \(teamAbbr) in season \(season)")
+    func fetchGames(forTeam teamAbbr: String, season: String?) async throws -> FilteredGames {
+        let seasonDisplay = season ?? "current year"
+        logger.info("Fetching games for team \(teamAbbr) in season \(seasonDisplay)")
         
         let response = try await client.fetchSchedule(season: season)
         return filterGames(from: response.results.schedule, forTeam: teamAbbr)

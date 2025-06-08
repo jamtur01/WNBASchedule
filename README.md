@@ -99,9 +99,9 @@ This script updates version numbers in all necessary files. After running:
 
 ## Data Source
 
-This application uses the NBA API to fetch WNBA schedule data:
+This application uses the NBA API to fetch WNBA schedule data. The season year automatically updates based on the current year:
 ```
-https://content-api-prod.nba.com/public/1/leagues/wnba/schedule?addEvents=true&seasonYear=2025
+https://content-api-prod.nba.com/public/1/leagues/wnba/schedule?addEvents=true&seasonYear={currentYear}
 ```
 
 ## Contributing
