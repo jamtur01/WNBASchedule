@@ -13,6 +13,7 @@
 // MARK: - Menu
 "menu.title" = "%@ Schedule";
 "menu.section.previous" = "PREVIOUS GAMES";
+"menu.section.in_progress" = "IN PROGRESS";
 "menu.section.upcoming" = "UPCOMING GAMES";
 "menu.no_games" = "No games found for %@";
 "menu.settings" = "Settings";

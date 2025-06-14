@@ -13,6 +13,7 @@
 // MARK: - Menu
 "menu.title" = "%@ Calendario";
 "menu.section.previous" = "PARTIDOS ANTERIORES";
+"menu.section.in_progress" = "EN PROGRESO";
 "menu.section.upcoming" = "PRÓXIMOS PARTIDOS";
 "menu.no_games" = "No se encontraron partidos para %@";
 "menu.settings" = "Configuración";

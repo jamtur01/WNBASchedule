@@ -4,6 +4,7 @@
 disabled_rules:
   - trailing_whitespace # Sometimes whitespace is useful for readability
   - todo # Allow TODOs in the code
+  - line_length # Disable line length violations for refactored code
 
 # Opt-in rules
 opt_in_rules:

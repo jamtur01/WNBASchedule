@@ -45,6 +45,11 @@ protocol NBAClientProtocol {
     /// - Parameter season: The season year (e.g., "2025"). If nil, uses current year.
     /// - Returns: The schedule response
     func fetchSchedule(season: String?) async throws -> ScheduleResponse
+    
+    /// Fetches live boxscore data for a specific game
+    /// - Parameter gameId: The game ID (e.g., "1022500066")
+    /// - Returns: Boxscore response with live game data
+    func fetchBoxscore(gameId: String) async throws -> BoxscoreResponse
 }
 
 /// Client for interacting with the NBA API
@@ -118,6 +123,33 @@ class NBAClient: NBAClientProtocol {
         return try await fetchWithRetry(url: url, cacheKey: cacheKey, retryCount: 0)
     }
     
+    func fetchBoxscore(gameId: String) async throws -> BoxscoreResponse {
+        // Generate cache key for boxscore (shorter cache time for live data)
+        let cacheKey = "boxscore_\(gameId)"
+        
+        // Try to get from cache first (but with much shorter expiration for live data)
+        if let cachedData = cache.getData(for: cacheKey) {
+            do {
+                let decoder = JSONDecoder()
+                let response = try decoder.decode(BoxscoreResponse.self, from: cachedData)
+                logger.info("Retrieved boxscore from cache for game \(gameId)")
+                return response
+            } catch {
+                logger.error("Failed to decode cached boxscore: \(error.localizedDescription)")
+                // Continue to fetch fresh data if cache decoding fails
+            }
+        }
+        
+        // Build the boxscore URL
+        let boxscoreURL = "https://cdn.wnba.com/static/json/liveData/boxscore/boxscore_\(gameId).json"
+        guard let url = URL(string: boxscoreURL) else {
+            throw NBAClientError.invalidURL
+        }
+        
+        // Fetch with retry logic (but shorter cache expiration for live data)
+        return try await fetchBoxscoreWithRetry(url: url, cacheKey: cacheKey, retryCount: 0)
+    }
+    
     // MARK: - Private Methods
     
     private func fetchWithRetry(url: URL, cacheKey: String, retryCount: Int) async throws -> ScheduleResponse {
@@ -182,6 +214,72 @@ class NBAClient: NBAClientProtocol {
             throw error
         } catch {
             logger.error("Network error: \(error.localizedDescription)")
+            throw NBAClientError.networkError(error)
+        }
+    }
+    
+    private func fetchBoxscoreWithRetry(url: URL, cacheKey: String, retryCount: Int) async throws -> BoxscoreResponse {
+        do {
+            let request = URLRequest(url: url, cachePolicy: .reloadIgnoringLocalCacheData, timeoutInterval: 15)
+            
+            logger.info("Fetching boxscore from URL: \(url.absoluteString)")
+            let (data, response) = try await session.data(for: request)
+            
+            guard let httpResponse = response as? HTTPURLResponse else {
+                throw NBAClientError.invalidResponse(0)
+            }
+            
+            // Handle HTTP status codes
+            switch httpResponse.statusCode {
+            case 200...299:
+                // Success
+                do {
+                    let decoder = JSONDecoder()
+                    let boxscoreResponse = try decoder.decode(BoxscoreResponse.self, from: data)
+                    
+                    // Cache the successful response with shorter expiration for live data (5 minutes)
+                    cache.storeData(data, for: cacheKey, expirationInterval: 300)
+                    
+                    logger.info("Successfully fetched and cached boxscore")
+                    return boxscoreResponse
+                } catch {
+                    logger.error("Boxscore decoding error: \(error.localizedDescription)")
+                    throw NBAClientError.decodingError(error)
+                }
+                
+            case 429:
+                // Rate limited
+                logger.warning("Rate limited by boxscore API")
+                throw NBAClientError.rateLimited
+                
+            case 500...599:
+                // Server error
+                logger.error("Boxscore server error with status code: \(httpResponse.statusCode)")
+                throw NBAClientError.serverError("Server returned status code \(httpResponse.statusCode)")
+                
+            default:
+                logger.error("Invalid boxscore response with status code: \(httpResponse.statusCode)")
+                throw NBAClientError.invalidResponse(httpResponse.statusCode)
+            }
+            
+        } catch let error as NBAClientError {
+            // If we can retry, do so with exponential backoff
+            if retryCount < maxRetries {
+                // Calculate delay with exponential backoff
+                let delay = retryDelay * pow(2.0, Double(retryCount))
+                logger.info("Retrying boxscore request (attempt \(retryCount + 1) of \(self.maxRetries)) after \(delay) seconds")
+                        
+                // Wait before retrying
+                try await Task.sleep(nanoseconds: UInt64(delay * 1_000_000_000))
+                
+                // Retry the request
+                return try await fetchBoxscoreWithRetry(url: url, cacheKey: cacheKey, retryCount: retryCount + 1)
+            }
+            
+            // We've exhausted our retries
+            throw error
+        } catch {
+            logger.error("Boxscore network error: \(error.localizedDescription)")
             throw NBAClientError.networkError(error)
         }
     }

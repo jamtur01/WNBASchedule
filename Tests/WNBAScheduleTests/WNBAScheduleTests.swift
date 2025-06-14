@@ -70,9 +70,9 @@ final class WNBAScheduleTests: XCTestCase {
     func testGameStatusProperties() {
         // Test different game states
         let completedGame = createTestGame(state: 3)
-        let inProgressGame = createTestGame(state: 1)
-        let halftimeGame = createTestGame(state: 2)
-        let upcomingGame = createTestGame(state: 0)
+        let inProgressGame = createTestGame(state: 2)
+        let anotherInProgressGame = createTestGame(state: 2)
+        let upcomingGame = createTestGame(state: 1)
         let unknownStateGame = createTestGame(state: 99)
         
         // Test status properties
@@ -84,9 +84,9 @@ final class WNBAScheduleTests: XCTestCase {
         XCTAssertTrue(inProgressGame.isInProgress)
         XCTAssertFalse(inProgressGame.isUpcoming)
         
-        XCTAssertFalse(halftimeGame.isCompleted)
-        XCTAssertTrue(halftimeGame.isInProgress)
-        XCTAssertFalse(halftimeGame.isUpcoming)
+        XCTAssertFalse(anotherInProgressGame.isCompleted)
+        XCTAssertTrue(anotherInProgressGame.isInProgress)
+        XCTAssertFalse(anotherInProgressGame.isUpcoming)
         
         XCTAssertFalse(upcomingGame.isCompleted)
         XCTAssertFalse(upcomingGame.isInProgress)
@@ -95,7 +95,7 @@ final class WNBAScheduleTests: XCTestCase {
         // Test status descriptions
         XCTAssertEqual(completedGame.statusDescription, "Final")
         XCTAssertEqual(inProgressGame.statusDescription, "In Progress")
-        XCTAssertEqual(halftimeGame.statusDescription, "Halftime")
+        XCTAssertEqual(anotherInProgressGame.statusDescription, "In Progress")
         XCTAssertEqual(upcomingGame.statusDescription, "Upcoming")
         XCTAssertEqual(unknownStateGame.statusDescription, "Unknown")
     }

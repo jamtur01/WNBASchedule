@@ -15,6 +15,7 @@ extension Image {
 
 struct AllTeamsMenuView: View {
     let upcomingGames: [Game]
+    let inProgressGames: [Game]
     let refreshAction: () -> Void
     let changeTeamAction: (String) -> Void
 
@@ -68,6 +69,20 @@ struct AllTeamsMenuView: View {
 
             Divider()
 
+            // In Progress Games Section
+            if !inProgressGames.isEmpty {
+                Text("menu.section.in_progress".localized)
+                    .font(.system(size: 14, weight: .bold))
+                    .foregroundColor(.orange)
+                    .padding(.top, 5)
+
+                ForEach(inProgressGames, id: \.gid) { game in
+                    InProgressGameRow(game: game)
+                }
+
+                Divider()
+            }
+
             // Upcoming Games Section
             if !upcomingGames.isEmpty {
                 Text("menu.section.upcoming".localized)
@@ -80,7 +95,7 @@ struct AllTeamsMenuView: View {
                 }
 
                 Divider()
-            } else {
+            } else if inProgressGames.isEmpty {
                 Text("No hay partidos programados en este rango.")
                     .font(.system(size: 13))
                     .foregroundColor(.gray)

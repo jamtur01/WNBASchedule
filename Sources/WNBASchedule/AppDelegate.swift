@@ -7,21 +7,17 @@ import os.log
 // MARK: - AppDelegate
 class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate, @unchecked Sendable {
     // MARK: - Properties
-    private var statusItem: NSStatusItem?
-    private var scheduleManager: ScheduleManagerProtocol
-    private var timer: Timer?
-    private var hostingView: NSHostingView<AnyView>?
     private var games: FilteredGames?
-    private var userPreferences: UserPreferences
-    private var apiCache: APICacheProtocol
-    
-    // Constants
-    private let refreshInterval: TimeInterval = 3600 // 1 hour
-    private let memoryAuditInterval: TimeInterval = 1800 // 30 minutes
+    private let scheduleManager: ScheduleManagerProtocol
+    private let userPreferences: UserPreferences
+    private let apiCache: APICacheProtocol
     private let logger = Logger(subsystem: "net.kartar.wnbaschedule", category: "AppDelegate")
     
-    // Memory audit timer
-    private var memoryAuditTimer: Timer?
+    // Managers
+    private let statusBarManager: StatusBarManager
+    private let timerManager: TimerManager
+    private let menuManager: MenuManager
+    private let liveScoreManager: LiveScoreManager
     
     // MARK: - Initialization
     init(
@@ -32,124 +28,89 @@ class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate, @unchecked S
         self.scheduleManager = scheduleManager
         self.userPreferences = userPreferences
         self.apiCache = apiCache
+        
+        // Initialize managers
+        self.statusBarManager = StatusBarManager(userPreferences: userPreferences)
+        self.timerManager = TimerManager()
+        self.menuManager = MenuManager(userPreferences: userPreferences)
+        self.liveScoreManager = LiveScoreManager()
+        
         super.init()
     }
     
     // MARK: - App Lifecycle
     func applicationDidFinishLaunching(_ notification: Notification) {
-        // Track this object for memory leaks
         trackForMemoryLeak(description: "AppDelegate")
         
-        setupStatusItem()
-        updateMenu()
-        setupRefreshTimer()
-        setupMemoryAuditTimer()
-        
-        // Log initial memory usage
-        let memoryUsage = MemoryAudit.shared.currentMemoryUsage()
-        logger.info("Initial memory usage: \(MemoryAudit.shared.formatMemorySize(memoryUsage))")
+        setupApplication()
+        logInitialMemoryUsage()
     }
     
     func applicationWillTerminate(_ notification: Notification) {
-        invalidateTimer()
-        invalidateMemoryAuditTimer()
+        timerManager.invalidateAllTimers()
         stopMemoryTracking()
     }
     
     func applicationWillResignActive(_ notification: Notification) {
-        // Pause timers when app is in background to save resources
-        invalidateTimer()
-        invalidateMemoryAuditTimer()
+        timerManager.invalidateAllTimers()
     }
     
     func applicationDidBecomeActive(_ notification: Notification) {
-        // Resume timers when app is active
-        setupRefreshTimer()
-        setupMemoryAuditTimer()
-        updateMenu() // Refresh data
+        setupTimers()
+        updateMenu()
     }
     
-    // MARK: - Private Methods
-    private func setupStatusItem() {
-        statusItem = NSStatusBar.system.statusItem(withLength: NSStatusItem.squareLength)
-        
-        if let statusButton = statusItem?.button {
-            statusButton.title = "🏀"
-            statusButton.font = NSFont.systemFont(ofSize: 18, weight: .semibold)
-            updateStatusButtonTooltip()
-        }
-        // Set up an empty menu and assign delegate
-        let menu = NSMenu()
-        menu.delegate = self
-        statusItem?.menu = menu
-    }
-    
-    private func updateStatusButtonTooltip() {
-        if let statusButton = statusItem?.button {
-            let team = TeamManager.getTeamFullName(abbreviation: userPreferences.favoriteTeam)
-            statusButton.toolTip = "\(team) WNBA Schedule"
+    // MARK: - NSMenuDelegate
+    func menuWillOpen(_ menu: NSMenu) {
+        Task { [weak self] in
+            guard let self = self else { return }
+            await self.fetchGamesAndUpdateMenu()
         }
     }
     
-    private func setupRefreshTimer() {
-        // Cancel existing timer if any
-        invalidateTimer()
+    // MARK: - Private Setup Methods
+    private func setupApplication() {
+        guard let statusItem = statusBarManager.setupStatusItem() else {
+            logger.error("Failed to create status item")
+            return
+        }
         
-        // Create new timer
-        timer = Timer.scheduledTimer(
-            timeInterval: refreshInterval,
+        menuManager.setupMenuDelegate(statusItem: statusItem, delegate: self)
+        updateMenu()
+        setupTimers()
+    }
+    
+    private func setupTimers() {
+        let hasInProgressGames = self.hasInProgressGames()
+        
+        timerManager.setupAllTimers(
             target: self,
-            selector: #selector(updateMenu),
-            userInfo: nil,
-            repeats: true
+            refreshSelector: #selector(updateMenu),
+            memoryAuditSelector: #selector(performMemoryAudit),
+            liveScoreSelector: #selector(updateLiveScores),
+            hasInProgressGames: hasInProgressGames
         )
-        
-        // Make sure timer fires even when scrolling
-        if let timer = timer {
-            RunLoop.current.add(timer, forMode: .common)
-        }
     }
     
-    private func invalidateTimer() {
-        timer?.invalidate()
-        timer = nil
+    private func logInitialMemoryUsage() {
+        let memoryUsage = MemoryAudit.shared.currentMemoryUsage()
+        logger.info("Initial memory usage: \(MemoryAudit.shared.formatMemorySize(memoryUsage))")
     }
     
-    private func setupMemoryAuditTimer() {
-        // Cancel existing timer if any
-        invalidateMemoryAuditTimer()
-        
-        // Create new timer
-        memoryAuditTimer = Timer.scheduledTimer(
-            timeInterval: memoryAuditInterval,
-            target: self,
-            selector: #selector(performMemoryAudit),
-            userInfo: nil,
-            repeats: true
-        )
-        
-        // Make sure timer fires even when scrolling
-        if let memoryAuditTimer = memoryAuditTimer {
-            RunLoop.current.add(memoryAuditTimer, forMode: .common)
-        }
-        
-        // Perform an initial audit
-        performMemoryAudit()
-    }
-    
-    private func invalidateMemoryAuditTimer() {
-        memoryAuditTimer?.invalidate()
-        memoryAuditTimer = nil
+    // MARK: - Timer Actions
+    @objc
+    private func performMemoryAudit() {
+        let memoryUsage = MemoryAudit.shared.currentMemoryUsage()
+        logger.info("Current memory usage: \(MemoryAudit.shared.formatMemorySize(memoryUsage))")
+        MemoryAudit.shared.performAudit()
     }
     
     @objc
-    private func performMemoryAudit() {
-        // Log current memory usage
-        let memoryUsage = MemoryAudit.shared.currentMemoryUsage()
-        logger.info("Current memory usage: \(MemoryAudit.shared.formatMemorySize(memoryUsage))")
-        
-        // Perform memory audit
-        MemoryAudit.shared.performAudit()
+    private func updateLiveScores() {
+        Task { [weak self] in
+            guard let self = self else { return }
+            await self.performLiveScoreUpdate()
+        }
     }
     
     @objc
@@ -160,42 +121,13 @@ class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate, @unchecked S
         }
     }
     
+    // MARK: - Game Fetching and Menu Updates
     private func fetchGamesAndUpdateMenu() async {
         do {
             if userPreferences.favoriteTeam == "ALL" {
-                // Fetch all games for the current season
-                let currentYear = Calendar.current.component(.year, from: Date())
-                let season = String(currentYear)
-                let response = try await DependencyContainer.shared.nbaClient.fetchSchedule(season: season)
-                let allGames: [Game] = response.results.schedule
-
-                // Filter for games in the next N days (including today)
-                let now = Date()
-                let calendar = Calendar.current
-                let startOfToday = calendar.startOfDay(for: now)
-                guard let endDate = calendar.date(
-                    byAdding: .day,
-                    value: userPreferences.allTeamsDaysToShow,
-                    to: startOfToday
-                ) else {
-                    logger.error("Failed to calculate end date for filtering games.")
-                    return
-                }
-                let filteredGames = allGames.filter { game in
-                    let gameDate = calendar.startOfDay(for: game.localGameTime)
-                    return gameDate >= startOfToday && gameDate < endDate
-                }.sorted { $0.localGameTime < $1.localGameTime }
-
-                await MainActor.run {
-                    self.updateMenuUIForAllTeams(upcomingGames: filteredGames)
-                }
+                try await handleAllTeamsMode()
             } else {
-                // Fetch the games for the selected team
-                let games = try await scheduleManager.fetchGames(forTeam: userPreferences.favoriteTeam)
-                await MainActor.run {
-                    self.games = games
-                    self.updateMenuUI(with: games)
-                }
+                try await handleIndividualTeamMode()
             }
         } catch {
             logger.error("Error updating menu: \(error.localizedDescription)")
@@ -205,107 +137,149 @@ class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate, @unchecked S
         }
     }
     
-    private func updateMenuUI(with games: FilteredGames) {
-        // Create the SwiftUI menu
-        let menuView = MenuView(
-            games: games,
-            teamAbbreviation: userPreferences.favoriteTeam,
-            refreshAction: { [weak self] in
-                self?.updateMenu()
-            },
-            changeTeamAction: { [weak self] newTeam in
-                self?.changeTeam(to: newTeam)
-            }
-        )
-        
-        // Wrap in AnyView for type erasure
-        let hostingView = NSHostingView(rootView: AnyView(menuView))
-        self.hostingView = hostingView
-        
-        // Size the hosting view to fit its content
-        hostingView.frame.size = hostingView.fittingSize
-        
-        // Remove all items from the existing menu and add the new view
-        if let menu = self.statusItem?.menu {
-            menu.removeAllItems()
-            let customMenuItem = NSMenuItem()
-            customMenuItem.view = hostingView
-            menu.addItem(customMenuItem)
+    private func handleAllTeamsMode() async throws {
+        // Fetch all games for the current season
+        let currentYear = Calendar.current.component(.year, from: Date())
+        let season = String(currentYear)
+        let response = try await DependencyContainer.shared.nbaClient.fetchSchedule(season: season)
+        let allGames: [Game] = response.results.schedule
+
+        // Filter for games in the specified date range
+        let filteredGames = try filterGamesForAllTeams(allGames)
+
+        // Split into in-progress and upcoming games
+        var inProgressGames = filteredGames.filter { $0.isInProgress }
+        let upcomingGames = filteredGames.filter { $0.isUpcoming }
+
+        // Fetch live scores for in-progress games
+        if !inProgressGames.isEmpty {
+            inProgressGames = await liveScoreManager.fetchLiveScores(for: inProgressGames)
+        }
+
+        // Capture variables for MainActor
+        let finalInProgressGames = inProgressGames
+        let hasInProgressGames = !inProgressGames.isEmpty
+
+        await MainActor.run {
+            self.updateMenuUIForAllTeams(upcomingGames: upcomingGames, inProgressGames: finalInProgressGames)
+            self.setupLiveScoreTimerIfNeeded(hasInProgressGames: hasInProgressGames)
         }
     }
-
-    private func updateMenuUIForAllTeams(upcomingGames: [Game]) {
-        // Create a SwiftUI view for "All Teams" mode
-        let menuView = AllTeamsMenuView(
-            upcomingGames: upcomingGames,
-            refreshAction: { [weak self] in
-                self?.updateMenu()
-            },
-            changeTeamAction: { [weak self] newTeam in
-                self?.changeTeam(to: newTeam)
-            }
-        )
-
-        let hostingView = NSHostingView(rootView: AnyView(menuView))
-        self.hostingView = hostingView
-
-        hostingView.frame.size = hostingView.fittingSize
-
-        if let menu = self.statusItem?.menu {
-            menu.removeAllItems()
-            let customMenuItem = NSMenuItem()
-            customMenuItem.view = hostingView
-            menu.addItem(customMenuItem)
+    
+    private func handleIndividualTeamMode() async throws {
+        let games = try await scheduleManager.fetchGames(forTeam: userPreferences.favoriteTeam)
+        
+        await MainActor.run {
+            self.games = games
+            self.updateMenuUI(with: games)
+            self.setupLiveScoreTimerIfNeeded(hasInProgressGames: !games.inProgressGames.isEmpty)
         }
     }
-    private func showErrorMenu(error: Error) {
-        let menu = NSMenu()
+    
+    // MARK: - Live Score Updates
+    private func performLiveScoreUpdate() async {
+        logger.info("Performing live score update")
         
-        // Add error message
-        let errorMessage = "Error fetching WNBA schedule: \(error.localizedDescription)"
-        menu.addItem(NSMenuItem(title: errorMessage, action: nil, keyEquivalent: ""))
-        
-        menu.addItem(NSMenuItem.separator())
-        
-        // Add refresh option
-        let refreshItem = NSMenuItem(title: "Refresh", action: #selector(self.updateMenu), keyEquivalent: "r")
-        refreshItem.target = self
-        menu.addItem(refreshItem)
-        
-        // Add team selection option
-        let teamItem = NSMenuItem(title: "Change Team", action: nil, keyEquivalent: "")
-        let teamSubmenu = NSMenu()
-        
-        for team in TeamManager.allTeams {
-            let item = NSMenuItem(
-                title: "\(team.fullName) (\(team.abbreviation))",
-                action: #selector(self.teamSelected(_:)),
-                keyEquivalent: ""
-            )
-            item.representedObject = team.abbreviation
-            item.target = self
-            teamSubmenu.addItem(item)
-            // MARK: - NSMenuDelegate
-            func menuWillOpen(_ menu: NSMenu) {
-                Task { [weak self] in
-                    guard let self = self else { return }
-                    await self.fetchGamesAndUpdateMenu()
+        if userPreferences.favoriteTeam == "ALL" {
+            await updateLiveScoresForAllTeams()
+        } else {
+            await updateLiveScoresForTeam()
+        }
+    }
+    
+    private func updateLiveScoresForAllTeams() async {
+        await liveScoreManager.updateLiveScoresForAllTeams(userPreferences: userPreferences) { [weak self] result in
+            Task { @MainActor [weak self] in
+                guard let self = self else { return }
+                
+                switch result {
+                case .success(let data):
+                    if data.gameFinished {
+                        logger.info("Game finished, refreshing entire schedule")
+                        self.updateMenu()
+                    } else {
+                        self.updateMenuUIForAllTeams(
+                            upcomingGames: data.upcomingGames,
+                            inProgressGames: data.inProgressGames
+                        )
+                    }
+                    
+                    if data.inProgressGames.isEmpty {
+                        self.timerManager.invalidateLiveScoreTimer()
+                    }
+                    
+                case .failure(let error):
+                    logger.error("Error updating live scores for all teams: \(error.localizedDescription)")
                 }
             }
         }
-        
-        teamItem.submenu = teamSubmenu
-        menu.addItem(teamItem)
-        
-        menu.addItem(NSMenuItem.separator())
-        
-        // Add quit option
-        menu.addItem(NSMenuItem(title: "Quit", action: #selector(NSApplication.terminate(_:)), keyEquivalent: "q"))
-        
-        // Set the menu
-        self.statusItem?.menu = menu
     }
     
+    private func updateLiveScoresForTeam() async {
+        guard let currentGames = games else {
+            logger.info("No current games, stopping live score updates")
+            await MainActor.run {
+                self.timerManager.invalidateLiveScoreTimer()
+            }
+            return
+        }
+        
+        await liveScoreManager.updateLiveScoresForTeam(currentGames: currentGames) { [weak self] result in
+            Task { @MainActor [weak self] in
+                guard let self = self else { return }
+                
+                switch result {
+                case .success(let data):
+                    if data.gameFinished {
+                        logger.info("Game finished, refreshing entire schedule")
+                        self.updateMenu()
+                    } else {
+                        self.games = data.updatedGames
+                        self.updateMenuUI(with: data.updatedGames)
+                    }
+                    
+                    if data.updatedGames.inProgressGames.isEmpty {
+                        self.timerManager.invalidateLiveScoreTimer()
+                    }
+                    
+                case .failure(let error):
+                    logger.error("Error updating live scores for team: \(error.localizedDescription)")
+                }
+            }
+        }
+    }
+    
+    // MARK: - UI Updates
+    private func updateMenuUI(with games: FilteredGames) {
+        menuManager.updateMenuUI(
+            with: games,
+            statusItem: statusBarManager.getStatusItem(),
+            refreshAction: { [weak self] in self?.updateMenu() },
+            changeTeamAction: { [weak self] newTeam in self?.changeTeam(to: newTeam) }
+        )
+    }
+    
+    private func updateMenuUIForAllTeams(upcomingGames: [Game], inProgressGames: [Game]) {
+        menuManager.updateMenuUIForAllTeams(
+            upcomingGames: upcomingGames,
+            inProgressGames: inProgressGames,
+            statusItem: statusBarManager.getStatusItem(),
+            refreshAction: { [weak self] in self?.updateMenu() },
+            changeTeamAction: { [weak self] newTeam in self?.changeTeam(to: newTeam) }
+        )
+    }
+    
+    private func showErrorMenu(error: Error) {
+        menuManager.showErrorMenu(
+            error: error,
+            statusItem: statusBarManager.getStatusItem(),
+            target: self,
+            updateMenuSelector: #selector(updateMenu),
+            teamSelectedSelector: #selector(teamSelected(_:))
+        )
+    }
+    
+    // MARK: - Team Management
     @objc
     private func teamSelected(_ sender: NSMenuItem) {
         guard let teamAbbr = sender.representedObject as? String else { return }
@@ -315,8 +289,45 @@ class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate, @unchecked S
     private func changeTeam(to teamAbbreviation: String) {
         userPreferences.favoriteTeam = teamAbbreviation
         userPreferences.savePreferences()
-        updateStatusButtonTooltip()
-        apiCache.clearCache() // Ensure fresh data is fetched for new team
+        statusBarManager.updateTooltip()
+        apiCache.clearCache()
         updateMenu()
+    }
+    
+    // MARK: - Helper Methods
+    private func hasInProgressGames() -> Bool {
+        if let games = games {
+            return !games.inProgressGames.isEmpty
+        }
+        return userPreferences.favoriteTeam == "ALL"
+    }
+    
+    private func setupLiveScoreTimerIfNeeded(hasInProgressGames: Bool) {
+        if hasInProgressGames {
+            timerManager.setupLiveScoreTimer(
+                target: self,
+                selector: #selector(updateLiveScores),
+                hasInProgressGames: hasInProgressGames
+            )
+        }
+    }
+    
+    private func filterGamesForAllTeams(_ allGames: [Game]) throws -> [Game] {
+        let now = Date()
+        let calendar = Calendar.current
+        let startOfToday = calendar.startOfDay(for: now)
+        
+        guard let endDate = calendar.date(
+            byAdding: .day,
+            value: userPreferences.allTeamsDaysToShow,
+            to: startOfToday
+        ) else {
+            throw LiveScoreError.dateCalculationFailed
+        }
+        
+        return allGames.filter { game in
+            let gameDate = calendar.startOfDay(for: game.localGameTime)
+            return gameDate >= startOfToday && gameDate < endDate
+        }.sorted { $0.localGameTime < $1.localGameTime }
     }
 }

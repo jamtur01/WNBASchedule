@@ -174,7 +174,7 @@ final class ScheduleManagerTests: XCTestCase {
                 home: createTeam(abbr: "CON", score: nil),
                 visitor: createTeam(abbr: "NYL", score: nil)
             ),
-            state: 0 // Upcoming
+            state: 1 // Upcoming
         )
         
         return ScheduleResponse(results: Results(schedule: [pastGame, upcomingGame]))
@@ -214,7 +214,7 @@ final class ScheduleManagerTests: XCTestCase {
                     home: createTeam(abbr: "CON", score: nil),
                     visitor: createTeam(abbr: "NYL", score: nil)
                 ),
-                state: 0 // Upcoming
+                state: 1 // Upcoming
             )
             games.append(game)
         }
@@ -283,7 +283,9 @@ final class ScheduleManagerTests: XCTestCase {
 
 class MockNBAClient: NBAClientProtocol {
     var mockScheduleResponse: ScheduleResponse?
+    var mockBoxscoreResponse: BoxscoreResponse?
     var lastFetchedSeason: String?
+    var lastFetchedGameId: String?
     var error: Error?
     
     func fetchSchedule(season: String?) async throws -> ScheduleResponse {
@@ -295,6 +297,21 @@ class MockNBAClient: NBAClientProtocol {
         }
         
         guard let response = mockScheduleResponse else {
+            throw NBAClientError.invalidResponse(404)
+        }
+        
+        return response
+    }
+    
+    func fetchBoxscore(gameId: String) async throws -> BoxscoreResponse {
+        lastFetchedGameId = gameId
+        
+        if let error = error {
+            throw error
+        }
+        
+        guard let response = mockBoxscoreResponse else {
+            // For now, just throw an error since ScheduleManager tests don't use boxscore
             throw NBAClientError.invalidResponse(404)
         }
         

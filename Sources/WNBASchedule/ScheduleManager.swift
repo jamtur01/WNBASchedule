@@ -45,7 +45,12 @@ class ScheduleManager: ScheduleManagerProtocol {
         logger.info("Fetching games for team \(teamAbbr) in season \(seasonDisplay)")
         
         let response = try await client.fetchSchedule(season: season)
-        return filterGames(from: response.results.schedule, forTeam: teamAbbr)
+        var games = response.results.schedule
+        
+        // Fetch live scores for in-progress games
+        games = await fetchLiveScores(for: games)
+        
+        return filterGames(from: games, forTeam: teamAbbr)
     }
     
     // MARK: - Private Methods
@@ -56,20 +61,22 @@ class ScheduleManager: ScheduleManagerProtocol {
             game.home.abbr == teamAbbr || game.visitor.abbr == teamAbbr
         }
         
-        let now = Date()
-        
         // Mark games as home or away for the specified team
         let markedGames = teamGames.map { game -> MarkedGame in
             let isHome = game.home.abbr == teamAbbr
             return MarkedGame(game: game, isHomeGame: isHome)
         }
         
-        // Split into past and upcoming games
-        let pastGames = markedGames.filter { $0.game.localGameTime < now }
-        let upcomingGames = markedGames.filter { $0.game.localGameTime >= now }
+        // Split into past, in-progress, and upcoming games
+        let pastGames = markedGames.filter { $0.game.isCompleted }
+        let inProgressGames = markedGames.filter { $0.game.isInProgress }
+        let upcomingGames = markedGames.filter { $0.game.isUpcoming }
         
-        // Sort past games by date (oldest first)
+        // Sort past games by date (oldest first, latest last for display)
         let sortedPastGames = pastGames.sorted { $0.game.localGameTime < $1.game.localGameTime }
+        
+        // Sort in-progress games by date (earliest first)
+        let sortedInProgressGames = inProgressGames.sorted { $0.game.localGameTime < $1.game.localGameTime }
         
         // Sort upcoming games by date (earliest first)
         let sortedUpcomingGames = upcomingGames.sorted { $0.game.localGameTime < $1.game.localGameTime }
@@ -78,27 +85,84 @@ class ScheduleManager: ScheduleManagerProtocol {
         let pastGamesToShow = userPreferences.pastGamesToShow
         let upcomingGamesToShow = userPreferences.upcomingGamesToShow
         
-        let recentPastGames = Array(sortedPastGames.prefix(pastGamesToShow))
+        let recentPastGames = Array(sortedPastGames.suffix(pastGamesToShow))
         let nextUpcomingGames = Array(sortedUpcomingGames.prefix(upcomingGamesToShow))
+        // Show all in-progress games (there shouldn't be many at once)
+        let allInProgressGames = sortedInProgressGames
         
         logger.info(
-            "Team \(teamAbbr): \(teamGames.count) games, \(recentPastGames.count) past, \(nextUpcomingGames.count) upc"
+            "Team \(teamAbbr): \(teamGames.count) games, \(recentPastGames.count) past, \(allInProgressGames.count) in-progress, \(nextUpcomingGames.count) upcoming"
         )
         
         return FilteredGames(
             pastGames: recentPastGames,
+            inProgressGames: allInProgressGames,
             upcomingGames: nextUpcomingGames
         )
+    }
+    
+    /// Fetches live scores for in-progress games
+    /// - Parameter games: Array of games to check for live scores
+    /// - Returns: Updated games array with live scores populated
+    private func fetchLiveScores(for games: [Game]) async -> [Game] {
+        var updatedGames = games
+        
+        // Find in-progress games
+        let inProgressGameIndices = games.enumerated().compactMap { index, game in
+            game.isInProgress ? index : nil
+        }
+        
+        if inProgressGameIndices.isEmpty {
+            logger.info("No in-progress games found, skipping live score fetch")
+            return updatedGames
+        }
+        
+        logger.info("Fetching live scores for \(inProgressGameIndices.count) in-progress games")
+        
+        // Fetch live scores concurrently
+        await withTaskGroup(of: (Int, BoxscoreResponse?)?.self) { group in
+            for index in inProgressGameIndices {
+                let game = games[index]
+                group.addTask { [weak self] in
+                    guard let self = self else { return nil }
+                    do {
+                        let boxscore = try await self.client.fetchBoxscore(gameId: game.gid)
+                        return (index, boxscore)
+                    } catch {
+                        self.logger.error(
+                            "Failed to fetch boxscore for game \(game.gid): \(error.localizedDescription)"
+                        )
+                        return (index, nil)
+                    }
+                }
+            }
+            
+            for await result in group {
+                guard let (index, boxscore) = result else { continue }
+                
+                // Update the game with live scores
+                updatedGames[index].liveHomeScore = boxscore?.game.homeTeam.score
+                updatedGames[index].liveVisitorScore = boxscore?.game.awayTeam.score
+                
+                if let homeScore = boxscore?.game.homeTeam.score,
+                   let awayScore = boxscore?.game.awayTeam.score {
+                    self.logger.info("Updated live scores for game \(games[index].gid): \(awayScore)-\(homeScore)")
+                }
+            }
+        }
+        
+        return updatedGames
     }
 }
 
 /// Represents filtered games for a team
 struct FilteredGames {
     let pastGames: [MarkedGame]
+    let inProgressGames: [MarkedGame]
     let upcomingGames: [MarkedGame]
     
     var isEmpty: Bool {
-        return pastGames.isEmpty && upcomingGames.isEmpty
+        return pastGames.isEmpty && inProgressGames.isEmpty && upcomingGames.isEmpty
     }
     
     var hasUpcomingGames: Bool {
@@ -107,6 +171,10 @@ struct FilteredGames {
     
     var hasPastGames: Bool {
         return !pastGames.isEmpty
+    }
+    
+    var hasInProgressGames: Bool {
+        return !inProgressGames.isEmpty
     }
 }
 

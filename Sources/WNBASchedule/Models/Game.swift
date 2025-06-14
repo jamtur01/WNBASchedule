@@ -38,7 +38,7 @@ struct Game: Codable, Identifiable {
     /// Visiting team
     let visitor: Team
     
-    /// Game state (0: upcoming, 1: in progress, 2: halftime, 3: completed)
+    /// Game state (1: upcoming, 2: in progress, 3: completed)
     let state: Int
     
     // MARK: - Optional Properties
@@ -105,6 +105,12 @@ struct Game: Codable, Identifiable {
     
     /// League Pass video link
     let leaguePassVideoLink: String?
+    
+    // MARK: - Live Score Data (not from API, populated separately)
+    
+    /// Live scores from boxscore API (for in-progress games)
+    var liveHomeScore: Int?
+    var liveVisitorScore: Int?
     
     // MARK: - Coding Keys
     
@@ -181,23 +187,21 @@ struct Game: Codable, Identifiable {
     
     /// Whether the game is in progress
     var isInProgress: Bool {
-        return state == 1 || state == 2
+        return state == 2
     }
     
     /// Whether the game is upcoming
     var isUpcoming: Bool {
-        return state == 0
+        return state == 1
     }
     
     /// Game status description
     var statusDescription: String {
         switch state {
-        case 0:
-            return "Upcoming"
         case 1:
-            return "In Progress"
+            return "Upcoming"
         case 2:
-            return "Halftime"
+            return "In Progress"
         case 3:
             return "Final"
         default:
@@ -226,6 +230,22 @@ struct Game: Codable, Identifiable {
     /// URL for the game on the WNBA website
     var gameURL: URL? {
         return URL(string: "https://www.wnba.com/game/\(gid)/")
+    }
+    
+    /// Current home team score (live score for in-progress games, otherwise original score)
+    var currentHomeScore: Int? {
+        if isInProgress, let liveScore = liveHomeScore {
+            return liveScore
+        }
+        return home.score
+    }
+    
+    /// Current visitor team score (live score for in-progress games, otherwise original score)
+    var currentVisitorScore: Int? {
+        if isInProgress, let liveScore = liveVisitorScore {
+            return liveScore
+        }
+        return visitor.score
     }
 }
 

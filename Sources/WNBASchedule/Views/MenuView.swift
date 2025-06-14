@@ -112,6 +112,20 @@ struct MenuView: View {
                     Divider()
                 }
 
+                // In Progress Games Section
+                if !games.inProgressGames.isEmpty {
+                    Text("menu.section.in_progress".localized)
+                        .font(.system(size: 14, weight: .bold))
+                        .foregroundColor(.orange)
+                        .padding(.top, 5)
+
+                    ForEach(games.inProgressGames, id: \.game.gid) { markedGame in
+                        InProgressGameRow(game: markedGame.game)
+                    }
+
+                    Divider()
+                }
+
                 // Upcoming Games Section
                 if !games.upcomingGames.isEmpty {
                     Text("menu.section.upcoming".localized)
@@ -313,6 +327,52 @@ struct PreviousGameRow: View {
             }
         }
         .buttonStyle(PlainButtonStyle()) // Keep the original appearance
+        .padding(.vertical, 2)
+    }
+}
+
+// MARK: - In Progress Game Row
+struct InProgressGameRow: View {
+    let game: Game
+    
+    private var homeWinning: Bool {
+        return (game.currentHomeScore ?? 0) > (game.currentVisitorScore ?? 0)
+    }
+    
+    private func openGameURL() {
+        if let url = URL(string: "https://www.wnba.com/game/\(game.gid)/") {
+            NSWorkspace.shared.open(url)
+        }
+    }
+    
+    var body: some View {
+        Button(action: openGameURL) {
+            HStack(alignment: .center) {
+                // Game status
+                Text(game.gameStatusText?.trimmingCharacters(in: .whitespaces) ?? game.statusDescription)
+                    .font(.system(size: 13, weight: .medium))
+                    .foregroundColor(.orange)
+                    .frame(minWidth: 80, alignment: .leading)
+
+                Spacer()
+
+                HStack(spacing: 5) {
+                    Text("\(game.visitor.abbr) \(game.currentVisitorScore ?? 0)")
+                        .font(.system(size: 13, weight: .bold))
+                        .foregroundColor(homeWinning ? .red : .green)
+                    Text("vs")
+                        .font(.system(size: 13))
+                        .foregroundColor(.gray)
+                    Text("\(game.home.abbr) \(game.currentHomeScore ?? 0)")
+                        .font(.system(size: 13, weight: .bold))
+                        .foregroundColor(homeWinning ? .green : .red)
+                }
+                .lineLimit(1)
+                .truncationMode(.tail)
+                .frame(minWidth: 120, alignment: .trailing)
+            }
+        }
+        .buttonStyle(PlainButtonStyle())
         .padding(.vertical, 2)
     }
 }

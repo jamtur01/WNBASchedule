@@ -12,8 +12,8 @@ enum Localization {
     ///   - comment: A comment to provide context for translators
     /// - Returns: The localized string
     static func string(for key: String, comment: String = "") -> String {
-        // Use Bundle.main for localization (resources copied to app bundle)
-        let localizedString = Bundle.main.localizedString(forKey: key, value: nil, table: nil)
+        // Use Bundle.module for localization in Swift Package Manager
+        let localizedString = Bundle.module.localizedString(forKey: key, value: nil, table: nil)
         
         // Log if we're falling back to the key (indicates missing translation)
         if localizedString == key {
@@ -56,7 +56,7 @@ enum Localization {
     
     /// A list of supported locale identifiers
     static var supportedLocaleIdentifiers: [String] {
-        return Bundle.main.localizations
+        return Bundle.module.localizations
     }
     
     /// Changes the app's locale to the specified identifier
