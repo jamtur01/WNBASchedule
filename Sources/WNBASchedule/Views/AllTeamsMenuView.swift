@@ -18,6 +18,7 @@ struct AllTeamsMenuView: View {
     let inProgressGames: [Game]
     let refreshAction: () -> Void
     let changeTeamAction: (String) -> Void
+    let previouslySelectedTeam: String?
 
     @State private var showingTeamPicker = false
 
@@ -41,6 +42,32 @@ struct AllTeamsMenuView: View {
                     .padding(.top, 5)
                     .fixedSize(horizontal: true, vertical: false)
                 Spacer(minLength: 8)
+                
+                // Back button (only shown if there's a previously selected team)
+                if let previousTeam = previouslySelectedTeam,
+                   let teamInfo = TeamManager.getTeamInfo(abbreviation: previousTeam) {
+                    Button(
+                        action: {
+                            changeTeamAction(previousTeam)
+                        },
+                        label: {
+                            HStack(spacing: 4) {
+                                Image(systemName: "arrow.left")
+                                    .font(.system(size: 10))
+                                Text(teamInfo.abbreviation)
+                                    .font(.system(size: 10, weight: .medium))
+                            }
+                            .foregroundColor(.blue)
+                            .padding(.horizontal, 6)
+                            .padding(.vertical, 3)
+                            .background(Color.blue.opacity(0.1))
+                            .cornerRadius(4)
+                        }
+                    )
+                    .buttonStyle(PlainButtonStyle())
+                    .help("Back to \(teamInfo.fullName)")
+                }
+                
                 Button(
                     action: {
                         showingTeamPicker.toggle()

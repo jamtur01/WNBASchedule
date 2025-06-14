@@ -287,6 +287,11 @@ class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate, @unchecked S
     }
     
     private func changeTeam(to teamAbbreviation: String) {
+        // If switching to "ALL", save the current team as previously selected
+        if teamAbbreviation == "ALL" && userPreferences.favoriteTeam != "ALL" {
+            userPreferences.previouslySelectedTeam = userPreferences.favoriteTeam
+        }
+        
         userPreferences.favoriteTeam = teamAbbreviation
         userPreferences.savePreferences()
         statusBarManager.updateTooltip()

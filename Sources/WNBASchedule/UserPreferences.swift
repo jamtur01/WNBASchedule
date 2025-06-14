@@ -61,6 +61,15 @@ class UserPreferences {
         }
     }
     
+    /// The previously selected team before switching to "ALL" (used for Back button)
+    var previouslySelectedTeam: String? {
+        didSet {
+            if oldValue != previouslySelectedTeam {
+                savePreferences()
+            }
+        }
+    }
+    
     // MARK: - Constants
     private let defaultFavoriteTeam = "NYL"
     private let defaultPastGamesToShow = 10
@@ -75,6 +84,7 @@ class UserPreferences {
     private let allTeamsDaysToShowKey = "allTeamsDaysToShow"
     private let useLocalTimeZoneKey = "useLocalTimeZone"
     private let preferredLanguageKey = "preferredLanguage"
+    private let previouslySelectedTeamKey = "previouslySelectedTeam"
     
     private let logger = Logger(subsystem: "net.kartar.wnbaschedule", category: "UserPreferences")
     
@@ -90,6 +100,7 @@ class UserPreferences {
         self.allTeamsDaysToShow = userDefaults.integer(forKey: allTeamsDaysToShowKey)
         self.useLocalTimeZone = userDefaults.bool(forKey: useLocalTimeZoneKey)
         self.preferredLanguage = userDefaults.string(forKey: preferredLanguageKey) ?? defaultPreferredLanguage
+        self.previouslySelectedTeam = userDefaults.string(forKey: previouslySelectedTeamKey)
         
         // If these values are 0, it means they weren't set before, so use defaults
         if self.pastGamesToShow == 0 {
@@ -124,6 +135,7 @@ class UserPreferences {
         userDefaults.set(allTeamsDaysToShow, forKey: allTeamsDaysToShowKey)
         userDefaults.set(useLocalTimeZone, forKey: useLocalTimeZoneKey)
         userDefaults.set(preferredLanguage, forKey: preferredLanguageKey)
+        userDefaults.set(previouslySelectedTeam, forKey: previouslySelectedTeamKey)
         
         logger.info("""
             Saved user preferences: team=\(self.favoriteTeam), language=\(self.preferredLanguage), \

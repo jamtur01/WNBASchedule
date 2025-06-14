@@ -44,7 +44,8 @@ class MenuManager {
             upcomingGames: upcomingGames,
             inProgressGames: inProgressGames,
             refreshAction: refreshAction,
-            changeTeamAction: changeTeamAction
+            changeTeamAction: changeTeamAction,
+            previouslySelectedTeam: userPreferences.previouslySelectedTeam
         )
         
         setMenuContent(AnyView(menuView), statusItem: statusItem)
