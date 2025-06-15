@@ -51,7 +51,7 @@ extension NSAttributedString {
     /// Create a header style attributed string
     static func header(
         _ text: String,
-        color: NSColor = NSColor(red: 0.0, green: 0.5, blue: 0.4, alpha: 1.0)
+        color: NSColor = ColorManager.wnbaNSColor
     ) -> NSAttributedString {
         return styled(
             text,
@@ -77,8 +77,8 @@ extension NSAttributedString {
     /// Create a team style attributed string
     static func team(_ text: String, isWinner: Bool) -> NSAttributedString {
         let color = isWinner
-            ? NSColor(red: 0.0, green: 0.6, blue: 0.0, alpha: 1.0)
-            : NSColor(red: 0.8, green: 0.0, blue: 0.0, alpha: 1.0)
+            ? ColorManager.winNSColor
+            : ColorManager.lossNSColor
         return styled(
             text,
             font: .boldSystemFont(ofSize: 13),
@@ -122,8 +122,8 @@ extension NSAttributedString {
         
         // Away team with score
         let awayColor = gameInfo.homeWon ?
-            NSColor(red: 0.8, green: 0.0, blue: 0.0, alpha: 1.0) :
-            NSColor(red: 0.0, green: 0.6, blue: 0.0, alpha: 1.0)
+            ColorManager.lossNSColor :
+            ColorManager.winNSColor
             
         mutableString.append(NSAttributedString(
             string: "\(gameInfo.awayTeam) \(gameInfo.awayScore ?? 0)",
@@ -144,8 +144,8 @@ extension NSAttributedString {
         
         // Home team with score
         let homeColor = gameInfo.homeWon ?
-            NSColor(red: 0.0, green: 0.6, blue: 0.0, alpha: 1.0) :
-            NSColor(red: 0.8, green: 0.0, blue: 0.0, alpha: 1.0)
+            ColorManager.winNSColor :
+            ColorManager.lossNSColor
             
         mutableString.append(NSAttributedString(
             string: "\(gameInfo.homeTeam) \(gameInfo.homeScore ?? 0)",

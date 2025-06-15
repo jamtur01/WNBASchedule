@@ -20,10 +20,7 @@ struct MenuView: View {
     }
     
     private var teamColor: Color {
-        if let hexColor = teamInfo?.primaryColor {
-            return Color(hex: hexColor) ?? Color.blue
-        }
-        return Color.blue
+        return ColorManager.teamColor(for: teamAbbreviation)
     }
     
     // MARK: - Body
@@ -116,7 +113,7 @@ struct MenuView: View {
                 if !games.inProgressGames.isEmpty {
                     Text("menu.section.in_progress".localized)
                         .font(.system(size: 14, weight: .bold))
-                        .foregroundColor(.orange)
+                        .foregroundColor(ColorManager.liveColor)
                         .padding(.top, 5)
 
                     ForEach(games.inProgressGames, id: \.game.gid) { markedGame in
@@ -158,13 +155,13 @@ struct MenuView: View {
                             label: {
                                 Text("All Teams".localized)
                                     .font(.system(size: 13, weight: .bold))
-                                    .foregroundColor(teamAbbreviation == "ALL" ? .white : Color(hex: "#FA4616"))
+                                    .foregroundColor(teamAbbreviation == "ALL" ? .white : ColorManager.wnbaBrandColor)
                                     .padding(.horizontal, 10)
                                     .padding(.vertical, 5)
                                     .background(
                                         teamAbbreviation == "ALL"
-                                            ? (Color(hex: "#FA4616") ?? .orange)
-                                            : (Color(hex: "#FA4616") ?? .orange).opacity(0.15)
+                                            ? ColorManager.wnbaBrandColor
+                                            : ColorManager.wnbaBrandColor.opacity(0.15)
                                     )
                                     .cornerRadius(5)
                             }
@@ -313,13 +310,13 @@ struct PreviousGameRow: View {
                 HStack(spacing: 5) {
                     Text("\(game.visitor.abbr) \(game.visitor.score ?? 0)")
                         .font(.system(size: 13, weight: .bold))
-                        .foregroundColor(homeWon ? .red : .green)
+                        .foregroundColor(homeWon ? ColorManager.lossColor : ColorManager.winColor)
                     Text("vs")
                         .font(.system(size: 13))
-                        .foregroundColor(.gray)
+                        .foregroundColor(ColorManager.textSecondary)
                     Text("\(game.home.abbr) \(game.home.score ?? 0)")
                         .font(.system(size: 13, weight: .bold))
-                        .foregroundColor(homeWon ? .green : .red)
+                        .foregroundColor(homeWon ? ColorManager.winColor : ColorManager.lossColor)
                 }
                 .lineLimit(1)
                 .truncationMode(.tail)
@@ -351,7 +348,7 @@ struct InProgressGameRow: View {
                 // Game status
                 Text(game.gameStatusText?.trimmingCharacters(in: .whitespaces) ?? game.statusDescription)
                     .font(.system(size: 13, weight: .medium))
-                    .foregroundColor(.orange)
+                    .foregroundColor(ColorManager.liveColor)
                     .frame(minWidth: 80, alignment: .leading)
 
                 Spacer()
@@ -359,13 +356,13 @@ struct InProgressGameRow: View {
                 HStack(spacing: 5) {
                     Text("\(game.visitor.abbr) \(game.currentVisitorScore ?? 0)")
                         .font(.system(size: 13, weight: .bold))
-                        .foregroundColor(homeWinning ? .red : .green)
+                        .foregroundColor(homeWinning ? ColorManager.lossColor : ColorManager.winColor)
                     Text("vs")
                         .font(.system(size: 13))
-                        .foregroundColor(.gray)
+                        .foregroundColor(ColorManager.textSecondary)
                     Text("\(game.home.abbr) \(game.currentHomeScore ?? 0)")
                         .font(.system(size: 13, weight: .bold))
-                        .foregroundColor(homeWinning ? .green : .red)
+                        .foregroundColor(homeWinning ? ColorManager.winColor : ColorManager.lossColor)
                 }
                 .lineLimit(1)
                 .truncationMode(.tail)
@@ -445,22 +442,3 @@ struct UpcomingGameRow: View {
     }
 }
 
-// MARK: - Color Extension
-extension Color {
-    init?(hex: String) {
-        var hexSanitized = hex.trimmingCharacters(in: .whitespacesAndNewlines)
-        hexSanitized = hexSanitized.replacingOccurrences(of: "#", with: "")
-        
-        var rgb: UInt64 = 0
-        
-        guard Scanner(string: hexSanitized).scanHexInt64(&rgb) else {
-            return nil
-        }
-        
-        let red = Double((rgb & 0xFF0000) >> 16) / 255.0
-        let green = Double((rgb & 0x00FF00) >> 8) / 255.0
-        let blue = Double(rgb & 0x0000FF) / 255.0
-        
-        self.init(red: red, green: green, blue: blue)
-    }
-}

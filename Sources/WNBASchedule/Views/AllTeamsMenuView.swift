@@ -36,7 +36,7 @@ struct AllTeamsMenuView: View {
                     .frame(width: 26, height: 26)
                 Text("menu.title.all_teams".localized)
                     .font(.system(size: 16, weight: .bold))
-                    .foregroundColor(Color(hex: "#FA4616") ?? .orange)
+                    .foregroundColor(ColorManager.wnbaBrandColor)
                     .lineLimit(1)
                     .layoutPriority(1)
                     .padding(.top, 5)
@@ -57,10 +57,10 @@ struct AllTeamsMenuView: View {
                                 Text(teamInfo.abbreviation)
                                     .font(.system(size: 10, weight: .medium))
                             }
-                            .foregroundColor(.blue)
+                            .foregroundColor(ColorManager.wnbaBrandColor)
                             .padding(.horizontal, 6)
                             .padding(.vertical, 3)
-                            .background(Color.blue.opacity(0.1))
+                            .background(ColorManager.wnbaBrandColor.opacity(0.1))
                             .cornerRadius(4)
                         }
                     )
@@ -100,7 +100,7 @@ struct AllTeamsMenuView: View {
             if !inProgressGames.isEmpty {
                 Text("menu.section.in_progress".localized)
                     .font(.system(size: 14, weight: .bold))
-                    .foregroundColor(.orange)
+                    .foregroundColor(ColorManager.liveColor)
                     .padding(.top, 5)
 
                 ForEach(inProgressGames, id: \.gid) { game in
@@ -114,7 +114,7 @@ struct AllTeamsMenuView: View {
             if !upcomingGames.isEmpty {
                 Text("menu.section.upcoming".localized)
                     .font(.system(size: 14, weight: .bold))
-                    .foregroundColor(Color(hex: "#FA4616") ?? .orange)
+                    .foregroundColor(ColorManager.wnbaBrandColor)
                     .padding(.top, 5)
 
                 ForEach(upcomingGames, id: \.gid) { game in
@@ -147,7 +147,7 @@ struct AllTeamsMenuView: View {
                                 .foregroundColor(.white)
                                 .padding(.horizontal, 10)
                                 .padding(.vertical, 4)
-                                .background(Color(hex: "#FA4616") ?? .orange)
+                                .background(ColorManager.wnbaBrandColor)
                                 .cornerRadius(4)
                         }
                     )
