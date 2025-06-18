@@ -93,5 +93,5 @@ Icon
 *.code-workspace
 
 WNBASchedule.app
-CLAUDE.md
+CLAUDE.md*
 .claude

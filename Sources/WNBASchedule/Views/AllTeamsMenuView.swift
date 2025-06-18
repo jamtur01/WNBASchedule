@@ -78,6 +78,7 @@ struct AllTeamsMenuView: View {
             AllTeamsMenuActions(refreshAction: refreshAction)
         }
         .padding(.horizontal, 20)
-        .padding(.vertical, 12)
+        .padding(.top, 16) // Increased top padding to prevent clipping
+        .padding(.bottom, 12)
     }
 }

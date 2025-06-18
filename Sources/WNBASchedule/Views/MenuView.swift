@@ -120,7 +120,7 @@ struct MenuView: View {
             .padding(.top, 8)
         }
         .padding(.horizontal, 16)
-        .padding(.vertical, 12)
+        .padding(.top, 16) // Increased top padding to prevent clipping
+        .padding(.bottom, 12)
     }
 }
-

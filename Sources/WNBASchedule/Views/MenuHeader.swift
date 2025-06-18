@@ -50,19 +50,17 @@ struct MenuHeader: View {
                     }
                 )
                 .buttonStyle(PlainButtonStyle())
-            }
-            
-            // Team picker (shown when settings button is clicked)
-            if showingTeamPicker {
-                TeamPickerView(
-                    selectedTeam: teamAbbreviation,
-                    onTeamSelected: { newTeam in
-                        changeTeamAction(newTeam)
-                        showingTeamPicker = false
-                    }
-                )
-                .transition(.opacity)
-                .animation(.easeInOut, value: showingTeamPicker)
+                .popover(isPresented: $showingTeamPicker, arrowEdge: .top) {
+                    TeamPickerView(
+                        selectedTeam: teamAbbreviation,
+                        onTeamSelected: { newTeam in
+                            changeTeamAction(newTeam)
+                            showingTeamPicker = false
+                        }
+                    )
+                    .frame(width: 320, height: 400)
+                    .background(ColorManager.adaptiveCardBackground(colorScheme: colorScheme))
+                }
             }
         }
     }
@@ -134,19 +132,17 @@ struct AllTeamsMenuHeader: View {
                     }
                 )
                 .buttonStyle(PlainButtonStyle())
-            }
-
-            // Team picker (shown when settings button is clicked)
-            if showingTeamPicker {
-                TeamPickerView(
-                    selectedTeam: "ALL",
-                    onTeamSelected: { newTeam in
-                        changeTeamAction(newTeam)
-                        showingTeamPicker = false
-                    }
-                )
-                .transition(.opacity)
-                .animation(.easeInOut, value: showingTeamPicker)
+                .popover(isPresented: $showingTeamPicker, arrowEdge: .top) {
+                    TeamPickerView(
+                        selectedTeam: "ALL",
+                        onTeamSelected: { newTeam in
+                            changeTeamAction(newTeam)
+                            showingTeamPicker = false
+                        }
+                    )
+                    .frame(width: 320, height: 400)
+                    .background(ColorManager.adaptiveCardBackground(colorScheme: colorScheme))
+                }
             }
         }
     }
