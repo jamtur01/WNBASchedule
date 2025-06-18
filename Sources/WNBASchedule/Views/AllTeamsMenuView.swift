@@ -28,71 +28,12 @@ struct AllTeamsMenuView: View {
 
     var body: some View {
         VStack(alignment: .leading, spacing: 5) {
-            // Title Row
-            HStack(alignment: .center, spacing: 8) {
-                Image.loadFromBundle(named: "wnbalogo")
-                    .resizable()
-                    .aspectRatio(contentMode: .fit)
-                    .frame(width: 26, height: 26)
-                Text("menu.title.all_teams".localized)
-                    .font(.system(size: 16, weight: .bold))
-                    .foregroundColor(ColorManager.wnbaBrandColor)
-                    .lineLimit(1)
-                    .layoutPriority(1)
-                    .padding(.top, 5)
-                    .fixedSize(horizontal: true, vertical: false)
-                Spacer(minLength: 8)
-                
-                // Back button (only shown if there's a previously selected team)
-                if let previousTeam = previouslySelectedTeam,
-                   let teamInfo = TeamManager.getTeamInfo(abbreviation: previousTeam) {
-                    Button(
-                        action: {
-                            changeTeamAction(previousTeam)
-                        },
-                        label: {
-                            HStack(spacing: 4) {
-                                Image(systemName: "arrow.left")
-                                    .font(.system(size: 10))
-                                Text(teamInfo.abbreviation)
-                                    .font(.system(size: 10, weight: .medium))
-                            }
-                            .foregroundColor(ColorManager.wnbaBrandColor)
-                            .padding(.horizontal, 6)
-                            .padding(.vertical, 3)
-                            .background(ColorManager.wnbaBrandColor.opacity(0.1))
-                            .cornerRadius(4)
-                        }
-                    )
-                    .buttonStyle(PlainButtonStyle())
-                    .help("Back to \(teamInfo.fullName)")
-                }
-                
-                Button(
-                    action: {
-                        showingTeamPicker.toggle()
-                    },
-                    label: {
-                        Image(systemName: "gear")
-                            .font(.system(size: 12))
-                            .foregroundColor(.gray)
-                    }
-                )
-                .buttonStyle(PlainButtonStyle())
-            }
-
-            // Team picker (shown when settings button is clicked)
-            if showingTeamPicker {
-                TeamPickerView(
-                    selectedTeam: "ALL",
-                    onTeamSelected: { newTeam in
-                        changeTeamAction(newTeam)
-                        showingTeamPicker = false
-                    }
-                )
-                .transition(.opacity)
-                .animation(.easeInOut, value: showingTeamPicker)
-            }
+            // All Teams Menu Header
+            AllTeamsMenuHeader(
+                showingTeamPicker: $showingTeamPicker,
+                changeTeamAction: changeTeamAction,
+                previouslySelectedTeam: previouslySelectedTeam
+            )
 
             Divider()
 
@@ -133,53 +74,10 @@ struct AllTeamsMenuView: View {
             LaunchAtLogin.Toggle()
                 .padding(.vertical, 4)
 
-            Divider()
-
-            // Menu Actions
-            HStack {
-                HStack(spacing: 8) {
-                    Button(
-                        action: {
-                            refreshAction()
-                        },
-                        label: {
-                            Text("action.refresh".localized)
-                                .foregroundColor(.white)
-                                .padding(.horizontal, 10)
-                                .padding(.vertical, 4)
-                                .background(ColorManager.wnbaBrandColor)
-                                .cornerRadius(4)
-                        }
-                    )
-                    .buttonStyle(PlainButtonStyle())
-
-                    Button(
-                        action: {
-                            NSApplication.shared.terminate(nil)
-                        },
-                        label: {
-                            Text("action.quit".localized)
-                                .foregroundColor(.white)
-                                .padding(.horizontal, 10)
-                                .padding(.vertical, 4)
-                                .background(Color.gray)
-                                .cornerRadius(4)
-                        }
-                    )
-                    .buttonStyle(PlainButtonStyle())
-                }
-
-                Spacer()
-
-                Text(String(format: "app.version".localized, Version.version))
-                    .font(.system(size: 9))
-                    .foregroundColor(.gray.opacity(0.6))
-            }
-            .frame(minWidth: 320)
-            .padding(.top, 8)
-            .padding(.bottom, 16)
+            // All Teams Menu Actions
+            AllTeamsMenuActions(refreshAction: refreshAction)
         }
-        .padding(.horizontal, 24)
-        .padding(.top, 8)
+        .padding(.horizontal, 20)
+        .padding(.vertical, 12)
     }
 }

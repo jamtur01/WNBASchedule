@@ -11,13 +11,13 @@ struct ColorManager {
         "ATL": "#E31E45",    // Brightened from #C8102E (Atlanta red)
         "CHI": "#4A9EF2",    // Lightened from #418FDE (Chicago blue)  
         "CON": "#FF6B35",    // Warmed from #E03A3E (Connecticut red-orange)
-        "DAL": "#D4E815",    // Slightly brightened from #C4D600 (Dallas lime)
+        "DAL": "#8BA614",    // Darkened from #D4E815 for better readability (Dallas lime)
         "GSV": "#B8A8E8",    // Lightened from #AD96DC (Golden State purple)
         "IND": "#1A4B8C",    // Lightened from #041E42 (Indiana navy)
         "LAS": "#8A4FA8",    // Lightened from #702F8A (LA Sparks purple)
         "LVA": "#2A2A2A",    // Lightened from pure black #010101 (Vegas)
         "MIN": "#3A7BB8",    // Brightened from #236192 (Minnesota blue)
-        "NYL": "#7FD6C2",    // Slightly darkened from #6ECEB2 (NY Liberty teal)
+        "NYL": "#2D8A72",    // Darkened from #7FD6C2 for better readability (NY Liberty teal)
         "PHX": "#3D2A65",    // Lightened from #211747 (Phoenix purple)
         "SEA": "#4A6B52",    // Lightened from #2C5234 (Seattle green)  
         "WAS": "#E31E45"     // Same as Atlanta - brightened from #C8102E (Washington red)
@@ -50,16 +50,54 @@ struct ColorManager {
     static let cardBackground = "#F9FAFB"
     static let separatorColor = "#E5E7EB"
     
+    // MARK: - Dark Mode Colors
+    
+    /// Dark mode variants of team colors with adjusted brightness for contrast
+    private static let darkModeTeamColors: [String: String] = [
+        "ATL": "#FF4A70",    // Brighter red for dark backgrounds
+        "CHI": "#6BB6FF",    // Lighter blue for dark backgrounds
+        "CON": "#FF8A5B",    // Warmer red-orange for dark backgrounds
+        "DAL": "#C4D630",    // Moderately bright lime for dark backgrounds (readable)
+        "GSV": "#D4C4F0",    // Lighter purple for dark backgrounds
+        "IND": "#4A7BC8",    // Brighter navy for dark backgrounds
+        "LAS": "#B970D4",    // Lighter purple for dark backgrounds
+        "LVA": "#6A6A6A",    // Lighter gray for dark backgrounds
+        "MIN": "#5A9AE0",    // Brighter blue for dark backgrounds
+        "NYL": "#4DBBA3",    // Moderately bright teal for dark backgrounds (readable)
+        "PHX": "#6A4A9A",    // Lighter purple for dark backgrounds
+        "SEA": "#7A9B82",    // Lighter green for dark backgrounds
+        "WAS": "#FF4A70"     // Same as Atlanta for dark backgrounds
+    ]
+    
+    /// Dark mode UI colors
+    static let darkPrimaryText = "#F9FAFB"      // Light text for dark backgrounds
+    static let darkSecondaryText = "#D1D5DB"    // Medium light text for dark backgrounds
+    static let darkLightText = "#9CA3AF"        // Gray text for dark backgrounds
+    static let darkCardBackground = "#1F2937"   // Dark background for cards
+    static let darkSeparatorColor = "#374151"   // Dark separator lines
+    
     // MARK: - Color Access Methods
     
     /// Get enhanced team color that maintains brand identity while improving readability
+    /// - Parameters:
+    ///   - teamAbbreviation: Team abbreviation (e.g., "NYL")
+    ///   - colorScheme: Current color scheme (light or dark)
+    /// - Returns: SwiftUI Color with enhanced readability for the current theme
+    static func teamColor(for teamAbbreviation: String, colorScheme: ColorScheme = .light) -> Color {
+        let colorMap = colorScheme == .dark ? darkModeTeamColors : enhancedTeamColors
+        let fallbackColor = colorScheme == .dark ? "#FF8A5B" : wnbaOrange
+        
+        if let hexColor = colorMap[teamAbbreviation] {
+            return Color(hex: hexColor) ?? (colorScheme == .dark ? .orange : .blue)
+        }
+        return Color(hex: fallbackColor) ?? .orange
+    }
+    
+    /// Get enhanced team color that maintains brand identity while improving readability (legacy method)
     /// - Parameter teamAbbreviation: Team abbreviation (e.g., "NYL")
     /// - Returns: SwiftUI Color with enhanced readability
     static func teamColor(for teamAbbreviation: String) -> Color {
-        if let hexColor = enhancedTeamColors[teamAbbreviation] {
-            return Color(hex: hexColor) ?? .blue
-        }
-        return Color(hex: wnbaOrange) ?? .orange
+        return teamColor(for: teamAbbreviation, colorScheme: .light)
     }
     
     /// Get original team color from TeamManager for comparison/fallback
@@ -103,6 +141,57 @@ struct ColorManager {
     /// Light text color for timestamps
     static var textLight: Color {
         Color(hex: lightText) ?? .gray
+    }
+    
+    // MARK: - Adaptive Colors (Color Scheme Aware)
+    
+    /// Adaptive team color that responds to color scheme
+    /// - Parameters:
+    ///   - teamAbbreviation: Team abbreviation
+    ///   - colorScheme: Current color scheme
+    /// - Returns: Adaptive color for the team
+    static func adaptiveTeamColor(for teamAbbreviation: String, colorScheme: ColorScheme) -> Color {
+        return teamColor(for: teamAbbreviation, colorScheme: colorScheme)
+    }
+    
+    /// Adaptive primary text color
+    /// - Parameter colorScheme: Current color scheme
+    /// - Returns: Adaptive primary text color
+    static func adaptivePrimaryText(colorScheme: ColorScheme) -> Color {
+        let colorHex = colorScheme == .dark ? darkPrimaryText : primaryText
+        return Color(hex: colorHex) ?? .primary
+    }
+    
+    /// Adaptive secondary text color
+    /// - Parameter colorScheme: Current color scheme
+    /// - Returns: Adaptive secondary text color
+    static func adaptiveSecondaryText(colorScheme: ColorScheme) -> Color {
+        let colorHex = colorScheme == .dark ? darkSecondaryText : secondaryText
+        return Color(hex: colorHex) ?? .secondary
+    }
+    
+    /// Adaptive light text color
+    /// - Parameter colorScheme: Current color scheme
+    /// - Returns: Adaptive light text color
+    static func adaptiveLightText(colorScheme: ColorScheme) -> Color {
+        let colorHex = colorScheme == .dark ? darkLightText : lightText
+        return Color(hex: colorHex) ?? .gray
+    }
+    
+    /// Adaptive card background color
+    /// - Parameter colorScheme: Current color scheme
+    /// - Returns: Adaptive card background color
+    static func adaptiveCardBackground(colorScheme: ColorScheme) -> Color {
+        let colorHex = colorScheme == .dark ? darkCardBackground : cardBackground
+        return Color(hex: colorHex) ?? .clear
+    }
+    
+    /// Adaptive separator color
+    /// - Parameter colorScheme: Current color scheme
+    /// - Returns: Adaptive separator color
+    static func adaptiveSeparator(colorScheme: ColorScheme) -> Color {
+        let colorHex = colorScheme == .dark ? darkSeparatorColor : separatorColor
+        return Color(hex: colorHex) ?? .gray
     }
     
     // MARK: - NSColor Support for Legacy Code
