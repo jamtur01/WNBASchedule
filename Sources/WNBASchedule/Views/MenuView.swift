@@ -39,11 +39,14 @@ struct MenuView: View {
                                 .frame(width: 32, height: 32)
                         },
                         placeholder: {
-                            Image(systemName: "photo")
-                                .resizable()
-                                .aspectRatio(contentMode: .fit)
+                            RoundedRectangle(cornerRadius: 4)
+                                .fill(teamColor)
                                 .frame(width: 32, height: 32)
-                                .opacity(0.3)
+                                .overlay(
+                                    Text(abbr.prefix(3))
+                                        .font(.system(size: 12, weight: .bold))
+                                        .foregroundColor(.white)
+                                )
                         }
                     )
                 }
