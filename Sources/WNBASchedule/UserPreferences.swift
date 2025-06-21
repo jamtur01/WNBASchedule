@@ -72,9 +72,9 @@ class UserPreferences {
     
     // MARK: - Constants
     private let defaultFavoriteTeam = "NYL"
-    private let defaultPastGamesToShow = 10
+    private let defaultPastGamesToShow = 5
     private let defaultUpcomingGamesToShow = 5
-    private let defaultAllTeamsDaysToShow = 4
+    private let defaultAllTeamsDaysToShow = 3
     private let defaultUseLocalTimeZone = true
     private let defaultPreferredLanguage = "en"
     
@@ -103,7 +103,8 @@ class UserPreferences {
         self.previouslySelectedTeam = userDefaults.string(forKey: previouslySelectedTeamKey)
         
         // If these values are 0, it means they weren't set before, so use defaults
-        if self.pastGamesToShow == 0 {
+        // Force pastGamesToShow to be 5 to override any existing user preferences
+        if self.pastGamesToShow == 0 || self.pastGamesToShow != defaultPastGamesToShow {
             self.pastGamesToShow = defaultPastGamesToShow
         }
         

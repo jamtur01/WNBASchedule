@@ -53,9 +53,14 @@ class LiveScoreManager {
             for await result in group {
                 guard let (index, boxscore, finished) = result else { continue }
                 
-                // Update the game with live scores
+                // Update the game with live scores and status
                 updatedGames[index].liveHomeScore = boxscore?.game.homeTeam.score
                 updatedGames[index].liveVisitorScore = boxscore?.game.awayTeam.score
+                
+                // Update game status text with live quarter information
+                if let statusText = boxscore?.game.gameStatusText {
+                    updatedGames[index].gameStatusText = statusText
+                }
                 
                 // Mark if any game finished
                 if finished {
@@ -65,7 +70,8 @@ class LiveScoreManager {
                 
                 if let homeScore = boxscore?.game.homeTeam.score,
                    let awayScore = boxscore?.game.awayTeam.score {
-                    self.logger.info("Updated live scores for game \(games[index].gid): \(awayScore)-\(homeScore)")
+                    let statusInfo = boxscore?.game.gameStatusText ?? "Unknown"
+                    self.logger.info("Updated live data for game \(games[index].gid): \(awayScore)-\(homeScore), Status: \(statusInfo)")
                 }
             }
         }

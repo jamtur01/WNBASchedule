@@ -20,49 +20,79 @@ struct MenuHeader: View {
         return ColorManager.adaptiveTeamColor(for: teamAbbreviation, colorScheme: colorScheme)
     }
     
+    @State private var isSettingsHovered = false
+    
     var body: some View {
-        VStack(alignment: .leading, spacing: 5) {
-            // Title Row
-            HStack(alignment: .center, spacing: 8) {
-                Text(
-                    String(
-                        format: "menu.title".localized,
-                        teamInfo?.fullName ?? "WNBA"
-                    )
-                )
-                .font(.system(size: 16, weight: .bold))
-                .foregroundColor(teamColor)
-                .lineLimit(1)
-                .layoutPriority(1)
-                .padding(.top, 5)
-                .fixedSize(horizontal: true, vertical: false)
-                
-                Spacer(minLength: 8)
-                
-                Button(
-                    action: {
-                        showingTeamPicker.toggle()
+        HStack(alignment: .center, spacing: DesignSystem.Spacing.xs) {
+            // Team logo
+            if let abbr = teamInfo?.abbreviation {
+                AsyncImage(
+                    url: URL(string: "https://cdn.wnba.com/static/next/teams/favicons/\(abbr)/icon-32.png"),
+                    content: { image in
+                        image
+                            .resizable()
+                            .aspectRatio(contentMode: .fit)
+                            .frame(width: 24, height: 24)
                     },
-                    label: {
-                        Image(systemName: "gear")
-                            .font(.system(size: 12))
-                            .foregroundColor(.gray)
+                    placeholder: {
+                        RoundedRectangle(cornerRadius: 4)
+                            .fill(teamColor)
+                            .frame(width: 24, height: 24)
+                            .overlay(
+                                Text(abbr.prefix(3))
+                                    .font(.system(size: 10, weight: .bold))
+                                    .foregroundColor(.white)
+                            )
                     }
                 )
-                .buttonStyle(PlainButtonStyle())
-                .popover(isPresented: $showingTeamPicker, arrowEdge: .top) {
-                    TeamPickerView(
-                        selectedTeam: teamAbbreviation,
-                        onTeamSelected: { newTeam in
-                            changeTeamAction(newTeam)
-                            showingTeamPicker = false
-                        }
-                    )
-                    .frame(width: 320, height: 400)
-                    .background(ColorManager.adaptiveCardBackground(colorScheme: colorScheme))
+            }
+            
+            // Title with improved typography
+            Text(
+                String(
+                    format: "menu.title".localized,
+                    teamInfo?.fullName ?? "WNBA"
+                )
+            )
+            .font(DesignSystem.Typography.title)
+            .foregroundColor(teamColor)
+            .lineLimit(1)
+            .layoutPriority(1)
+            .fixedSize(horizontal: true, vertical: false)
+            
+            Spacer(minLength: DesignSystem.Spacing.sm)
+            
+            // Settings button with enhanced styling
+            Button(
+                action: {
+                    showingTeamPicker.toggle()
+                },
+                label: {
+                    Image(systemName: "gear")
+                        .font(.system(size: DesignSystem.ComponentSize.iconSmall))
+                        .foregroundColor(isSettingsHovered ? .primary : ColorManager.adaptiveSecondaryText(colorScheme: colorScheme))
+                        .frame(width: DesignSystem.ComponentSize.iconLarge, height: DesignSystem.ComponentSize.iconLarge)
+                        .background(
+                            Circle()
+                                .fill(isSettingsHovered ? ColorManager.adaptiveSeparator(colorScheme: colorScheme).opacity(0.3) : Color.clear)
+                        )
                 }
+            )
+            .buttonStyle(PlainButtonStyle())
+            .interactiveHover($isSettingsHovered)
+            .popover(isPresented: $showingTeamPicker, arrowEdge: .top) {
+                TeamPickerView(
+                    selectedTeam: teamAbbreviation,
+                    onTeamSelected: { newTeam in
+                        changeTeamAction(newTeam)
+                        showingTeamPicker = false
+                    }
+                )
+                .frame(width: 320, height: 400)
+                .designSystemCard(colorScheme: colorScheme)
             }
         }
+        .padding(.vertical, DesignSystem.Spacing.xxs)
     }
 }
 
@@ -77,73 +107,86 @@ struct AllTeamsMenuHeader: View {
     @Environment(\.colorScheme) 
     var colorScheme
     
+    @State private var isBackHovered = false
+    @State private var isSettingsHovered = false
+    
     var body: some View {
-        VStack(alignment: .leading, spacing: 5) {
-            // Title Row
-            HStack(alignment: .center, spacing: 8) {
-                Image.loadFromBundle(named: "wnbalogo")
-                    .resizable()
-                    .aspectRatio(contentMode: .fit)
-                    .frame(width: 26, height: 26)
-                
-                Text("menu.title.all_teams".localized)
-                    .font(.system(size: 16, weight: .bold))
-                    .foregroundColor(ColorManager.wnbaBrandColor)
-                    .lineLimit(1)
-                    .layoutPriority(1)
-                    .padding(.top, 5)
-                    .fixedSize(horizontal: true, vertical: false)
-                
-                Spacer(minLength: 8)
-                
-                // Back button (only shown if there's a previously selected team)
-                if let previousTeam = previouslySelectedTeam,
-                   let teamInfo = TeamManager.getTeamInfo(abbreviation: previousTeam) {
-                    Button(
-                        action: {
-                            changeTeamAction(previousTeam)
-                        },
-                        label: {
-                            HStack(spacing: 4) {
-                                Image(systemName: "arrow.left")
-                                    .font(.system(size: 10))
-                                Text(teamInfo.abbreviation)
-                                    .font(.system(size: 10, weight: .medium))
-                            }
-                            .foregroundColor(ColorManager.wnbaBrandColor)
-                            .padding(.horizontal, 6)
-                            .padding(.vertical, 3)
-                            .background(ColorManager.wnbaBrandColor.opacity(0.1))
-                            .cornerRadius(4)
-                        }
-                    )
-                    .buttonStyle(PlainButtonStyle())
-                    .help("Back to \(teamInfo.fullName)")
-                }
-                
+        HStack(alignment: .center, spacing: DesignSystem.Spacing.sm) {
+            // WNBA Logo
+            Image.loadFromBundle(named: "wnbalogo")
+                .resizable()
+                .aspectRatio(contentMode: .fit)
+                .frame(width: DesignSystem.ComponentSize.logoMedium, height: DesignSystem.ComponentSize.logoMedium)
+            
+            // Title with improved typography
+            Text("menu.title.all_teams".localized)
+                .font(DesignSystem.Typography.title)
+                .foregroundColor(ColorManager.wnbaBrandColor)
+                .lineLimit(1)
+                .layoutPriority(1)
+                .fixedSize(horizontal: true, vertical: false)
+            
+            Spacer(minLength: DesignSystem.Spacing.sm)
+            
+            // Back button with enhanced styling
+            if let previousTeam = previouslySelectedTeam,
+               let teamInfo = TeamManager.getTeamInfo(abbreviation: previousTeam) {
                 Button(
                     action: {
-                        showingTeamPicker.toggle()
+                        changeTeamAction(previousTeam)
                     },
                     label: {
-                        Image(systemName: "gear")
-                            .font(.system(size: 12))
-                            .foregroundColor(.gray)
+                        HStack(spacing: DesignSystem.Spacing.xxxs) {
+                            Image(systemName: "arrow.left")
+                                .font(.system(size: DesignSystem.ComponentSize.iconSmall))
+                            Text(teamInfo.abbreviation)
+                                .font(DesignSystem.Typography.caption)
+                                .fontWeight(.medium)
+                        }
+                        .foregroundColor(isBackHovered ? .white : ColorManager.wnbaBrandColor)
+                        .padding(.horizontal, DesignSystem.Spacing.xs)
+                        .padding(.vertical, DesignSystem.Spacing.xxxs)
+                        .background(
+                            RoundedRectangle(cornerRadius: DesignSystem.CornerRadius.sm)
+                                .fill(isBackHovered ? ColorManager.wnbaBrandColor : ColorManager.wnbaBrandColor.opacity(0.1))
+                        )
                     }
                 )
                 .buttonStyle(PlainButtonStyle())
-                .popover(isPresented: $showingTeamPicker, arrowEdge: .top) {
-                    TeamPickerView(
-                        selectedTeam: "ALL",
-                        onTeamSelected: { newTeam in
-                            changeTeamAction(newTeam)
-                            showingTeamPicker = false
-                        }
-                    )
-                    .frame(width: 320, height: 400)
-                    .background(ColorManager.adaptiveCardBackground(colorScheme: colorScheme))
+                .interactiveHover($isBackHovered)
+                .help("Back to \(teamInfo.fullName)")
+            }
+            
+            // Settings button with enhanced styling
+            Button(
+                action: {
+                    showingTeamPicker.toggle()
+                },
+                label: {
+                    Image(systemName: "gear")
+                        .font(.system(size: DesignSystem.ComponentSize.iconSmall))
+                        .foregroundColor(isSettingsHovered ? .primary : ColorManager.adaptiveSecondaryText(colorScheme: colorScheme))
+                        .frame(width: DesignSystem.ComponentSize.iconLarge, height: DesignSystem.ComponentSize.iconLarge)
+                        .background(
+                            Circle()
+                                .fill(isSettingsHovered ? ColorManager.adaptiveSeparator(colorScheme: colorScheme).opacity(0.3) : Color.clear)
+                        )
                 }
+            )
+            .buttonStyle(PlainButtonStyle())
+            .interactiveHover($isSettingsHovered)
+            .popover(isPresented: $showingTeamPicker, arrowEdge: .top) {
+                TeamPickerView(
+                    selectedTeam: "ALL",
+                    onTeamSelected: { newTeam in
+                        changeTeamAction(newTeam)
+                        showingTeamPicker = false
+                    }
+                )
+                .frame(width: 320, height: 400)
+                .designSystemCard(colorScheme: colorScheme)
             }
         }
+        .padding(.vertical, DesignSystem.Spacing.xxs)
     }
 }

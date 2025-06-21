@@ -274,6 +274,6 @@ struct MenuBarContentView: View {
                 .padding()
             }
         }
-        .frame(width: 400, height: 600)
+        .frame(width: 320, height: 630)
     }
 }

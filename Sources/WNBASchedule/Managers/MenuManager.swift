@@ -111,7 +111,8 @@ class MenuManager {
         let hostingView = NSHostingView(rootView: content)
         self.hostingView = hostingView
         
-        hostingView.frame.size = hostingView.fittingSize
+        // Let SwiftUI handle the sizing instead of using fittingSize
+        // This prevents truncation of content when there are many games
         
         if let menu = statusItem?.menu {
             menu.removeAllItems()

@@ -13,6 +13,9 @@ extension Image {
     }
 }
 
+/// All teams menu view showing games across all WNBA teams
+/// Layout: Fixed height (800px) with Spacer to push buttons to bottom  
+/// Pattern: Header -> Content -> Spacer -> Actions (see BaseMenuLayout for shared approach)
 struct AllTeamsMenuView: View {
     let upcomingGames: [Game]
     let inProgressGames: [Game]
@@ -27,25 +30,28 @@ struct AllTeamsMenuView: View {
     }
 
     var body: some View {
-        VStack(alignment: .leading, spacing: 5) {
-            // All Teams Menu Header
-            AllTeamsMenuHeader(
-                showingTeamPicker: $showingTeamPicker,
-                changeTeamAction: changeTeamAction,
-                previouslySelectedTeam: previouslySelectedTeam
-            )
-
-            Divider()
-
-            // In Progress Games Section
+        StandardMenuLayout(
+            header: {
+                AllTeamsMenuHeader(
+                    showingTeamPicker: $showingTeamPicker,
+                    changeTeamAction: changeTeamAction,
+                    previouslySelectedTeam: previouslySelectedTeam
+                )
+            },
+            content: {
+                VStack(alignment: .leading, spacing: 12) {
+                    // In Progress Games Section
             if !inProgressGames.isEmpty {
                 Text("menu.section.in_progress".localized)
-                    .font(.system(size: 14, weight: .bold))
+                    .font(DesignSystem.Typography.headline)
+                    .fontWeight(.semibold)
                     .foregroundColor(ColorManager.liveColor)
-                    .padding(.top, 5)
+                    .padding(.top, 2)
 
-                ForEach(inProgressGames, id: \.gid) { game in
-                    InProgressGameRow(game: game)
+                LazyVStack(alignment: .leading, spacing: 2) {
+                    ForEach(inProgressGames, id: \.gid) { game in
+                        InProgressGameRow(game: game)
+                    }
                 }
 
                 Divider()
@@ -54,31 +60,30 @@ struct AllTeamsMenuView: View {
             // Upcoming Games Section
             if !upcomingGames.isEmpty {
                 Text("menu.section.upcoming".localized)
-                    .font(.system(size: 14, weight: .bold))
+                    .font(DesignSystem.Typography.headline)
+                    .fontWeight(.semibold)
                     .foregroundColor(ColorManager.wnbaBrandColor)
-                    .padding(.top, 5)
+                    .padding(.top, 2)
 
-                ForEach(upcomingGames, id: \.gid) { game in
-                    UpcomingGameRow(game: game)
+                LazyVStack(alignment: .leading, spacing: 2) {
+                    ForEach(upcomingGames, id: \.gid) { game in
+                        UpcomingGameRow(game: game)
+                    }
                 }
 
                 Divider()
             } else if inProgressGames.isEmpty {
                 Text("No hay partidos programados en este rango.")
-                    .font(.system(size: 13))
-                    .foregroundColor(.gray)
-                    .padding(.top, 8)
+                    .font(DesignSystem.Typography.callout)
+                    .foregroundColor(.secondary)
+                    .padding(.top, DesignSystem.Spacing.sm)
             }
-
-            // Launch at Login toggle
-            LaunchAtLogin.Toggle()
-                .padding(.vertical, 4)
-
-            // All Teams Menu Actions
-            AllTeamsMenuActions(refreshAction: refreshAction)
-        }
-        .padding(.horizontal, 20)
-        .padding(.top, 16) // Increased top padding to prevent clipping
-        .padding(.bottom, 12)
+                }
+            },
+            footer: {
+                // All Teams Menu Actions (now includes Launch at Login)
+                AllTeamsMenuActions(refreshAction: refreshAction)
+            }
+        )
     }
 }

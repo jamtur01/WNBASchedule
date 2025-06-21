@@ -1,5 +1,6 @@
 import SwiftUI
 import AppKit
+import LaunchAtLogin
 
 // MARK: - Menu Actions Components
 
@@ -10,76 +11,109 @@ struct MenuActions: View {
     let refreshAction: () -> Void
     let changeTeamAction: (String) -> Void
     
+    @State private var isRefreshLoading = false
+    @Environment(\.colorScheme)
+    var colorScheme
+    
     var body: some View {
         VStack(spacing: 0) {
             Divider()
+                .foregroundColor(ColorManager.adaptiveSeparator(colorScheme: colorScheme))
             
-            // Menu Actions on a single line with distinct styling
-            HStack {
-                // Buttons next to each other
-                HStack(spacing: 8) {
+            // Action buttons with compact layout
+            VStack(spacing: 6) {
+                // Top row: Action buttons
+                HStack(spacing: 4) {
                     // "All Teams" button
-                    Button(
-                        action: {
-                            changeTeamAction("ALL")
-                        },
-                        label: {
-                            Text("All Teams".localized)
-                                .font(.system(size: 13, weight: .bold))
-                                .foregroundColor(teamAbbreviation == "ALL" ? .white : ColorManager.wnbaBrandColor)
-                                .padding(.horizontal, 10)
-                                .padding(.vertical, 5)
-                                .background(
-                                    teamAbbreviation == "ALL"
-                                        ? ColorManager.wnbaBrandColor
-                                        : ColorManager.wnbaBrandColor.opacity(0.15)
-                                )
-                                .cornerRadius(5)
+                    Button {
+                        changeTeamAction("ALL")
+                    } label: {
+                        Text("All Teams")
+                            .font(.system(size: 10, weight: .medium))
+                            .frame(minWidth: 65)
+                            .padding(.horizontal, 8)
+                            .padding(.vertical, 4)
+                    }
+                    .background(teamAbbreviation == "ALL" ? teamColor : Color.secondary.opacity(0.2))
+                    .foregroundColor(teamAbbreviation == "ALL" ? .white : .primary)
+                    .cornerRadius(4)
+                    
+                    // Refresh button
+                    Button {
+                        performRefresh()
+                    } label: {
+                        HStack(spacing: 2) {
+                            Image(systemName: "arrow.clockwise")
+                                .font(.system(size: 9))
+                                .rotationEffect(.degrees(isRefreshLoading ? 360 : 0))
+                                .animation(isRefreshLoading ? .linear(duration: 1).repeatForever(autoreverses: false) : .default, value: isRefreshLoading)
+                            Text("Refresh")
+                                .font(.system(size: 10, weight: .medium))
                         }
-                    )
-                    .buttonStyle(PlainButtonStyle())
-
-                    // Refresh button - positive action (team color)
-                    Button(
-                        action: refreshAction,
-                        label: {
-                            Text("action.refresh".localized)
-                                .foregroundColor(.white)
-                                .padding(.horizontal, 10)
-                                .padding(.vertical, 4)
-                                .background(teamColor)
-                                .cornerRadius(4)
-                        }
-                    )
-                    .buttonStyle(PlainButtonStyle())
-
-                    // Quit button - more subtle (gray)
-                    Button(
-                        action: {
-                            NSApplication.shared.terminate(nil)
-                        },
-                        label: {
-                            Text("action.quit".localized)
-                                .foregroundColor(.white)
-                                .padding(.horizontal, 10)
-                                .padding(.vertical, 4)
-                                .background(Color.gray)
-                                .cornerRadius(4)
-                        }
-                    )
-                    .buttonStyle(PlainButtonStyle())
+                        .frame(minWidth: 55)
+                        .padding(.horizontal, 8)
+                        .padding(.vertical, 4)
+                    }
+                    .background(teamColor)
+                    .foregroundColor(.white)
+                    .cornerRadius(4)
+                    .disabled(isRefreshLoading)
+                    
+                    // Quit button
+                    Button {
+                        NSApplication.shared.terminate(nil)
+                    } label: {
+                        Text("Quit")
+                            .font(.system(size: 10, weight: .medium))
+                            .frame(minWidth: 35)
+                            .padding(.horizontal, 8)
+                            .padding(.vertical, 4)
+                    }
+                    .background(Color.secondary.opacity(0.2))
+                    .foregroundColor(.primary)
+                    .cornerRadius(4)
+                    
+                    Spacer()
                 }
-
-                Spacer()
-
-                // Version as a small, subtle text on the far right
-                Text(String(format: "app.version".localized, Version.version))
-                    .font(.system(size: 9))
-                    .foregroundColor(.gray.opacity(0.6))
+                
+                // Bottom row: Version and Launch at Login
+                HStack {
+                    Spacer()
+                    
+                    VStack(alignment: .trailing, spacing: 2) {
+                        Text(String(format: "app.version".localized, Version.version))
+                            .font(DesignSystem.Typography.caption2)
+                            .foregroundColor(ColorManager.adaptiveLightText(colorScheme: colorScheme).opacity(0.6))
+                        
+                        LaunchAtLogin.Toggle()
+                            .font(DesignSystem.Typography.caption)
+                            .scaleEffect(0.8)
+                    }
+                }
             }
-            .frame(minWidth: 320)
-            .padding(.top, 8)
-            .padding(.bottom, 16)
+            .frame(maxWidth: .infinity)
+            .padding(.top, DesignSystem.Spacing.sm)
+            .padding(.bottom, DesignSystem.Spacing.md)
+        }
+    }
+    
+    // MARK: - Private Methods
+    
+    private func performRefresh() {
+        isRefreshLoading = true
+        
+        // Add haptic feedback for enhanced interaction
+        let feedback = NSHapticFeedbackManager.defaultPerformer
+        feedback.perform(.alignment, performanceTime: .now)
+        
+        // Perform the actual refresh
+        refreshAction()
+        
+        // Reset loading state after a short delay to show feedback
+        DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) {
+            withAnimation(DesignSystem.Animation.standard) {
+                isRefreshLoading = false
+            }
         }
     }
 }
@@ -88,51 +122,95 @@ struct MenuActions: View {
 struct AllTeamsMenuActions: View {
     let refreshAction: () -> Void
     
+    @State private var isRefreshLoading = false
+    @Environment(\.colorScheme)
+    var colorScheme
+    
     var body: some View {
         VStack(spacing: 0) {
             Divider()
+                .foregroundColor(ColorManager.adaptiveSeparator(colorScheme: colorScheme))
             
-            // Menu Actions
-            HStack {
-                HStack(spacing: 8) {
-                    Button(
-                        action: refreshAction,
-                        label: {
-                            Text("action.refresh".localized)
-                                .foregroundColor(.white)
-                                .padding(.horizontal, 10)
-                                .padding(.vertical, 4)
-                                .background(ColorManager.wnbaBrandColor)
-                                .cornerRadius(4)
+            // Action buttons with compact layout
+            VStack(spacing: 6) {
+                // Top row: Action buttons
+                HStack(spacing: 4) {
+                    // Refresh button
+                    Button {
+                        performRefresh()
+                    } label: {
+                        HStack(spacing: 2) {
+                            Image(systemName: "arrow.clockwise")
+                                .font(.system(size: 9))
+                                .rotationEffect(.degrees(isRefreshLoading ? 360 : 0))
+                                .animation(isRefreshLoading ? .linear(duration: 1).repeatForever(autoreverses: false) : .default, value: isRefreshLoading)
+                            Text("Refresh")
+                                .font(.system(size: 10, weight: .medium))
                         }
-                    )
-                    .buttonStyle(PlainButtonStyle())
-
-                    Button(
-                        action: {
-                            NSApplication.shared.terminate(nil)
-                        },
-                        label: {
-                            Text("action.quit".localized)
-                                .foregroundColor(.white)
-                                .padding(.horizontal, 10)
-                                .padding(.vertical, 4)
-                                .background(Color.gray)
-                                .cornerRadius(4)
-                        }
-                    )
-                    .buttonStyle(PlainButtonStyle())
+                        .frame(minWidth: 55)
+                        .padding(.horizontal, 8)
+                        .padding(.vertical, 4)
+                    }
+                    .background(ColorManager.wnbaBrandColor)
+                    .foregroundColor(.white)
+                    .cornerRadius(4)
+                    .disabled(isRefreshLoading)
+                    
+                    // Quit button
+                    Button {
+                        NSApplication.shared.terminate(nil)
+                    } label: {
+                        Text("Quit")
+                            .font(.system(size: 10, weight: .medium))
+                            .frame(minWidth: 35)
+                            .padding(.horizontal, 8)
+                            .padding(.vertical, 4)
+                    }
+                    .background(Color.secondary.opacity(0.2))
+                    .foregroundColor(.primary)
+                    .cornerRadius(4)
+                    
+                    Spacer()
                 }
-
-                Spacer()
-
-                Text(String(format: "app.version".localized, Version.version))
-                    .font(.system(size: 9))
-                    .foregroundColor(.gray.opacity(0.6))
+                
+                // Bottom row: Version and Launch at Login
+                HStack {
+                    Spacer()
+                    
+                    VStack(alignment: .trailing, spacing: 2) {
+                        Text(String(format: "app.version".localized, Version.version))
+                            .font(DesignSystem.Typography.caption2)
+                            .foregroundColor(ColorManager.adaptiveLightText(colorScheme: colorScheme).opacity(0.6))
+                        
+                        LaunchAtLogin.Toggle()
+                            .font(DesignSystem.Typography.caption)
+                            .scaleEffect(0.8)
+                    }
+                }
             }
-            .frame(minWidth: 320)
-            .padding(.top, 8)
-            .padding(.bottom, 16)
+            .frame(maxWidth: .infinity)
+            .padding(.top, DesignSystem.Spacing.sm)
+            .padding(.bottom, DesignSystem.Spacing.md)
+        }
+    }
+    
+    // MARK: - Private Methods
+    
+    private func performRefresh() {
+        isRefreshLoading = true
+        
+        // Add haptic feedback for enhanced interaction
+        let feedback = NSHapticFeedbackManager.defaultPerformer
+        feedback.perform(.alignment, performanceTime: .now)
+        
+        // Perform the actual refresh
+        refreshAction()
+        
+        // Reset loading state after a short delay to show feedback
+        DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) {
+            withAnimation(DesignSystem.Animation.standard) {
+                isRefreshLoading = false
+            }
         }
     }
 }

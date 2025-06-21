@@ -5,6 +5,9 @@ import LaunchAtLogin
 import Combine
 
 // MARK: - Menu View
+/// Main menu view for single team schedules
+/// Layout: Fixed height (800px) with Spacer to push buttons to bottom
+/// Pattern: Header -> Content -> Spacer -> Actions (see BaseMenuLayout for shared approach)
 struct MenuView: View {
     // MARK: - Properties
     
@@ -25,93 +28,104 @@ struct MenuView: View {
     
     // MARK: - Body
     
+    @Environment(\.colorScheme)
+    var colorScheme
+    
     var body: some View {
-        HStack(alignment: .top, spacing: 0) {
-            // Logo (fixed width)
-            VStack {
-                if let abbr = teamInfo?.abbreviation {
-                    AsyncImage(
-                        url: URL(string: "https://cdn.wnba.com/static/next/teams/favicons/\(abbr)/icon-32.png"),
-                        content: { image in
-                            image
-                                .resizable()
-                                .aspectRatio(contentMode: .fit)
-                                .frame(width: 32, height: 32)
-                        },
-                        placeholder: {
-                            RoundedRectangle(cornerRadius: 4)
-                                .fill(teamColor)
-                                .frame(width: 32, height: 32)
-                                .overlay(
-                                    Text(abbr.prefix(3))
-                                        .font(.system(size: 12, weight: .bold))
-                                        .foregroundColor(.white)
-                                )
-                        }
-                    )
-                }
-                Spacer()
-            }
-            .frame(width: 44, alignment: .top) // logo area
-
-            // Content VStack
-            VStack(alignment: .leading, spacing: 5) {
-                // Menu Header
+        StandardMenuLayout(
+            header: {
                 MenuHeader(
                     teamAbbreviation: teamAbbreviation,
                     showingTeamPicker: $showingTeamPicker,
                     changeTeamAction: changeTeamAction
                 )
+            },
+            content: {
+                VStack(alignment: .leading, spacing: 12) {
+                        // Previous Games Section with animation
+                        if !games.pastGames.isEmpty {
+                            GameSection(
+                                title: "menu.section.previous".localized,
+                                titleColor: teamColor,
+                                colorScheme: colorScheme
+                            ) {
+                                LazyVStack(alignment: .leading, spacing: 2) {
+                                    ForEach(Array(games.pastGames.enumerated()), id: \.element.game.gid) { index, markedGame in
+                                        PreviousGameRow(game: markedGame.game)
+                                            .transition(.asymmetric(
+                                                insertion: .move(edge: .leading).combined(with: .opacity),
+                                                removal: .move(edge: .trailing).combined(with: .opacity)
+                                            ))
+                                            .animation(
+                                                DesignSystem.Animation.gentleSpring.delay(Double(index) * 0.05),
+                                                value: games.pastGames.count
+                                            )
+                                    }
+                                }
+                            }
+                            .transition(.asymmetric(
+                                insertion: .move(edge: .top).combined(with: .opacity),
+                                removal: .move(edge: .top).combined(with: .opacity)
+                            ))
+                        }
 
-                Divider()
+                        // In Progress Games Section with prominent animation
+                        if !games.inProgressGames.isEmpty {
+                            GameSection(
+                                title: "menu.section.in_progress".localized,
+                                titleColor: ColorManager.liveColor,
+                                colorScheme: colorScheme
+                            ) {
+                                LazyVStack(alignment: .leading, spacing: 2) {
+                                    ForEach(Array(games.inProgressGames.enumerated()), id: \.element.game.gid) { index, markedGame in
+                                        InProgressGameRow(game: markedGame.game)
+                                            .transition(.asymmetric(
+                                                insertion: .scale.combined(with: .opacity),
+                                                removal: .scale.combined(with: .opacity)
+                                            ))
+                                            .animation(
+                                                DesignSystem.Animation.bouncy.delay(Double(index) * 0.1),
+                                                value: games.inProgressGames.count
+                                            )
+                                    }
+                                }
+                            }
+                            .transition(.asymmetric(
+                                insertion: .scale.combined(with: .opacity),
+                                removal: .scale.combined(with: .opacity)
+                            ))
+                        }
 
-                // Previous Games Section
-                if !games.pastGames.isEmpty {
-                    Text("menu.section.previous".localized)
-                        .font(.system(size: 14, weight: .bold))
-                        .foregroundColor(teamColor)
-                        .padding(.top, 5)
-
-                    ForEach(games.pastGames, id: \.game.gid) { markedGame in
-                        PreviousGameRow(game: markedGame.game)
-                    }
-
-                    Divider()
+                        // Upcoming Games Section with anticipation animation
+                        if !games.upcomingGames.isEmpty {
+                            GameSection(
+                                title: "menu.section.upcoming".localized,
+                                titleColor: teamColor,
+                                colorScheme: colorScheme
+                            ) {
+                                LazyVStack(alignment: .leading, spacing: 2) {
+                                    ForEach(Array(games.upcomingGames.enumerated()), id: \.element.game.gid) { index, markedGame in
+                                        UpcomingGameRow(game: markedGame.game)
+                                            .transition(.asymmetric(
+                                                insertion: .move(edge: .trailing).combined(with: .opacity),
+                                                removal: .move(edge: .leading).combined(with: .opacity)
+                                            ))
+                                            .animation(
+                                                DesignSystem.Animation.gentleSpring.delay(Double(index) * 0.03),
+                                                value: games.upcomingGames.count
+                                            )
+                                    }
+                                }
+                            }
+                            .transition(.asymmetric(
+                                insertion: .move(edge: .bottom).combined(with: .opacity),
+                                removal: .move(edge: .bottom).combined(with: .opacity)
+                            ))
+                        }
                 }
-
-                // In Progress Games Section
-                if !games.inProgressGames.isEmpty {
-                    Text("menu.section.in_progress".localized)
-                        .font(.system(size: 14, weight: .bold))
-                        .foregroundColor(ColorManager.liveColor)
-                        .padding(.top, 5)
-
-                    ForEach(games.inProgressGames, id: \.game.gid) { markedGame in
-                        InProgressGameRow(game: markedGame.game)
-                    }
-
-                    Divider()
-                }
-
-                // Upcoming Games Section
-                if !games.upcomingGames.isEmpty {
-                    Text("menu.section.upcoming".localized)
-                        .font(.system(size: 14, weight: .bold))
-                        .foregroundColor(teamColor)
-                        .padding(.top, 5)
-
-                    ForEach(games.upcomingGames, id: \.game.gid) { markedGame in
-                        UpcomingGameRow(game: markedGame.game)
-                    }
-
-                    Divider()
-                }
-
-                // Launch at Login toggle
-                LaunchAtLogin.Toggle()
-                    .padding(.vertical, 4)
-
-                // Menu Actions
+            },
+            footer: {
+                // Menu Actions (now includes Launch at Login)
                 MenuActions(
                     teamAbbreviation: teamAbbreviation,
                     teamColor: teamColor,
@@ -119,11 +133,28 @@ struct MenuView: View {
                     changeTeamAction: changeTeamAction
                 )
             }
-            .padding(.trailing, 20)
-            .padding(.top, 8)
+        )
+    }
+}
+
+// MARK: - Game Section Component
+
+/// Reusable section component for organized game display
+struct GameSection<Content: View>: View {
+    let title: String
+    let titleColor: Color
+    let colorScheme: ColorScheme
+    @ViewBuilder let content: Content
+    
+    var body: some View {
+        VStack(alignment: .leading, spacing: 0) {
+            // Section Header
+            Text(title)
+                .designSystemSectionHeader(colorScheme: colorScheme)
+                .foregroundColor(titleColor)
+            
+            // Section Content
+            content
         }
-        .padding(.horizontal, 16)
-        .padding(.top, 16) // Increased top padding to prevent clipping
-        .padding(.bottom, 12)
     }
 }

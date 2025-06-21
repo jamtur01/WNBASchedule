@@ -71,7 +71,7 @@ struct Game: Codable, Identifiable {
     let arenaCity: String?
     
     /// Game status text
-    let gameStatusText: String?
+    var gameStatusText: String?
     
     /// Game label
     let gameLabel: String?
