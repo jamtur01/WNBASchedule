@@ -149,35 +149,25 @@ struct Game: Codable, Identifiable {
     /// The game time as a DateInRegion for easier formatting
     var gameTimeInRegion: DateInRegion {
         let userPreferences = DependencyContainer.shared.userPreferences
-        
-        // Use the user's preference for timezone
-        if userPreferences.useLocalTimeZone {
-            return localGameTime.toSwiftDate()
-        } else {
-            // Use Eastern time (NBA's default)
-            let region = Region(zone: Zones.americaNewYork)
-            return localGameTime.in(region: region)
-        }
+        return DateFormatting.dateInRegion(from: localGameTime, useLocalTimeZone: userPreferences.useLocalTimeZone)
     }
     
     /// Formatted game date for display
     var formattedGameDate: String {
-        return gameTimeInRegion.date.toScheduleString()
+        let userPreferences = DependencyContainer.shared.userPreferences
+        return DateFormatting.scheduleDate(from: localGameTime, useLocalTimeZone: userPreferences.useLocalTimeZone)
     }
     
     /// Formatted game time for display
     var formattedGameTime: String {
-        let region = Region(
-            calendar: Calendars.gregorian,
-            zone: gameTimeInRegion.region.timeZone,
-            locale: Locales.english
-        )
-        return gameTimeInRegion.date.in(region: region).toString(.custom("h.mm a"))
+        let userPreferences = DependencyContainer.shared.userPreferences
+        return DateFormatting.time(from: localGameTime, useLocalTimeZone: userPreferences.useLocalTimeZone)
     }
     
     /// Formatted date and time
     var formattedDateTime: String {
-        return "\(formattedGameDate) at \(formattedGameTime)"
+        let userPreferences = DependencyContainer.shared.userPreferences
+        return DateFormatting.scheduleDateTime(from: localGameTime, useLocalTimeZone: userPreferences.useLocalTimeZone)
     }
     
     /// Whether the game is completed

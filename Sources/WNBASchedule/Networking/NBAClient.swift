@@ -167,19 +167,14 @@ class NBAClient: NBAClientProtocol {
             switch httpResponse.statusCode {
             case 200...299:
                 // Success
-                do {
-                    let decoder = JSONDecoder()
-                    let scheduleResponse = try decoder.decode(ScheduleResponse.self, from: data)
-                    
-                    // Cache the successful response
-                    cache.storeData(data, for: cacheKey, expirationInterval: cacheExpirationInterval)
-                    
-                    logger.info("Successfully fetched and cached schedule")
-                    return scheduleResponse
-                } catch {
-                    logger.error("Decoding error: \(error.localizedDescription)")
-                    throw NBAClientError.decodingError(error)
-                }
+                let decoder = JSONDecoder()
+                let scheduleResponse = try decoder.decode(ScheduleResponse.self, from: data)
+                
+                // Cache the successful response
+                cache.storeData(data, for: cacheKey, expirationInterval: cacheExpirationInterval)
+                
+                logger.info("Successfully fetched and cached schedule")
+                return scheduleResponse
                 
             case 429:
                 // Rate limited
@@ -198,7 +193,7 @@ class NBAClient: NBAClientProtocol {
             
         } catch let error as NBAClientError {
             // If we can retry, do so with exponential backoff
-            if retryCount < maxRetries {
+            if retryCount < maxRetries && shouldRetry(error: error) {
                 // Calculate delay with exponential backoff
                 let delay = retryDelay * pow(2.0, Double(retryCount))
                 logger.info("Retrying request (attempt \(retryCount + 1) of \(self.maxRetries)) after \(delay) seconds")
@@ -210,11 +205,25 @@ class NBAClient: NBAClientProtocol {
                 return try await fetchWithRetry(url: url, cacheKey: cacheKey, retryCount: retryCount + 1)
             }
             
-            // We've exhausted our retries
+            // We've exhausted our retries or error is not retryable
             throw error
+        } catch let error as DecodingError {
+            logger.error("Decoding error: \(error.localizedDescription)")
+            throw NBAClientError.decodingError(error)
         } catch {
             logger.error("Network error: \(error.localizedDescription)")
             throw NBAClientError.networkError(error)
+        }
+    }
+    
+    private func shouldRetry(error: NBAClientError) -> Bool {
+        switch error {
+        case .networkError, .serverError:
+            return true
+        case .invalidResponse(let code) where code >= 500:
+            return true
+        case .rateLimited, .decodingError, .invalidURL, .cacheError, .invalidResponse:
+            return false
         }
     }
     
@@ -233,19 +242,14 @@ class NBAClient: NBAClientProtocol {
             switch httpResponse.statusCode {
             case 200...299:
                 // Success
-                do {
-                    let decoder = JSONDecoder()
-                    let boxscoreResponse = try decoder.decode(BoxscoreResponse.self, from: data)
-                    
-                    // Cache the successful response with shorter expiration for live data (5 minutes)
-                    cache.storeData(data, for: cacheKey, expirationInterval: 300)
-                    
-                    logger.info("Successfully fetched and cached boxscore")
-                    return boxscoreResponse
-                } catch {
-                    logger.error("Boxscore decoding error: \(error.localizedDescription)")
-                    throw NBAClientError.decodingError(error)
-                }
+                let decoder = JSONDecoder()
+                let boxscoreResponse = try decoder.decode(BoxscoreResponse.self, from: data)
+                
+                // Cache the successful response with shorter expiration for live data (5 minutes)
+                cache.storeData(data, for: cacheKey, expirationInterval: 300)
+                
+                logger.info("Successfully fetched and cached boxscore")
+                return boxscoreResponse
                 
             case 429:
                 // Rate limited
@@ -264,7 +268,7 @@ class NBAClient: NBAClientProtocol {
             
         } catch let error as NBAClientError {
             // If we can retry, do so with exponential backoff
-            if retryCount < maxRetries {
+            if retryCount < maxRetries && shouldRetry(error: error) {
                 // Calculate delay with exponential backoff
                 let delay = retryDelay * pow(2.0, Double(retryCount))
                 logger.info("Retrying boxscore request (attempt \(retryCount + 1) of \(self.maxRetries)) after \(delay) seconds")
@@ -276,8 +280,11 @@ class NBAClient: NBAClientProtocol {
                 return try await fetchBoxscoreWithRetry(url: url, cacheKey: cacheKey, retryCount: retryCount + 1)
             }
             
-            // We've exhausted our retries
+            // We've exhausted our retries or error is not retryable
             throw error
+        } catch let error as DecodingError {
+            logger.error("Boxscore decoding error: \(error.localizedDescription)")
+            throw NBAClientError.decodingError(error)
         } catch {
             logger.error("Boxscore network error: \(error.localizedDescription)")
             throw NBAClientError.networkError(error)

@@ -1,7 +1,7 @@
 import Foundation
 import SwiftDate
 
-// Add SwiftDate extensions for more convenient date formatting
+// MARK: - SwiftDate Convenience Extensions
 extension Date {
     /// Convert a Date to a SwiftDate DateInRegion for easier formatting
     func toSwiftDate() -> DateInRegion {
@@ -9,18 +9,20 @@ extension Date {
     }
     
     /// Format a date using the WNBA schedule format
+    @available(*, deprecated, message: "Use DateFormatting.scheduleDate instead")
     func toScheduleString() -> String {
-        return self.toSwiftDate().toString(.custom("EEE MMM d, yyyy"))
+        return DateFormatting.scheduleDate(from: self)
     }
     
     /// Format a time using the short time format
+    @available(*, deprecated, message: "Use DateFormatting.time instead")
     func toTimeString() -> String {
-        let region = Region(calendar: Calendars.gregorian, zone: Zones.current, locale: Locales.english)
-        return self.in(region: region).toString(.custom("h.mm a"))
+        return DateFormatting.time(from: self)
     }
     
     /// Format a date and time together
+    @available(*, deprecated, message: "Use DateFormatting.scheduleDateTime instead")
     func toScheduleTimeString() -> String {
-        return "\(self.toScheduleString()) at \(self.toTimeString())"
+        return DateFormatting.scheduleDateTime(from: self)
     }
 }

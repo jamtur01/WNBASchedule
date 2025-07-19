@@ -300,22 +300,16 @@ class APICache: APICacheProtocol {
     }
     
     private func hashKey(_ key: String) -> String {
-        // Use SHA256 instead of MD5 (which is deprecated)
-        if let data = key.data(using: .utf8) {
-            var digest = [UInt8](repeating: 0, count: Int(CC_SHA256_DIGEST_LENGTH))
-            data.withUnsafeBytes {
-                _ = CC_SHA256($0.baseAddress, CC_LONG(data.count), &digest)
-            }
-            
-            let hexString = digest.map { String(format: "%02x", $0) }.joined()
-            return hexString
+        guard let data = key.data(using: .utf8) else {
+            // Fallback if encoding fails
+            return key.replacingOccurrences(of: "[/:?&=]", with: "_", options: .regularExpression)
         }
         
-        // Fallback if hashing fails
-        return key.replacingOccurrences(of: "/", with: "_")
-            .replacingOccurrences(of: ":", with: "_")
-            .replacingOccurrences(of: "?", with: "_")
-            .replacingOccurrences(of: "&", with: "_")
-            .replacingOccurrences(of: "=", with: "_")
+        var digest = [UInt8](repeating: 0, count: Int(CC_SHA256_DIGEST_LENGTH))
+        data.withUnsafeBytes { bytes in
+            _ = CC_SHA256(bytes.baseAddress, CC_LONG(data.count), &digest)
+        }
+        
+        return digest.map { String(format: "%02x", $0) }.joined()
     }
 }

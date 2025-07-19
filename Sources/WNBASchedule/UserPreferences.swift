@@ -95,25 +95,25 @@ class UserPreferences {
         let userDefaults = UserDefaults.standard
         
         self.favoriteTeam = userDefaults.string(forKey: favoriteTeamKey) ?? defaultFavoriteTeam
-        self.pastGamesToShow = userDefaults.integer(forKey: pastGamesToShowKey)
-        self.upcomingGamesToShow = userDefaults.integer(forKey: upcomingGamesToShowKey)
-        self.allTeamsDaysToShow = userDefaults.integer(forKey: allTeamsDaysToShowKey)
-        self.useLocalTimeZone = userDefaults.bool(forKey: useLocalTimeZoneKey)
         self.preferredLanguage = userDefaults.string(forKey: preferredLanguageKey) ?? defaultPreferredLanguage
         self.previouslySelectedTeam = userDefaults.string(forKey: previouslySelectedTeamKey)
         
-        // If these values are 0, it means they weren't set before, so use defaults
-        // Force pastGamesToShow to be 5 to override any existing user preferences
-        if self.pastGamesToShow == 0 || self.pastGamesToShow != defaultPastGamesToShow {
-            self.pastGamesToShow = defaultPastGamesToShow
-        }
+        // For integer values, check if they were previously set
+        let storedUpcomingGames = userDefaults.integer(forKey: upcomingGamesToShowKey)
+        let storedAllTeamsDays = userDefaults.integer(forKey: allTeamsDaysToShowKey)
         
-        if self.upcomingGamesToShow == 0 {
-            self.upcomingGamesToShow = defaultUpcomingGamesToShow
-        }
-
-        if self.allTeamsDaysToShow == 0 {
-            self.allTeamsDaysToShow = defaultAllTeamsDaysToShow
+        // Force pastGamesToShow to be 5 to override any existing user preferences
+        self.pastGamesToShow = defaultPastGamesToShow
+        
+        // Use stored values if they were set (non-zero), otherwise use defaults
+        self.upcomingGamesToShow = storedUpcomingGames > 0 ? storedUpcomingGames : defaultUpcomingGamesToShow
+        self.allTeamsDaysToShow = storedAllTeamsDays > 0 ? storedAllTeamsDays : defaultAllTeamsDaysToShow
+        
+        // For boolean values, check if the key exists
+        if userDefaults.object(forKey: useLocalTimeZoneKey) != nil {
+            self.useLocalTimeZone = userDefaults.bool(forKey: useLocalTimeZoneKey)
+        } else {
+            self.useLocalTimeZone = defaultUseLocalTimeZone
         }
         
         logger.info("""

@@ -32,10 +32,12 @@ class LiveScoreManager {
         await withTaskGroup(of: (Int, BoxscoreResponse?, Bool)?.self) { group in
             for index in inProgressGameIndices {
                 let game = games[index]
+                let gameId = game.gid
+                
                 group.addTask { [weak self] in
                     guard let self = self else { return nil }
                     do {
-                        let boxscore = try await DependencyContainer.shared.nbaClient.fetchBoxscore(gameId: game.gid)
+                        let boxscore = try await DependencyContainer.shared.nbaClient.fetchBoxscore(gameId: gameId)
                         
                         // Check if game finished
                         let finished = boxscore.game.gameStatusText == "Final"
@@ -43,7 +45,7 @@ class LiveScoreManager {
                         return (index, boxscore, finished)
                     } catch {
                         self.logger.error(
-                            "Failed to fetch boxscore for game \(game.gid): \(error.localizedDescription)"
+                            "Failed to fetch boxscore for game \(gameId): \(error.localizedDescription)"
                         )
                         return (index, nil, false)
                     }
