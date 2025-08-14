@@ -7,9 +7,9 @@
     <key>CFBundleName</key>
     <string>WNBASchedule</string>
     <key>CFBundleVersion</key>
-    <string>1.7.0</string>
+    <string>1.8.1</string>
     <key>CFBundleShortVersionString</key>
-    <string>1.7.0</string>
+    <string>1.8.1</string>
     <key>LSMinimumSystemVersion</key>
     <string>12.0</string>
     <key>LSUIElement</key>

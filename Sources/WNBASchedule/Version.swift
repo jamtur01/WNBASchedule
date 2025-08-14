@@ -3,8 +3,8 @@ import Foundation
 /// Version information for the WNBASchedule app
 struct Version {
     /// Current version of the app
-    static let version = "1.7.0"
+    static let version = "1.8.1"
     
     /// Build number, typically incremented for each build
-    static let build = "20250618"
+    static let build = "20250813"
 }
