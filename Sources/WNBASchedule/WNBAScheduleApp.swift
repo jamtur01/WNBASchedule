@@ -123,8 +123,6 @@ class AppCoordinator: ObservableObject {
         }
     }
     
-
-    
     private func setupTimers() {
         // Setup refresh timer (every 15 minutes)
         refreshTimer = Timer.scheduledTimer(withTimeInterval: 900, repeats: true) { _ in
