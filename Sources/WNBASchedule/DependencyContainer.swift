@@ -6,24 +6,18 @@ class DependencyContainer {
     static let shared = DependencyContainer()
     
     // MARK: - Dependencies
-    lazy var nbaClient: NBAClientProtocol = {
-        return NBAClient(cache: apiCache)
-    }()
-    
-    lazy var scheduleManager: ScheduleManagerProtocol = {
-        return ScheduleManager(client: nbaClient)
-    }()
-    
-    lazy var userPreferences: UserPreferences = {
-        return UserPreferences()
-    }()
-    
-    lazy var apiCache: APICacheProtocol = {
-        return APICache()
-    }()
+    var nbaClient: NBAClientProtocol
+    var scheduleManager: ScheduleManagerProtocol
+    var userPreferences: UserPreferences
+    var apiCache: APICacheProtocol
     
     // MARK: - Initialization
-    private init() {}
+    private init() {
+        self.apiCache = APICache()
+        self.userPreferences = UserPreferences()
+        self.nbaClient = NBAClient(cache: apiCache)
+        self.scheduleManager = ScheduleManager(client: nbaClient, userPreferences: userPreferences)
+    }
     
     // MARK: - Testing Support
     /// Resets the container with mock implementations for testing

@@ -23,13 +23,15 @@ class ScheduleManager: ScheduleManagerProtocol {
     
     private let client: NBAClientProtocol
     private let userPreferences: UserPreferences
+    private let liveScoreManager: LiveScoreManager
     private let logger = Logger(subsystem: "net.kartar.wnbaschedule", category: "ScheduleManager")
     
     // MARK: - Initialization
     
-    init(client: NBAClientProtocol, userPreferences: UserPreferences = DependencyContainer.shared.userPreferences) {
+    init(client: NBAClientProtocol, userPreferences: UserPreferences = DependencyContainer.shared.userPreferences, liveScoreManager: LiveScoreManager = LiveScoreManager()) {
         self.client = client
         self.userPreferences = userPreferences
+        self.liveScoreManager = liveScoreManager
         logger.info("ScheduleManager initialized")
     }
     
@@ -48,7 +50,7 @@ class ScheduleManager: ScheduleManagerProtocol {
         var games = response.results.schedule
         
         // Fetch live scores for in-progress games
-        games = await fetchLiveScores(for: games)
+        games = await liveScoreManager.fetchLiveScores(for: games)
         
         return filterGames(from: games, forTeam: teamAbbr)
     }
@@ -99,59 +101,6 @@ class ScheduleManager: ScheduleManagerProtocol {
             inProgressGames: allInProgressGames,
             upcomingGames: nextUpcomingGames
         )
-    }
-    
-    /// Fetches live scores for in-progress games
-    /// - Parameter games: Array of games to check for live scores
-    /// - Returns: Updated games array with live scores populated
-    private func fetchLiveScores(for games: [Game]) async -> [Game] {
-        var updatedGames = games
-        
-        // Find in-progress games
-        let inProgressGameIndices = games.enumerated().compactMap { index, game in
-            game.isInProgress ? index : nil
-        }
-        
-        if inProgressGameIndices.isEmpty {
-            logger.info("No in-progress games found, skipping live score fetch")
-            return updatedGames
-        }
-        
-        logger.info("Fetching live scores for \(inProgressGameIndices.count) in-progress games")
-        
-        // Fetch live scores concurrently
-        await withTaskGroup(of: (Int, BoxscoreResponse?)?.self) { group in
-            for index in inProgressGameIndices {
-                let game = games[index]
-                group.addTask { [weak self] in
-                    guard let self = self else { return nil }
-                    do {
-                        let boxscore = try await self.client.fetchBoxscore(gameId: game.gid)
-                        return (index, boxscore)
-                    } catch {
-                        self.logger.error(
-                            "Failed to fetch boxscore for game \(game.gid): \(error.localizedDescription)"
-                        )
-                        return (index, nil)
-                    }
-                }
-            }
-            
-            for await result in group {
-                guard let (index, boxscore) = result else { continue }
-                
-                // Update the game with live scores
-                updatedGames[index].liveHomeScore = boxscore?.game.homeTeam.score
-                updatedGames[index].liveVisitorScore = boxscore?.game.awayTeam.score
-                
-                if let homeScore = boxscore?.game.homeTeam.score,
-                   let awayScore = boxscore?.game.awayTeam.score {
-                    self.logger.info("Updated live scores for game \(games[index].gid): \(awayScore)-\(homeScore)")
-                }
-            }
-        }
-        
-        return updatedGames
     }
 }
 

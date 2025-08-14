@@ -106,23 +106,14 @@ class LiveScoreManager {
             let allGames: [Game] = response.results.schedule
             
             // Filter for games in the next N days (including today)
-            let now = Date()
-            let calendar = Calendar.current
-            let startOfToday = calendar.startOfDay(for: now)
-            guard let endDate = calendar.date(
-                byAdding: .day,
-                value: userPreferences.allTeamsDaysToShow,
-                to: startOfToday
-            ) else {
-                logger.error("Failed to calculate end date for filtering games.")
-                completion(.failure(LiveScoreError.dateCalculationFailed))
+            let filteredGames: [Game]
+            do {
+                filteredGames = try GameFiltering.filterGamesForAllTeams(allGames, daysToShow: userPreferences.allTeamsDaysToShow)
+            } catch {
+                logger.error("Failed to filter games: \(error.localizedDescription)")
+                completion(.failure(error))
                 return
             }
-            
-            let filteredGames = allGames.filter { game in
-                let gameDate = calendar.startOfDay(for: game.localGameTime)
-                return gameDate >= startOfToday && gameDate < endDate
-            }.sorted { $0.localGameTime < $1.localGameTime }
             
             // Split games
             var inProgressGames = filteredGames.filter { $0.isInProgress }

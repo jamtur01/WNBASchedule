@@ -91,7 +91,8 @@ class APICache: APICacheProtocol {
                     let metadataURL = URL(fileURLWithPath: cacheFilePath).appendingPathExtension("metadata")
                     if FileManager.default.fileExists(atPath: metadataURL.path),
                        let metadata = try? Data(contentsOf: metadataURL),
-                       let metadataDict = try? JSONSerialization.jsonObject(with: metadata) as? [String: Any],
+                       let jsonObject = try? JSONSerialization.jsonObject(with: metadata, options: []),
+                       let metadataDict = jsonObject as? [String: Any],
                        let interval = metadataDict["expirationInterval"] as? TimeInterval {
                         
                         let expirationDate = modificationDate.addingTimeInterval(interval)
@@ -188,7 +189,8 @@ class APICache: APICacheProtocol {
                         let metadataURL = fileURL.appendingPathExtension("metadata")
                         if FileManager.default.fileExists(atPath: metadataURL.path),
                            let metadata = try? Data(contentsOf: metadataURL),
-                           let metadataDict = try? JSONSerialization.jsonObject(with: metadata) as? [String: Any],
+                           let jsonObject = try? JSONSerialization.jsonObject(with: metadata, options: []),
+                           let metadataDict = jsonObject as? [String: Any],
                            let interval = metadataDict["expirationInterval"] as? TimeInterval {
                             
                             let expirationDate = modificationDate.addingTimeInterval(interval)

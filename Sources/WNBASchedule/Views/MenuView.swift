@@ -1,6 +1,5 @@
 import SwiftUI
 import AppKit
-import SwiftDate
 import LaunchAtLogin
 import Combine
 

@@ -1,6 +1,4 @@
 import SwiftUI
-import SwiftDate
-import LaunchAtLogin
 import os.log
 
 @main
@@ -98,7 +96,7 @@ class AppCoordinator: ObservableObject {
         let response = try await DependencyContainer.shared.nbaClient.fetchSchedule(season: season)
         let allGames: [Game] = response.results.schedule
         
-        let filteredGames = try filterGamesForAllTeams(allGames)
+        let filteredGames = try GameFiltering.filterGamesForAllTeams(allGames, daysToShow: userPreferences.allTeamsDaysToShow)
         
         var inProgressGames = filteredGames.filter { $0.isInProgress }
         let upcomingGames = filteredGames.filter { $0.isUpcoming }
@@ -125,24 +123,7 @@ class AppCoordinator: ObservableObject {
         }
     }
     
-    private func filterGamesForAllTeams(_ allGames: [Game]) throws -> [Game] {
-        let now = Date()
-        let calendar = Calendar.current
-        let startOfToday = calendar.startOfDay(for: now)
-        
-        guard let endDate = calendar.date(
-            byAdding: .day,
-            value: userPreferences.allTeamsDaysToShow,
-            to: startOfToday
-        ) else {
-            throw LiveScoreError.dateCalculationFailed
-        }
-        
-        return allGames.filter { game in
-            let gameDate = calendar.startOfDay(for: game.localGameTime)
-            return gameDate >= startOfToday && gameDate < endDate
-        }.sorted { $0.localGameTime < $1.localGameTime }
-    }
+
     
     private func setupTimers() {
         // Setup refresh timer (every 15 minutes)

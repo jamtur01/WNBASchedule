@@ -102,8 +102,9 @@ class UserPreferences {
         let storedUpcomingGames = userDefaults.integer(forKey: upcomingGamesToShowKey)
         let storedAllTeamsDays = userDefaults.integer(forKey: allTeamsDaysToShowKey)
         
-        // Force pastGamesToShow to be 5 to override any existing user preferences
-        self.pastGamesToShow = defaultPastGamesToShow
+        // Use stored value if it exists, otherwise use default
+        let storedPastGames = userDefaults.integer(forKey: pastGamesToShowKey)
+        self.pastGamesToShow = storedPastGames > 0 ? storedPastGames : defaultPastGamesToShow
         
         // Use stored values if they were set (non-zero), otherwise use defaults
         self.upcomingGamesToShow = storedUpcomingGames > 0 ? storedUpcomingGames : defaultUpcomingGamesToShow
@@ -154,8 +155,7 @@ class UserPreferences {
         allTeamsDaysToShow = defaultAllTeamsDaysToShow
         useLocalTimeZone = defaultUseLocalTimeZone
         preferredLanguage = defaultPreferredLanguage
-        
-        savePreferences()
+        // savePreferences() is called by the didSet observers above
         logger.info("Reset user preferences to defaults")
     }
     
