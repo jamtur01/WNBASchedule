@@ -347,7 +347,7 @@ struct Provider: Codable {
     let broadcasterTeamId: Int
     
     /// Broadcaster ranking
-    let broadcasterRanking: Int
+    let broadcasterRanking: Int?
     
     /// Whether this is a national broadcast
     var isNational: Bool {
