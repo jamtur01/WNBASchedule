@@ -95,7 +95,7 @@ struct DesignSystem {
     // MARK: - Interactive States
     
     /// Button state configurations
-    enum ButtonStyle {
+    enum DesignButtonStyle {
         case primary(color: Color)
         case secondary
         case ghost
@@ -280,7 +280,7 @@ extension View {
     ///   - isHovered: Binding to hover state
     /// - Returns: Styled button view
     func designSystemButton(
-        style: DesignSystem.ButtonStyle,
+        style: DesignSystem.DesignButtonStyle,
         isHovered: Binding<Bool>
     ) -> some View {
         self

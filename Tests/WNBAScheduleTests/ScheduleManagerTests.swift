@@ -132,8 +132,8 @@ final class ScheduleManagerTests: XCTestCase {
             return
         }
         XCTAssertTrue(homeGame.isHomeGame)
-        XCTAssertTrue(homeGame.teamIsHome)
-        XCTAssertFalse(homeGame.teamIsAway)
+        XCTAssertTrue(homeGame.isHomeGame) // Use isHomeGame instead of teamIsHome
+        XCTAssertFalse(!homeGame.isHomeGame) // Use !isHomeGame instead of teamIsAway
         XCTAssertEqual(homeGame.opponentTeam.abbr, "LVA")
         XCTAssertEqual(homeGame.teamScore, 85)
         XCTAssertEqual(homeGame.opponentScore, 80)
@@ -145,8 +145,8 @@ final class ScheduleManagerTests: XCTestCase {
             return
         }
         XCTAssertFalse(awayGame.isHomeGame)
-        XCTAssertFalse(awayGame.teamIsHome)
-        XCTAssertTrue(awayGame.teamIsAway)
+        XCTAssertFalse(awayGame.isHomeGame) // Use isHomeGame instead of teamIsHome
+        XCTAssertTrue(!awayGame.isHomeGame) // Use !isHomeGame instead of teamIsAway
         XCTAssertEqual(awayGame.opponentTeam.abbr, "CON")
     }
     

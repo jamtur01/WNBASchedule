@@ -41,23 +41,6 @@ struct KeyboardNavigation {
                 return .command
             }
         }
-        
-        var description: String {
-            switch self {
-            case .refresh:
-                return "Refresh schedule data"
-            case .showAllTeams:
-                return "Show all teams schedule"
-            case .nextTeam:
-                return "Switch to next team"
-            case .previousTeam:
-                return "Switch to previous team"
-            case .quit:
-                return "Quit application"
-            case .toggleTeamPicker:
-                return "Toggle team picker"
-            }
-        }
     }
 }
 
@@ -71,13 +54,6 @@ extension View {
     /// - Returns: View with keyboard shortcut
     func keyboardShortcut(_ shortcut: KeyboardNavigation.Shortcut, action: @escaping () -> Void) -> some View {
         self.keyboardShortcut(shortcut.keyEquivalent, modifiers: shortcut.modifiers)
-    }
-    
-    /// Add help text for keyboard shortcuts
-    /// - Parameter shortcut: The keyboard shortcut to describe
-    /// - Returns: View with help text
-    func shortcutHelp(_ shortcut: KeyboardNavigation.Shortcut) -> some View {
-        self.help(shortcut.description)
     }
 }
 
@@ -154,33 +130,6 @@ struct ContextMenuSupport {
         let pasteboard = NSPasteboard.general
         pasteboard.clearContents()
         pasteboard.setString(gameInfo, forType: .string)
-    }
-}
-
-// MARK: - Focus Management
-
-struct FocusSupport {
-    
-    enum FocusField: Hashable {
-        case teamPicker
-        case searchField
-        case gameList
-        case actionButtons
-    }
-    
-    /// Apply focus ring styling consistent with macOS
-    /// - Parameter isFocused: Whether the element is focused
-    /// - Returns: View with focus styling
-    static func focusRing<Content: View>(_ content: Content, isFocused: Bool) -> some View {
-        content
-            .overlay(
-                RoundedRectangle(cornerRadius: DesignSystem.CornerRadius.sm)
-                    .stroke(
-                        isFocused ? Color.accentColor : Color.clear,
-                        lineWidth: 2
-                    )
-                    .animation(DesignSystem.Animation.quick, value: isFocused)
-            )
     }
 }
 

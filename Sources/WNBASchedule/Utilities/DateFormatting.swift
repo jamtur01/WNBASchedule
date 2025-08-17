@@ -26,15 +26,6 @@ enum DateFormatting {
         return "\(scheduleDate(from: date, useLocalTimeZone: useLocalTimeZone)) at \(time(from: date, useLocalTimeZone: useLocalTimeZone))"
     }
     
-    /// Returns a DateInRegion for the given date with appropriate timezone
-    static func dateInRegion(from date: Date, useLocalTimeZone: Bool = true) -> DateInRegion {
-        if useLocalTimeZone {
-            return date.in(region: Region.current)
-        } else {
-            return date.in(region: Region(zone: Zones.americaNewYork))
-        }
-    }
-    
     /// Formats a relative date string (e.g., "Today", "Tomorrow", "Mon Jan 15")
     static func relativeDate(from date: Date, useLocalTimeZone: Bool = true) -> String {
         let calendar = Calendar.current

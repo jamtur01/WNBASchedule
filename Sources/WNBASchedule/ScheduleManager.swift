@@ -47,12 +47,31 @@ class ScheduleManager: ScheduleManagerProtocol {
         logger.info("Fetching games for team \(teamAbbr) in season \(seasonDisplay)")
         
         let response = try await client.fetchSchedule(season: season)
-        var games = response.results.schedule
+        let allGames = response.results.schedule
         
-        // Fetch live scores for in-progress games
-        games = await liveScoreManager.fetchLiveScores(for: games)
+        // Filter games first to reduce API calls
+        let filteredGames = filterGames(from: allGames, forTeam: teamAbbr)
         
-        return filterGames(from: games, forTeam: teamAbbr)
+        // Only fetch live scores for the filtered in-progress games
+        if !filteredGames.inProgressGames.isEmpty {
+            let inProgressGames = filteredGames.inProgressGames.map { $0.game }
+            let updatedInProgressGames = await liveScoreManager.fetchLiveScores(for: inProgressGames)
+            
+            let updatedMarkedGames = updatedInProgressGames.map { updatedGame in
+                MarkedGame(
+                    game: updatedGame,
+                    isHomeGame: updatedGame.home.abbr == teamAbbr
+                )
+            }
+            
+            return FilteredGames(
+                pastGames: filteredGames.pastGames,
+                inProgressGames: updatedMarkedGames,
+                upcomingGames: filteredGames.upcomingGames
+            )
+        }
+        
+        return filteredGames
     }
     
     // MARK: - Private Methods
@@ -109,22 +128,6 @@ struct FilteredGames {
     let pastGames: [MarkedGame]
     let inProgressGames: [MarkedGame]
     let upcomingGames: [MarkedGame]
-    
-    var isEmpty: Bool {
-        return pastGames.isEmpty && inProgressGames.isEmpty && upcomingGames.isEmpty
-    }
-    
-    var hasUpcomingGames: Bool {
-        return !upcomingGames.isEmpty
-    }
-    
-    var hasPastGames: Bool {
-        return !pastGames.isEmpty
-    }
-    
-    var hasInProgressGames: Bool {
-        return !inProgressGames.isEmpty
-    }
 }
 
 /// Represents a game marked as home or away for a specific team
@@ -134,14 +137,6 @@ struct MarkedGame: Identifiable {
     
     var id: String {
         return game.gid
-    }
-    
-    var teamIsHome: Bool {
-        return isHomeGame
-    }
-    
-    var teamIsAway: Bool {
-        return !isHomeGame
     }
     
     var opponentTeam: Team {

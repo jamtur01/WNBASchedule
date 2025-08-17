@@ -39,8 +39,8 @@ class LiveScoreManager {
                     do {
                         let boxscore = try await DependencyContainer.shared.nbaClient.fetchBoxscore(gameId: gameId)
                         
-                        // Check if game finished
-                        let finished = boxscore.game.gameStatusText == "Final"
+                        // Check if game finished (handles variations like "Final", "Final/OT", etc.)
+                        let finished = boxscore.game.gameStatusText.hasPrefix("Final")
                         
                         return (index, boxscore, finished)
                     } catch {

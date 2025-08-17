@@ -1,5 +1,6 @@
 import SwiftUI
-import LaunchAtLogin
+
+import os.log
 
 extension Image {
     static func loadFromBundle(named name: String) -> Image {
@@ -8,6 +9,10 @@ extension Image {
             return Image(nsImage: nsImage)
         }
         
+        // Log missing asset for translators/designers
+        let logger = Logger(subsystem: "net.kartar.wnbaschedule", category: "Assets")
+        logger.warning("Missing bundle asset: \(name).png - falling back to system image")
+        
         // Fallback to system image
         return Image(systemName: "sportscourt")
     }
@@ -15,7 +20,7 @@ extension Image {
 
 /// All teams menu view showing games across all WNBA teams
 /// Layout: Fixed height (800px) with Spacer to push buttons to bottom  
-/// Pattern: Header -> Content -> Spacer -> Actions (see BaseMenuLayout for shared approach)
+/// Pattern: Header -> Content -> Spacer -> Actions (see StandardMenuLayout for shared approach)
 struct AllTeamsMenuView: View {
     let upcomingGames: [Game]
     let inProgressGames: [Game]
@@ -73,7 +78,7 @@ struct AllTeamsMenuView: View {
 
                 Divider()
             } else if inProgressGames.isEmpty {
-                Text("No hay partidos programados en este rango.")
+                Text("menu.no_games_scheduled".localized)
                     .font(DesignSystem.Typography.callout)
                     .foregroundColor(.secondary)
                     .padding(.top, DesignSystem.Spacing.sm)

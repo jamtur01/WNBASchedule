@@ -3,11 +3,6 @@ import AppKit
 
 // MARK: - Game Row Components
 
-/// Container for game row components
-struct GameRowComponents {
-    // This struct serves as a namespace for game row components
-}
-
 // MARK: - Previous Game Row
 
 /// Displays a completed game with final scores
@@ -263,22 +258,21 @@ struct UpcomingGameRow: View {
     
     private var timeUntilGame: String {
         let now = Date()
-        
         let gameDate = game.localGameTime
-        if gameDate.timeIntervalSince(now) > 0 {
-            let timeInterval = gameDate.timeIntervalSince(now)
-            if timeInterval > 86400 { // More than 1 day
-                let days = Int(timeInterval / 86400)
-                return "\(days)d"
-            } else if timeInterval > 3600 { // More than 1 hour
-                let hours = Int(timeInterval / 3600)
-                return "\(hours)h"
-            } else if timeInterval > 0 {
-                let minutes = Int(timeInterval / 60)
-                return "\(minutes)m"
-            }
+        let timeInterval = gameDate.timeIntervalSince(now)
+        
+        guard timeInterval > 0 else { return "" }
+        
+        if timeInterval > 86400 { // More than 1 day
+            let days = Int(timeInterval / 86400)
+            return "\(days)d"
+        } else if timeInterval > 3600 { // More than 1 hour
+            let hours = Int(timeInterval / 3600)
+            return "\(hours)h"
+        } else {
+            let minutes = Int(timeInterval / 60)
+            return "\(minutes)m"
         }
-        return ""
     }
     
     var body: some View {

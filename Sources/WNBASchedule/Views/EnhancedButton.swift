@@ -3,7 +3,7 @@ import SwiftUI
 /// Enhanced button component with loading states and improved feedback
 struct EnhancedButton: View {
     let title: String
-    let style: DesignSystem.ButtonStyle
+    let style: DesignSystem.DesignButtonStyle
     let isLoading: Bool
     let action: () -> Void
     
@@ -14,7 +14,7 @@ struct EnhancedButton: View {
     
     init(
         _ title: String,
-        style: DesignSystem.ButtonStyle = .secondary,
+        style: DesignSystem.DesignButtonStyle = .secondary,
         isLoading: Bool = false,
         action: @escaping () -> Void
     ) {
@@ -77,7 +77,7 @@ struct EnhancedButton: View {
 struct EnhancedIconButton: View {
     let icon: String
     let title: String?
-    let style: DesignSystem.ButtonStyle
+    let style: DesignSystem.DesignButtonStyle
     let isLoading: Bool
     let action: () -> Void
     
@@ -89,7 +89,7 @@ struct EnhancedIconButton: View {
     init(
         icon: String,
         title: String? = nil,
-        style: DesignSystem.ButtonStyle = .secondary,
+        style: DesignSystem.DesignButtonStyle = .secondary,
         isLoading: Bool = false,
         action: @escaping () -> Void
     ) {

@@ -126,30 +126,18 @@ struct Game: Codable, Identifiable {
     
     /// The game time in the user's local timezone
     var localGameTime: Date {
-        let logger = Logger(subsystem: "net.kartar.wnbaschedule", category: "Game")
-        
-        // Use the timestamp as primary source
-        // NBA API provides timestamps in milliseconds
-        let timestampDate = Date(timeIntervalSince1970: Double(timestamp) / 1000.0)
-        
-        if let date = utcTime.toISODate(region: Region.UTC) {
-            if abs(date.date.timeIntervalSince(timestampDate)) > 300 { // 5 minute difference
-                logger.warning(
-                    "Timestamp (\(timestampDate)) and UTC date (\(date.date)) differ by more than 5 minutes"
-                )
-            }
-            return timestampDate
-        } else {
-            logger.warning("Failed to parse UTC time string: \(utcTime), using timestamp fallback")
-        }
-        
-        return timestampDate
+        // Use the timestamp as primary source - NBA API provides timestamps in milliseconds
+        return Date(timeIntervalSince1970: Double(timestamp) / 1000.0)
     }
     
     /// The game time as a DateInRegion for easier formatting
     var gameTimeInRegion: DateInRegion {
         let userPreferences = DependencyContainer.shared.userPreferences
-        return DateFormatting.dateInRegion(from: localGameTime, useLocalTimeZone: userPreferences.useLocalTimeZone)
+        if userPreferences.useLocalTimeZone {
+            return localGameTime.in(region: Region.current)
+        } else {
+            return localGameTime.in(region: Region(zone: Zones.americaNewYork))
+        }
     }
     
     /// Formatted game date for display
@@ -299,14 +287,6 @@ struct Team: Codable {
     /// Full team name (city + name)
     var fullName: String {
         return "\(city) \(name)"
-    }
-    
-    /// Team record as a string (if available)
-    var recordString: String? {
-        if let wins = wins, let losses = losses {
-            return "\(wins)-\(losses)"
-        }
-        return nil
     }
     
     /// Team color from TeamManager

@@ -6,7 +6,7 @@ import Combine
 // MARK: - Menu View
 /// Main menu view for single team schedules
 /// Layout: Fixed height (800px) with Spacer to push buttons to bottom
-/// Pattern: Header -> Content -> Spacer -> Actions (see BaseMenuLayout for shared approach)
+/// Pattern: Header -> Content -> Spacer -> Actions (see StandardMenuLayout for shared approach)
 struct MenuView: View {
     // MARK: - Properties
     

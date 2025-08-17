@@ -159,15 +159,10 @@ class UserPreferences {
         logger.info("Reset user preferences to defaults")
     }
     
-    /// Returns a list of available languages
-    var availableLanguages: [String] {
-        return Localization.supportedLocaleIdentifiers
-    }
-    
     /// Changes the app's language
     /// - Parameter languageCode: The language code to change to (e.g., "en", "es")
     func changeLanguage(to languageCode: String) {
-        guard availableLanguages.contains(languageCode) else {
+        guard Localization.supportedLocaleIdentifiers.contains(languageCode) else {
             logger.warning("Attempted to change to unsupported language: \(languageCode)")
             return
         }

@@ -331,10 +331,6 @@ class MockAPICache: APICacheProtocol {
     func clearCache() {
         mockData.removeAll()
     }
-    
-    func removeExpiredEntries() {
-        // No-op for testing
-    }
 }
 
 // Create a mock implementation of the protocol

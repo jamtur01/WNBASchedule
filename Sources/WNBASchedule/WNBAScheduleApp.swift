@@ -1,5 +1,6 @@
 import SwiftUI
 import os.log
+import Combine
 
 @main
 struct WNBAScheduleApp: App {
@@ -32,8 +33,9 @@ class AppCoordinator: ObservableObject {
     
     // Managers
     private let liveScoreManager: LiveScoreManager
-    private var refreshTimer: Timer?
-    private var liveScoreTimer: Timer?
+    private var cancellables = Set<AnyCancellable>()
+    private var refreshTimerCancellable: AnyCancellable?
+    private var liveScoreTimerCancellable: AnyCancellable?
     
     // MARK: - Initialization
     init(
@@ -125,25 +127,25 @@ class AppCoordinator: ObservableObject {
     
     private func setupTimers() {
         // Setup refresh timer (every 15 minutes)
-        refreshTimer = Timer.scheduledTimer(withTimeInterval: 900, repeats: true) { _ in
-            Task { @MainActor in
-                self.refreshGames()
+        refreshTimerCancellable = Timer.publish(every: 900, on: .main, in: .common)
+            .autoconnect()
+            .sink { [weak self] _ in
+                self?.refreshGames()
             }
-        }
     }
     
     private func setupLiveScoreTimerIfNeeded() {
         let hasInProgressGames = games?.inProgressGames.isEmpty == false
         
         if hasInProgressGames {
-            liveScoreTimer?.invalidate()
-            liveScoreTimer = Timer.scheduledTimer(withTimeInterval: 30, repeats: true) { _ in
-                Task { @MainActor in
-                    self.updateLiveScores()
+            liveScoreTimerCancellable?.cancel()
+            liveScoreTimerCancellable = Timer.publish(every: 30, on: .main, in: .common)
+                .autoconnect()
+                .sink { [weak self] _ in
+                    self?.updateLiveScores()
                 }
-            }
         } else {
-            liveScoreTimer?.invalidate()
+            liveScoreTimerCancellable?.cancel()
         }
     }
     
@@ -164,7 +166,7 @@ class AppCoordinator: ObservableObject {
                         }
                         
                         if data.updatedGames.inProgressGames.isEmpty {
-                            self.liveScoreTimer?.invalidate()
+                            self.liveScoreTimerCancellable?.cancel()
                         }
                         
                     case .failure(let error):
@@ -176,16 +178,15 @@ class AppCoordinator: ObservableObject {
     }
     
     deinit {
-        refreshTimer?.invalidate()
-        liveScoreTimer?.invalidate()
+        refreshTimerCancellable?.cancel()
+        liveScoreTimerCancellable?.cancel()
+        cancellables.removeAll()
     }
 }
 
 // MARK: - Menu Bar Content View
 struct MenuBarContentView: View {
     @EnvironmentObject var appCoordinator: AppCoordinator
-    @Environment(\.openWindow) 
-    var openWindow
     
     var body: some View {
         VStack(spacing: 0) {

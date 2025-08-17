@@ -100,14 +100,6 @@ struct ColorManager {
         return teamColor(for: teamAbbreviation, colorScheme: .light)
     }
     
-    /// Get original team color from TeamManager for comparison/fallback
-    /// - Parameter teamAbbreviation: Team abbreviation
-    /// - Returns: Original team color
-    static func originalTeamColor(for teamAbbreviation: String) -> Color {
-        let originalColor = TeamManager.getTeamColor(abbreviation: teamAbbreviation)
-        return Color(hex: originalColor) ?? .blue
-    }
-    
     /// WNBA brand color as SwiftUI Color
     static var wnbaBrandColor: Color {
         Color(hex: wnbaOrange) ?? .orange

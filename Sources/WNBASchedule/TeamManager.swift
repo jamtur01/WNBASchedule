@@ -9,126 +9,118 @@ struct TeamManager {
         let city: String
         let nickname: String
         let primaryColor: String
-        let tid: Int
-        
-        var displayName: String {
-            return "\(city) \(nickname)"
-        }
     }
     
     /// All WNBA teams
-    static let allTeams: [TeamInfo] = [
+    private static let allTeamsArray: [TeamInfo] = [
         TeamInfo(
             abbreviation: "ATL",
             fullName: "Atlanta Dream",
             city: "Atlanta",
             nickname: "Dream",
-            primaryColor: "#C8102E",
-            tid: 1611661330
+            primaryColor: "#C8102E"
         ),
         TeamInfo(
             abbreviation: "CHI",
             fullName: "Chicago Sky",
             city: "Chicago",
             nickname: "Sky",
-            primaryColor: "#418FDE",
-            tid: 1611661329
+            primaryColor: "#418FDE"
         ),
         TeamInfo(
             abbreviation: "CON",
             fullName: "Connecticut Sun",
             city: "Connecticut",
             nickname: "Sun",
-            primaryColor: "#FC4C02",
-            tid: 1611661323
+            primaryColor: "#FC4C02"
         ),
         TeamInfo(
             abbreviation: "DAL",
             fullName: "Dallas Wings",
             city: "Dallas",
             nickname: "Wings",
-            primaryColor: "#C4D600",
-            tid: 1611661321
+            primaryColor: "#C4D600"
         ),
         TeamInfo(
             abbreviation: "GSV",
             fullName: "Golden State Valkyries",
             city: "San Francisco",
             nickname: "Valkyries",
-            primaryColor: "#AD96DC",
-            tid: 1611661331
+            primaryColor: "#AD96DC"
         ),
         TeamInfo(
             abbreviation: "IND",
             fullName: "Indiana Fever",
             city: "Indiana",
             nickname: "Fever",
-            primaryColor: "#041E42",
-            tid: 1611661325
+            primaryColor: "#041E42"
         ),
         TeamInfo(
             abbreviation: "LAS",
             fullName: "Los Angeles Sparks",
             city: "Los Angeles",
             nickname: "Sparks",
-            primaryColor: "#702F8A",
-            tid: 1611661320
+            primaryColor: "#702F8A"
         ),
         TeamInfo(
             abbreviation: "LVA",
             fullName: "Las Vegas Aces",
             city: "Las Vegas",
             nickname: "Aces",
-            primaryColor: "#010101",
-            tid: 1611661319
+            primaryColor: "#010101"
         ),
         TeamInfo(
             abbreviation: "MIN",
             fullName: "Minnesota Lynx",
             city: "Minnesota",
             nickname: "Lynx",
-            primaryColor: "#236192",
-            tid: 1611661324
+            primaryColor: "#236192"
         ),
         TeamInfo(
             abbreviation: "NYL",
             fullName: "New York Liberty",
             city: "New York",
             nickname: "Liberty",
-            primaryColor: "#6ECEB2",
-            tid: 1611661313
+            primaryColor: "#6ECEB2"
         ),
         TeamInfo(
             abbreviation: "PHX",
             fullName: "Phoenix Mercury",
             city: "Phoenix",
             nickname: "Mercury",
-            primaryColor: "#211747",
-            tid: 1611661317
+            primaryColor: "#211747"
         ),
         TeamInfo(
             abbreviation: "SEA",
             fullName: "Seattle Storm",
             city: "Seattle",
             nickname: "Storm",
-            primaryColor: "#2C5234",
-            tid: 1611661328
+            primaryColor: "#2C5234"
         ),
         TeamInfo(
             abbreviation: "WAS",
             fullName: "Washington Mystics",
             city: "Washington",
             nickname: "Mystics",
-            primaryColor: "#C8102E",
-            tid: 1611661322
+            primaryColor: "#C8102E"
         )
     ]
+    
+    /// Dictionary lookup for efficient team access
+    private static let teamLookup: [String: TeamInfo] = {
+        Dictionary(uniqueKeysWithValues: allTeamsArray.map { ($0.abbreviation, $0) })
+    }()
+    
+    /// All WNBA teams (computed property for external access)
+    static var allTeams: [TeamInfo] {
+        return allTeamsArray
+    }
 
     /// Get team information by abbreviation
     /// - Parameter abbreviation: The team's abbreviation (e.g., "NYL")
     /// - Returns: The team info if found, nil otherwise
     static func getTeamInfo(abbreviation: String) -> TeamInfo? {
-        return allTeams.first { $0.abbreviation == abbreviation }
+        return teamLookup[abbreviation]
     }
     
     /// Get a team's full name by abbreviation

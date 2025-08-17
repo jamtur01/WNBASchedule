@@ -18,9 +18,6 @@ protocol APICacheProtocol {
     
     /// Clears all cached data
     func clearCache()
-    
-    /// Removes expired cache entries
-    func removeExpiredEntries()
 }
 
 /// A simple in-memory and disk cache for API responses
@@ -251,19 +248,24 @@ class APICache: APICacheProtocol {
     }
     
     private func evictOldestEntries(toFitSize size: Int) {
+        let sizeToFree = size - (maxMemoryCacheSize - currentMemoryCacheSize)
+        
+        // If we already have enough space, no need to evict
+        guard sizeToFree > 0 else { return }
+        
         // Sort entries by expiration date (oldest first)
         let sortedEntries = memoryCache.sorted { $0.value.expirationDate < $1.value.expirationDate }
         
-        var sizeToFree = size - (maxMemoryCacheSize - currentMemoryCacheSize)
+        var remainingSizeToFree = sizeToFree
         
         for (key, entry) in sortedEntries {
-            if sizeToFree <= 0 {
+            if remainingSizeToFree <= 0 {
                 break
             }
             
             memoryCache.removeValue(forKey: key)
             currentMemoryCacheSize -= entry.sizeInBytes
-            sizeToFree -= entry.sizeInBytes
+            remainingSizeToFree -= entry.sizeInBytes
             
             logger.debug("Evicted cache entry for key: \(key)")
         }

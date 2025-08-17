@@ -22,9 +22,11 @@ final class WNBAScheduleTests: XCTestCase {
         XCTAssertEqual(homeTeam.fullName, "New York Liberty")
         XCTAssertEqual(awayTeam.fullName, "Las Vegas Aces")
         
-        // Test record string
-        XCTAssertEqual(homeTeam.recordString, "10-2")
-        XCTAssertEqual(awayTeam.recordString, "9-3")
+        // Test record creation (since recordString was removed)
+        XCTAssertEqual(homeTeam.wins, 10)
+        XCTAssertEqual(homeTeam.losses, 2)
+        XCTAssertEqual(awayTeam.wins, 9)
+        XCTAssertEqual(awayTeam.losses, 3)
         
         // Test team with missing record
         let teamWithoutRecord = Team(
@@ -36,7 +38,8 @@ final class WNBAScheduleTests: XCTestCase {
             losses: nil,
             wins: nil
         )
-        XCTAssertNil(teamWithoutRecord.recordString)
+        XCTAssertNil(teamWithoutRecord.wins)
+        XCTAssertNil(teamWithoutRecord.losses)
         
         // Test primary color (this depends on TeamManager)
         XCTAssertFalse(homeTeam.primaryColor.isEmpty)
@@ -185,12 +188,12 @@ final class WNBAScheduleTests: XCTestCase {
         
         // Test basic properties
         XCTAssertTrue(markedHomeGame.isHomeGame)
-        XCTAssertTrue(markedHomeGame.teamIsHome)
-        XCTAssertFalse(markedHomeGame.teamIsAway)
+        XCTAssertTrue(markedHomeGame.isHomeGame) // Use isHomeGame instead of teamIsHome
+        XCTAssertFalse(!markedHomeGame.isHomeGame) // Use !isHomeGame instead of teamIsAway
         
         XCTAssertFalse(markedAwayGame.isHomeGame)
-        XCTAssertFalse(markedAwayGame.teamIsHome)
-        XCTAssertTrue(markedAwayGame.teamIsAway)
+        XCTAssertFalse(markedAwayGame.isHomeGame) // Use isHomeGame instead of teamIsHome
+        XCTAssertTrue(!markedAwayGame.isHomeGame) // Use !isHomeGame instead of teamIsAway
         
         // Test opponent team
         XCTAssertEqual(markedHomeGame.opponentTeam.abbr, "LVA")
