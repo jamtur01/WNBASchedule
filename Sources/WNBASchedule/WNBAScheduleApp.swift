@@ -59,7 +59,7 @@ class AppCoordinator: ObservableObject {
         
         Task {
             do {
-                if userPreferences.favoriteTeam == "ALL" {
+                if TeamSelection.isAllTeams(userPreferences.favoriteTeam) {
                     try await handleAllTeamsMode()
                 } else {
                     try await handleIndividualTeamMode()
@@ -81,7 +81,7 @@ class AppCoordinator: ObservableObject {
     
     func changeTeam(to teamAbbreviation: String) {
         // If switching to "ALL", save the current team as previously selected
-        if teamAbbreviation == "ALL" && userPreferences.favoriteTeam != "ALL" {
+        if TeamSelection.isAllTeams(teamAbbreviation) && !TeamSelection.isAllTeams(userPreferences.favoriteTeam) {
             userPreferences.previouslySelectedTeam = userPreferences.favoriteTeam
         }
         
@@ -93,25 +93,20 @@ class AppCoordinator: ObservableObject {
     
     // MARK: - Private Methods
     private func handleAllTeamsMode() async throws {
-        let currentYear = Calendar.current.component(.year, from: Date())
-        let season = String(currentYear)
-        let response = try await DependencyContainer.shared.nbaClient.fetchSchedule(season: season)
-        let allGames: [Game] = response.results.schedule
+        // Use ScheduleManager to fetch all teams games
+        let (inProgressGames, upcomingGames) = try await scheduleManager.fetchAllTeamsGames(season: nil)
         
-        let filteredGames = try GameFiltering.filterGamesForAllTeams(allGames, daysToShow: userPreferences.allTeamsDaysToShow)
-        
-        var inProgressGames = filteredGames.filter { $0.isInProgress }
-        let upcomingGames = filteredGames.filter { $0.isUpcoming }
-        
-        if !inProgressGames.isEmpty {
-            inProgressGames = await liveScoreManager.fetchLiveScores(for: inProgressGames)
+        // Fetch live scores for in-progress games if any exist
+        var updatedInProgressGames = inProgressGames
+        if !updatedInProgressGames.isEmpty {
+            updatedInProgressGames = await liveScoreManager.fetchLiveScores(for: updatedInProgressGames)
         }
         
         await MainActor.run {
             // Convert to FilteredGames format for compatibility
             self.games = FilteredGames(
                 pastGames: [],
-                inProgressGames: inProgressGames.map { MarkedGame(game: $0, isHomeGame: false) },
+                inProgressGames: updatedInProgressGames.map { MarkedGame(game: $0, isHomeGame: false) },
                 upcomingGames: upcomingGames.map { MarkedGame(game: $0, isHomeGame: false) }
             )
         }
@@ -152,26 +147,26 @@ class AppCoordinator: ObservableObject {
     private func updateLiveScores() {
         guard let currentGames = games else { return }
         
-        Task {
-            await liveScoreManager.updateLiveScoresForTeam(currentGames: currentGames) { [weak self] result in
-                Task { @MainActor [weak self] in
-                    guard let self = self else { return }
-                    
-                    switch result {
-                    case .success(let data):
-                        if data.gameFinished {
-                            self.refreshGames()
-                        } else {
-                            self.games = data.updatedGames
-                        }
-                        
-                        if data.updatedGames.inProgressGames.isEmpty {
-                            self.liveScoreTimerCancellable?.cancel()
-                        }
-                        
-                    case .failure(let error):
-                        self.logger.error("Error updating live scores: \(error.localizedDescription)")
+        Task { @MainActor [weak self] in
+            guard let self = self else { return }
+            
+            await self.liveScoreManager.updateLiveScoresForTeam(currentGames: currentGames) { [weak self] result in
+                guard let self = self else { return }
+                
+                switch result {
+                case .success(let data):
+                    if data.gameFinished {
+                        self.refreshGames()
+                    } else {
+                        self.games = data.updatedGames
                     }
+                    
+                    if data.updatedGames.inProgressGames.isEmpty {
+                        self.liveScoreTimerCancellable?.cancel()
+                    }
+                    
+                case .failure(let error):
+                    self.logger.error("Error updating live scores: \(error.localizedDescription)")
                 }
             }
         }
@@ -218,7 +213,7 @@ struct MenuBarContentView: View {
                 .frame(maxWidth: .infinity, maxHeight: .infinity)
                 .padding()
             } else if let games = appCoordinator.games {
-                if DependencyContainer.shared.userPreferences.favoriteTeam == "ALL" {
+                if TeamSelection.isAllTeams(DependencyContainer.shared.userPreferences.favoriteTeam) {
                     AllTeamsMenuView(
                         upcomingGames: games.upcomingGames.map { $0.game },
                         inProgressGames: games.inProgressGames.map { $0.game },

@@ -116,7 +116,7 @@ struct ContextMenuSupport {
             if teams.count > 5 {
                 Divider()
                 Button("Show All Teams...") {
-                    onTeamSelected("ALL")
+                    onTeamSelected(TeamSelection.allTeams)
                 }
             }
         }

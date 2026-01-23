@@ -16,6 +16,7 @@
 "menu.section.in_progress" = "EN PROGRESO";
 "menu.section.upcoming" = "PRÓXIMOS PARTIDOS";
 "menu.no_games" = "No se encontraron partidos para %@";
+"menu.no_games_scheduled" = "No hay partidos programados en este rango.";
 "menu.settings" = "Configuración";
 "menu.select_team" = "Seleccionar equipo";
 

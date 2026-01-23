@@ -16,6 +16,7 @@
 "menu.section.in_progress" = "IN PROGRESS";
 "menu.section.upcoming" = "UPCOMING GAMES";
 "menu.no_games" = "No games found for %@";
+"menu.no_games_scheduled" = "No games scheduled in this range.";
 "menu.settings" = "Settings";
 "menu.select_team" = "Select Team";
 

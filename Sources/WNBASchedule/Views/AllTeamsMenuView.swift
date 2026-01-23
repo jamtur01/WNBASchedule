@@ -19,7 +19,7 @@ extension Image {
 }
 
 /// All teams menu view showing games across all WNBA teams
-/// Layout: Fixed height (800px) with Spacer to push buttons to bottom  
+/// Layout: Fixed height (630px) with Spacer to push buttons to bottom  
 /// Pattern: Header -> Content -> Spacer -> Actions (see StandardMenuLayout for shared approach)
 struct AllTeamsMenuView: View {
     let upcomingGames: [Game]
@@ -29,10 +29,6 @@ struct AllTeamsMenuView: View {
     let previouslySelectedTeam: String?
 
     @State private var showingTeamPicker = false
-
-    private var daysRange: Int {
-        DependencyContainer.shared.userPreferences.allTeamsDaysToShow
-    }
 
     var body: some View {
         StandardMenuLayout(

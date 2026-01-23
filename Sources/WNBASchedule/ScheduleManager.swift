@@ -15,6 +15,11 @@ protocol ScheduleManagerProtocol {
     ///   - season: The season year (e.g., "2025"). If nil, uses current year.
     /// - Returns: Filtered games for the team in the specified season
     func fetchGames(forTeam teamAbbr: String, season: String?) async throws -> FilteredGames
+    
+    /// Fetches all teams games (in-progress and upcoming)
+    /// - Parameter season: The season year (e.g., "2025"). If nil, uses current year.
+    /// - Returns: Tuple containing in-progress and upcoming games arrays
+    func fetchAllTeamsGames(season: String?) async throws -> (inProgress: [Game], upcoming: [Game])
 }
 
 /// Manages the fetching and filtering of WNBA games
@@ -74,32 +79,56 @@ class ScheduleManager: ScheduleManagerProtocol {
         return filteredGames
     }
     
+    func fetchAllTeamsGames(season: String? = nil) async throws -> (inProgress: [Game], upcoming: [Game]) {
+        let currentYear = Calendar.current.component(.year, from: Date())
+        let selectedSeason = season ?? String(currentYear)
+        
+        logger.info("Fetching all teams games for season \(selectedSeason)")
+        
+        let response = try await client.fetchSchedule(season: selectedSeason)
+        let allGames = response.results.schedule
+        
+        // Filter and sort games by status
+        let inProgressGames = allGames.filter { $0.isInProgress }
+        let upcomingGames = allGames.filter { $0.isUpcoming }
+            .sorted { $0.localGameTime < $1.localGameTime }
+        
+        logger.info("Found \(inProgressGames.count) in-progress and \(upcomingGames.count) upcoming games")
+        
+        return (inProgressGames, upcomingGames)
+    }
+    
     // MARK: - Private Methods
     
     private func filterGames(from allGames: [Game], forTeam teamAbbr: String) -> FilteredGames {
-        // Filter games for the specified team
-        let teamGames = allGames.filter { game in
-            game.home.abbr == teamAbbr || game.visitor.abbr == teamAbbr
+        // Filter and mark games for the specified team in a single pass
+        let markedGames = allGames
+            .filter { game in
+                game.home.abbr == teamAbbr || game.visitor.abbr == teamAbbr
+            }
+            .map { game -> MarkedGame in
+                let isHome = game.home.abbr == teamAbbr
+                return MarkedGame(game: game, isHomeGame: isHome)
+            }
+        
+        // Group games by status in a single pass using Dictionary grouping
+        var pastGames: [MarkedGame] = []
+        var inProgressGames: [MarkedGame] = []
+        var upcomingGames: [MarkedGame] = []
+        
+        for markedGame in markedGames {
+            if markedGame.game.isCompleted {
+                pastGames.append(markedGame)
+            } else if markedGame.game.isInProgress {
+                inProgressGames.append(markedGame)
+            } else if markedGame.game.isUpcoming {
+                upcomingGames.append(markedGame)
+            }
         }
         
-        // Mark games as home or away for the specified team
-        let markedGames = teamGames.map { game -> MarkedGame in
-            let isHome = game.home.abbr == teamAbbr
-            return MarkedGame(game: game, isHomeGame: isHome)
-        }
-        
-        // Split into past, in-progress, and upcoming games
-        let pastGames = markedGames.filter { $0.game.isCompleted }
-        let inProgressGames = markedGames.filter { $0.game.isInProgress }
-        let upcomingGames = markedGames.filter { $0.game.isUpcoming }
-        
-        // Sort past games by date (oldest first, latest last for display)
+        // Sort games by date
         let sortedPastGames = pastGames.sorted { $0.game.localGameTime < $1.game.localGameTime }
-        
-        // Sort in-progress games by date (earliest first)
         let sortedInProgressGames = inProgressGames.sorted { $0.game.localGameTime < $1.game.localGameTime }
-        
-        // Sort upcoming games by date (earliest first)
         let sortedUpcomingGames = upcomingGames.sorted { $0.game.localGameTime < $1.game.localGameTime }
         
         // Use user preferences for the number of games to display
@@ -112,7 +141,7 @@ class ScheduleManager: ScheduleManagerProtocol {
         let allInProgressGames = sortedInProgressGames
         
         logger.info(
-            "Team \(teamAbbr): \(teamGames.count) games, \(recentPastGames.count) past, \(allInProgressGames.count) in-progress, \(nextUpcomingGames.count) upcoming"
+            "Team \(teamAbbr): \(markedGames.count) games, \(recentPastGames.count) past, \(allInProgressGames.count) in-progress, \(nextUpcomingGames.count) upcoming"
         )
         
         return FilteredGames(

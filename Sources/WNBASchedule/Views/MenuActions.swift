@@ -26,7 +26,7 @@ struct MenuActions: View {
                 HStack(spacing: 4) {
                     // "All Teams" button
                     Button {
-                        changeTeamAction("ALL")
+                        changeTeamAction(TeamSelection.allTeams)
                     } label: {
                         Text("All Teams")
                             .font(.system(size: 10, weight: .medium))
@@ -34,8 +34,8 @@ struct MenuActions: View {
                             .padding(.horizontal, 8)
                             .padding(.vertical, 4)
                     }
-                    .background(teamAbbreviation == "ALL" ? teamColor : Color.secondary.opacity(0.2))
-                    .foregroundColor(teamAbbreviation == "ALL" ? .white : .primary)
+                    .background(TeamSelection.isAllTeams(teamAbbreviation) ? teamColor : Color.secondary.opacity(0.2))
+                    .foregroundColor(TeamSelection.isAllTeams(teamAbbreviation) ? .white : .primary)
                     .cornerRadius(4)
                     
                     // Refresh button

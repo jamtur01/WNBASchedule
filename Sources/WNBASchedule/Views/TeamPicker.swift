@@ -132,11 +132,11 @@ struct TeamPickerView: View {
             
             HStack(spacing: 8) {
                 Button("All Teams") {
-                    onTeamSelected("ALL")
+                    onTeamSelected(TeamSelection.allTeams)
                 }
                 .font(.system(size: 11))
                 .buttonStyle(PlainButtonStyle())
-                .foregroundColor(selectedTeam == "ALL" ? Color.accentColor : ColorManager.adaptiveSecondaryText(colorScheme: colorScheme))
+                .foregroundColor(TeamSelection.isAllTeams(selectedTeam) ? Color.accentColor : ColorManager.adaptiveSecondaryText(colorScheme: colorScheme))
                 
                 Spacer()
                 

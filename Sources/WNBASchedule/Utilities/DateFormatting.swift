@@ -34,10 +34,14 @@ enum DateFormatting {
         
         if gameDay == today {
             return Localization.string(for: "TODAY")
-        } else if let tomorrow = calendar.date(byAdding: .day, value: 1, to: today), gameDay == tomorrow {
-            return Localization.string(for: "TOMORROW")
-        } else {
-            return scheduleDate(from: date, useLocalTimeZone: useLocalTimeZone)
         }
+        
+        // Safely calculate tomorrow's date
+        if let tomorrow = calendar.date(byAdding: .day, value: 1, to: today), gameDay == tomorrow {
+            return Localization.string(for: "TOMORROW")
+        }
+        
+        // Fallback to formatted date if calculation fails or date is not today/tomorrow
+        return scheduleDate(from: date, useLocalTimeZone: useLocalTimeZone)
     }
 }

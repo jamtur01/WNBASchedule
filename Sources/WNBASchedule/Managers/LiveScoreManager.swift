@@ -91,47 +91,30 @@ class LiveScoreManager {
     
     /// Updates live scores for all teams mode
     /// - Parameters:
-    ///   - userPreferences: User preferences for filtering
+    ///   - scheduleManager: Schedule manager to fetch games
     ///   - completion: Completion handler with results
     func updateLiveScoresForAllTeams(
-        userPreferences: UserPreferences,
+        scheduleManager: ScheduleManagerProtocol,
         completion: @escaping (Result<AllTeamsLiveScoreResult, Error>) -> Void
     ) async {
-        // Get current games for All Teams mode
-        let currentYear = Calendar.current.component(.year, from: Date())
-        let season = String(currentYear)
-        
         do {
-            let response = try await DependencyContainer.shared.nbaClient.fetchSchedule(season: season)
-            let allGames: [Game] = response.results.schedule
-            
-            // Filter for games in the next N days (including today)
-            let filteredGames: [Game]
-            do {
-                filteredGames = try GameFiltering.filterGamesForAllTeams(allGames, daysToShow: userPreferences.allTeamsDaysToShow)
-            } catch {
-                logger.error("Failed to filter games: \(error.localizedDescription)")
-                completion(.failure(error))
-                return
-            }
-            
-            // Split games
-            var inProgressGames = filteredGames.filter { $0.isInProgress }
-            let upcomingGames = filteredGames.filter { $0.isUpcoming }
+            // Use ScheduleManager to fetch all teams games (consistent with handleAllTeamsMode)
+            let (inProgressGames, upcomingGames) = try await scheduleManager.fetchAllTeamsGames(season: nil)
             
             // Check if any games finished
             var gameFinished = false
+            var updatedInProgressGames = inProgressGames
             
-            if !inProgressGames.isEmpty {
+            if !updatedInProgressGames.isEmpty {
                 // Fetch live scores and check for completed games
-                inProgressGames = await fetchLiveScoresAndCheckCompletion(
-                    for: inProgressGames, 
+                updatedInProgressGames = await fetchLiveScoresAndCheckCompletion(
+                    for: updatedInProgressGames, 
                     gameFinished: &gameFinished
                 )
             }
             
             completion(.success(AllTeamsLiveScoreResult(
-                inProgressGames: inProgressGames,
+                inProgressGames: updatedInProgressGames,
                 upcomingGames: upcomingGames,
                 gameFinished: gameFinished
             )))

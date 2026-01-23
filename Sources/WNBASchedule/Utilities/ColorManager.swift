@@ -9,7 +9,7 @@ struct ColorManager {
     /// Enhanced team colors optimized for readability while preserving brand identity
     private static let enhancedTeamColors: [String: String] = [
         "ATL": "#E31E45",    // Brightened from #C8102E (Atlanta red)
-        "CHI": "#4A9EF2",    // Lightened from #418FDE (Chicago blue)  
+        "CHI": "#4A9EF2",    // Lightened from #418FDE (Chicago blue)
         "CON": "#FF6B35",    // Warmed from #E03A3E (Connecticut red-orange)
         "DAL": "#8BA614",    // Darkened from #D4E815 for better readability (Dallas lime)
         "GSV": "#B8A8E8",    // Lightened from #AD96DC (Golden State purple)
@@ -18,8 +18,10 @@ struct ColorManager {
         "LVA": "#2A2A2A",    // Lightened from pure black #010101 (Vegas)
         "MIN": "#3A7BB8",    // Brightened from #236192 (Minnesota blue)
         "NYL": "#2D8A72",    // Darkened from #7FD6C2 for better readability (NY Liberty teal)
+        "PDX": "#DC143C",    // Portland Fire crimson red (primary brand color)
         "PHX": "#3D2A65",    // Lightened from #211747 (Phoenix purple)
-        "SEA": "#4A6B52",    // Lightened from #2C5234 (Seattle green)  
+        "SEA": "#4A6B52",    // Lightened from #2C5234 (Seattle green)
+        "TOR": "#6B1C3D",    // Toronto Tempo bordeaux/burgundy (primary brand color)
         "WAS": "#E31E45"     // Same as Atlanta - brightened from #C8102E (Washington red)
     ]
     
@@ -64,8 +66,10 @@ struct ColorManager {
         "LVA": "#6A6A6A",    // Lighter gray for dark backgrounds
         "MIN": "#5A9AE0",    // Brighter blue for dark backgrounds
         "NYL": "#4DBBA3",    // Moderately bright teal for dark backgrounds (readable)
+        "PDX": "#FF4757",    // Portland Fire brighter red for dark backgrounds
         "PHX": "#6A4A9A",    // Lighter purple for dark backgrounds
         "SEA": "#7A9B82",    // Lighter green for dark backgrounds
+        "TOR": "#9D3A5E",    // Toronto Tempo lighter bordeaux for dark backgrounds
         "WAS": "#FF4A70"     // Same as Atlanta for dark backgrounds
     ]
     

@@ -120,7 +120,13 @@ class NBAClient: NBAClientProtocol {
         }
         
         // Fetch with retry logic
-        return try await fetchWithRetry(url: url, cacheKey: cacheKey, retryCount: 0)
+        return try await fetchWithRetry(
+            url: url,
+            cacheKey: cacheKey,
+            cacheExpiration: cacheExpirationInterval,
+            timeoutInterval: 30,
+            retryCount: 0
+        )
     }
     
     func fetchBoxscore(gameId: String) async throws -> BoxscoreResponse {
@@ -146,17 +152,37 @@ class NBAClient: NBAClientProtocol {
             throw NBAClientError.invalidURL
         }
         
-        // Fetch with retry logic (but shorter cache expiration for live data)
-        return try await fetchBoxscoreWithRetry(url: url, cacheKey: cacheKey, retryCount: 0)
+        // Fetch with retry logic (but shorter cache expiration for live data - 5 minutes)
+        return try await fetchWithRetry(
+            url: url,
+            cacheKey: cacheKey,
+            cacheExpiration: 300,
+            timeoutInterval: 15,
+            retryCount: 0
+        )
     }
     
     // MARK: - Private Methods
     
-    private func fetchWithRetry(url: URL, cacheKey: String, retryCount: Int) async throws -> ScheduleResponse {
+    /// Generic retry logic for fetching and decoding API responses
+    /// - Parameters:
+    ///   - url: URL to fetch from
+    ///   - cacheKey: Cache key for storing the response
+    ///   - cacheExpiration: Cache expiration interval in seconds
+    ///   - timeoutInterval: Request timeout interval in seconds
+    ///   - retryCount: Current retry attempt count
+    /// - Returns: Decoded response of type T
+    private func fetchWithRetry<T: Decodable>(
+        url: URL,
+        cacheKey: String,
+        cacheExpiration: TimeInterval,
+        timeoutInterval: TimeInterval,
+        retryCount: Int
+    ) async throws -> T {
         do {
-            let request = URLRequest(url: url, cachePolicy: .reloadIgnoringLocalCacheData, timeoutInterval: 30)
+            let request = URLRequest(url: url, cachePolicy: .reloadIgnoringLocalCacheData, timeoutInterval: timeoutInterval)
             
-            logger.info("Fetching schedule from URL: \(url.absoluteString)")
+            logger.info("Fetching from URL: \(url.absoluteString)")
             let (data, response) = try await session.data(for: request)
             
             guard let httpResponse = response as? HTTPURLResponse else {
@@ -166,15 +192,15 @@ class NBAClient: NBAClientProtocol {
             // Handle HTTP status codes
             switch httpResponse.statusCode {
             case 200...299:
-                // Success
+                // Success - decode and cache
                 let decoder = JSONDecoder()
-                let scheduleResponse = try decoder.decode(ScheduleResponse.self, from: data)
+                let decodedResponse = try decoder.decode(T.self, from: data)
                 
                 // Cache the successful response
-                cache.storeData(data, for: cacheKey, expirationInterval: cacheExpirationInterval)
+                cache.storeData(data, for: cacheKey, expirationInterval: cacheExpiration)
                 
-                logger.info("Successfully fetched and cached schedule")
-                return scheduleResponse
+                logger.info("Successfully fetched and cached response")
+                return decodedResponse
                 
             case 429:
                 // Rate limited
@@ -202,7 +228,13 @@ class NBAClient: NBAClientProtocol {
                 try await Task.sleep(nanoseconds: UInt64(delay * 1_000_000_000))
                 
                 // Retry the request
-                return try await fetchWithRetry(url: url, cacheKey: cacheKey, retryCount: retryCount + 1)
+                return try await fetchWithRetry(
+                    url: url,
+                    cacheKey: cacheKey,
+                    cacheExpiration: cacheExpiration,
+                    timeoutInterval: timeoutInterval,
+                    retryCount: retryCount + 1
+                )
             }
             
             // We've exhausted our retries or error is not retryable
@@ -224,70 +256,6 @@ class NBAClient: NBAClientProtocol {
             return true
         case .rateLimited, .decodingError, .invalidURL, .cacheError, .invalidResponse:
             return false
-        }
-    }
-    
-    private func fetchBoxscoreWithRetry(url: URL, cacheKey: String, retryCount: Int) async throws -> BoxscoreResponse {
-        do {
-            let request = URLRequest(url: url, cachePolicy: .reloadIgnoringLocalCacheData, timeoutInterval: 15)
-            
-            logger.info("Fetching boxscore from URL: \(url.absoluteString)")
-            let (data, response) = try await session.data(for: request)
-            
-            guard let httpResponse = response as? HTTPURLResponse else {
-                throw NBAClientError.invalidResponse(0)
-            }
-            
-            // Handle HTTP status codes
-            switch httpResponse.statusCode {
-            case 200...299:
-                // Success
-                let decoder = JSONDecoder()
-                let boxscoreResponse = try decoder.decode(BoxscoreResponse.self, from: data)
-                
-                // Cache the successful response with shorter expiration for live data (5 minutes)
-                cache.storeData(data, for: cacheKey, expirationInterval: 300)
-                
-                logger.info("Successfully fetched and cached boxscore")
-                return boxscoreResponse
-                
-            case 429:
-                // Rate limited
-                logger.warning("Rate limited by boxscore API")
-                throw NBAClientError.rateLimited
-                
-            case 500...599:
-                // Server error
-                logger.error("Boxscore server error with status code: \(httpResponse.statusCode)")
-                throw NBAClientError.serverError("Server returned status code \(httpResponse.statusCode)")
-                
-            default:
-                logger.error("Invalid boxscore response with status code: \(httpResponse.statusCode)")
-                throw NBAClientError.invalidResponse(httpResponse.statusCode)
-            }
-            
-        } catch let error as NBAClientError {
-            // If we can retry, do so with exponential backoff
-            if retryCount < maxRetries && shouldRetry(error: error) {
-                // Calculate delay with exponential backoff
-                let delay = retryDelay * pow(2.0, Double(retryCount))
-                logger.info("Retrying boxscore request (attempt \(retryCount + 1) of \(self.maxRetries)) after \(delay) seconds")
-                        
-                // Wait before retrying
-                try await Task.sleep(nanoseconds: UInt64(delay * 1_000_000_000))
-                
-                // Retry the request
-                return try await fetchBoxscoreWithRetry(url: url, cacheKey: cacheKey, retryCount: retryCount + 1)
-            }
-            
-            // We've exhausted our retries or error is not retryable
-            throw error
-        } catch let error as DecodingError {
-            logger.error("Boxscore decoding error: \(error.localizedDescription)")
-            throw NBAClientError.decodingError(error)
-        } catch {
-            logger.error("Boxscore network error: \(error.localizedDescription)")
-            throw NBAClientError.networkError(error)
         }
     }
 }

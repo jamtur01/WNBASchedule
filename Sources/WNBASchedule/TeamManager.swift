@@ -91,11 +91,25 @@ struct TeamManager {
             primaryColor: "#211747"
         ),
         TeamInfo(
+            abbreviation: "PDX",
+            fullName: "Portland Fire",
+            city: "Portland",
+            nickname: "Fire",
+            primaryColor: "#DC143C"
+        ),
+        TeamInfo(
             abbreviation: "SEA",
             fullName: "Seattle Storm",
             city: "Seattle",
             nickname: "Storm",
             primaryColor: "#2C5234"
+        ),
+        TeamInfo(
+            abbreviation: "TOR",
+            fullName: "Toronto Tempo",
+            city: "Toronto",
+            nickname: "Tempo",
+            primaryColor: "#5C1431"
         ),
         TeamInfo(
             abbreviation: "WAS",

@@ -33,8 +33,10 @@ class APICache: APICacheProtocol {
     /// Maximum memory cache size in bytes (default: 10 MB)
     private let maxMemoryCacheSize: Int = 10 * 1024 * 1024
     
-    /// Current memory cache size in bytes
-    private var currentMemoryCacheSize: Int = 0
+    /// Current memory cache size in bytes (computed from actual cache entries)
+    private var currentMemoryCacheSize: Int {
+        memoryCache.values.reduce(0) { $0 + $1.sizeInBytes }
+    }
     
     private let logger = Logger(subsystem: "net.kartar.wnbaschedule", category: "APICache")
     
@@ -76,48 +78,25 @@ class APICache: APICacheProtocol {
         }
         
         // If not in memory, check disk cache
-        let cacheFilePath = cacheFileURL(for: key).path
+        let cacheFileURL = cacheFileURL(for: key)
+        let expirationCheck = checkDiskCacheExpiration(at: cacheFileURL)
         
-        if FileManager.default.fileExists(atPath: cacheFilePath) {
+        if !expirationCheck.isExpired, let expirationDate = expirationCheck.expirationDate {
+            // Cache is still valid
             do {
-                let attributes = try FileManager.default.attributesOfItem(atPath: cacheFilePath)
+                let data = try Data(contentsOf: cacheFileURL)
                 
-                // Check if cache file has expired
-                if let modificationDate = attributes[FileAttributeKey.modificationDate] as? Date {
-                    // Read expiration interval from a custom property file
-                    let metadataURL = URL(fileURLWithPath: cacheFilePath).appendingPathExtension("metadata")
-                    if FileManager.default.fileExists(atPath: metadataURL.path),
-                       let metadata = try? Data(contentsOf: metadataURL),
-                       let jsonObject = try? JSONSerialization.jsonObject(with: metadata, options: []),
-                       let metadataDict = jsonObject as? [String: Any],
-                       let interval = metadataDict["expirationInterval"] as? TimeInterval {
-                        
-                        let expirationDate = modificationDate.addingTimeInterval(interval)
-                        
-                        if Date() <= expirationDate {
-                            // Cache is still valid
-                            let data = try Data(contentsOf: URL(fileURLWithPath: cacheFilePath))
-                            
-                            // Store in memory cache for faster subsequent access
-                            storeInMemoryCache(data, for: key, expirationDate: expirationDate)
-                            
-                            logger.debug("Cache hit (disk) for key: \(key)")
-                            return data
-                        }
-                    }
-                }
+                // Store in memory cache for faster subsequent access
+                storeInMemoryCache(data, for: key, expirationDate: expirationDate)
                 
-                // Cache has expired, remove it
-                try FileManager.default.removeItem(atPath: cacheFilePath)
-                // Also remove metadata file if it exists
-                let metadataPath = cacheFilePath + ".metadata"
-                if FileManager.default.fileExists(atPath: metadataPath) {
-                    try FileManager.default.removeItem(atPath: metadataPath)
-                }
-                logger.debug("Removed expired disk cache for key: \(key)")
+                logger.debug("Cache hit (disk) for key: \(key)")
+                return data
             } catch {
                 logger.error("Error reading cache file: \(error.localizedDescription)")
             }
+        } else if expirationCheck.isExpired {
+            // Cache has expired, remove it
+            removeExpiredCacheFile(at: cacheFileURL)
         }
         
         logger.debug("Cache miss for key: \(key)")
@@ -138,7 +117,7 @@ class APICache: APICacheProtocol {
     func clearCache() {
         // Clear memory cache
         memoryCache.removeAll()
-        currentMemoryCacheSize = 0
+        // currentMemoryCacheSize is computed, so no need to reset
         
         // Clear disk cache
         do {
@@ -162,9 +141,8 @@ class APICache: APICacheProtocol {
         let expiredKeys = memoryCache.filter { $0.value.isExpired }.map { $0.key }
         
         for key in expiredKeys {
-            if let entry = memoryCache.removeValue(forKey: key) {
-                currentMemoryCacheSize -= entry.sizeInBytes
-            }
+            memoryCache.removeValue(forKey: key)
+            // currentMemoryCacheSize is computed, so no need to manually update
         }
         
         // Remove expired entries from disk cache
@@ -178,29 +156,9 @@ class APICache: APICacheProtocol {
             )
             
             for fileURL in cacheFiles {
-                do {
-                    let attributes = try fileManager.attributesOfItem(atPath: fileURL.path)
-                    
-                    if let modificationDate = attributes[FileAttributeKey.modificationDate] as? Date {
-                        // Read expiration interval from a custom property file
-                        let metadataURL = fileURL.appendingPathExtension("metadata")
-                        if FileManager.default.fileExists(atPath: metadataURL.path),
-                           let metadata = try? Data(contentsOf: metadataURL),
-                           let jsonObject = try? JSONSerialization.jsonObject(with: metadata, options: []),
-                           let metadataDict = jsonObject as? [String: Any],
-                           let interval = metadataDict["expirationInterval"] as? TimeInterval {
-                            
-                            let expirationDate = modificationDate.addingTimeInterval(interval)
-                            
-                            if Date() > expirationDate {
-                                try fileManager.removeItem(at: fileURL)
-                                // Also remove metadata file
-                                try fileManager.removeItem(at: metadataURL)
-                            }
-                        }
-                    }
-                } catch {
-                    logger.error("Error checking expiration for file \(fileURL.path): \(error.localizedDescription)")
+                let expirationCheck = checkDiskCacheExpiration(at: fileURL)
+                if expirationCheck.isExpired {
+                    removeExpiredCacheFile(at: fileURL)
                 }
             }
             
@@ -212,23 +170,75 @@ class APICache: APICacheProtocol {
     
     // MARK: - Private Methods
     
+    /// Checks if a disk cache entry is expired
+    /// - Parameter fileURL: URL of the cache file
+    /// - Returns: Tuple containing (isExpired: Bool, expirationDate: Date?) - expirationDate is nil if file doesn't exist or metadata is invalid
+    private func checkDiskCacheExpiration(at fileURL: URL) -> (isExpired: Bool, expirationDate: Date?) {
+        guard FileManager.default.fileExists(atPath: fileURL.path) else {
+            return (isExpired: true, expirationDate: nil)
+        }
+        
+        do {
+            let attributes = try FileManager.default.attributesOfItem(atPath: fileURL.path)
+            
+            guard let modificationDate = attributes[FileAttributeKey.modificationDate] as? Date else {
+                return (isExpired: true, expirationDate: nil)
+            }
+            
+            // Read expiration interval from metadata file
+            let metadataURL = fileURL.appendingPathExtension("metadata")
+            guard FileManager.default.fileExists(atPath: metadataURL.path),
+                  let metadata = try? Data(contentsOf: metadataURL),
+                  let jsonObject = try? JSONSerialization.jsonObject(with: metadata, options: []),
+                  let metadataDict = jsonObject as? [String: Any],
+                  let interval = metadataDict["expirationInterval"] as? TimeInterval else {
+                return (isExpired: true, expirationDate: nil)
+            }
+            
+            let expirationDate = modificationDate.addingTimeInterval(interval)
+            let isExpired = Date() > expirationDate
+            
+            return (isExpired: isExpired, expirationDate: expirationDate)
+        } catch {
+            logger.error("Error checking cache expiration for \(fileURL.path): \(error.localizedDescription)")
+            return (isExpired: true, expirationDate: nil)
+        }
+    }
+    
+    /// Removes expired cache file and its metadata
+    /// - Parameter fileURL: URL of the cache file to remove
+    private func removeExpiredCacheFile(at fileURL: URL) {
+        do {
+            try FileManager.default.removeItem(at: fileURL)
+            let metadataURL = fileURL.appendingPathExtension("metadata")
+            if FileManager.default.fileExists(atPath: metadataURL.path) {
+                try FileManager.default.removeItem(at: metadataURL)
+            }
+            logger.debug("Removed expired disk cache for key: \(fileURL.lastPathComponent)")
+        } catch {
+            logger.error("Error removing expired cache file: \(error.localizedDescription)")
+        }
+    }
+    
     private func storeInMemoryCache(_ data: Data, for key: String, expirationDate: Date) {
         let entry = CacheEntry(data: data, expirationDate: expirationDate)
         
-        // If adding this entry would exceed the max cache size, remove oldest entries
-        if let existingEntry = memoryCache[key] {
-            // Update existing entry size
-            currentMemoryCacheSize -= existingEntry.sizeInBytes
+        // Check if we need to make room in the cache
+        // Remove existing entry first if updating
+        if memoryCache[key] != nil {
+            // Entry will be replaced, so we'll check size after removal
         }
         
-        // Check if we need to make room in the cache
-        if currentMemoryCacheSize + entry.sizeInBytes > maxMemoryCacheSize {
+        // Calculate size after adding this entry
+        let sizeAfterAdd = currentMemoryCacheSize - (memoryCache[key]?.sizeInBytes ?? 0) + entry.sizeInBytes
+        
+        if sizeAfterAdd > maxMemoryCacheSize {
             evictOldestEntries(toFitSize: entry.sizeInBytes)
         }
         
         // Store the new entry
         memoryCache[key] = entry
-        currentMemoryCacheSize += entry.sizeInBytes
+        // currentMemoryCacheSize is computed, so no need to manually update
     }
     
     private func storeInDiskCache(_ data: Data, for key: String, expirationInterval: TimeInterval) {
@@ -248,7 +258,8 @@ class APICache: APICacheProtocol {
     }
     
     private func evictOldestEntries(toFitSize size: Int) {
-        let sizeToFree = size - (maxMemoryCacheSize - currentMemoryCacheSize)
+        let currentSize = currentMemoryCacheSize
+        let sizeToFree = size - (maxMemoryCacheSize - currentSize)
         
         // If we already have enough space, no need to evict
         guard sizeToFree > 0 else { return }
@@ -264,7 +275,6 @@ class APICache: APICacheProtocol {
             }
             
             memoryCache.removeValue(forKey: key)
-            currentMemoryCacheSize -= entry.sizeInBytes
             remainingSizeToFree -= entry.sizeInBytes
             
             logger.debug("Evicted cache entry for key: \(key)")

@@ -177,7 +177,7 @@ struct AllTeamsMenuHeader: View {
             .interactiveHover($isSettingsHovered)
             .popover(isPresented: $showingTeamPicker, arrowEdge: .top) {
                 TeamPickerView(
-                    selectedTeam: "ALL",
+                    selectedTeam: TeamSelection.allTeams,
                     onTeamSelected: { newTeam in
                         changeTeamAction(newTeam)
                         showingTeamPicker = false

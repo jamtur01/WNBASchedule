@@ -5,7 +5,7 @@ import os.log
 class UserPreferences {
     // MARK: - Properties
     
-    /// The user's favorite team abbreviation (default: "NYL" for NY Liberty)
+    /// The user's favorite team abbreviation (default: TeamSelection.defaultTeam for NY Liberty)
     var favoriteTeam: String {
         didSet {
             if oldValue != favoriteTeam {
@@ -61,7 +61,7 @@ class UserPreferences {
         }
     }
     
-    /// The previously selected team before switching to "ALL" (used for Back button)
+    /// The previously selected team before switching to TeamSelection.allTeams (used for Back button)
     var previouslySelectedTeam: String? {
         didSet {
             if oldValue != previouslySelectedTeam {
@@ -71,7 +71,7 @@ class UserPreferences {
     }
     
     // MARK: - Constants
-    private let defaultFavoriteTeam = "NYL"
+    private let defaultFavoriteTeam = TeamSelection.defaultTeam
     private let defaultPastGamesToShow = 5
     private let defaultUpcomingGamesToShow = 5
     private let defaultAllTeamsDaysToShow = 3

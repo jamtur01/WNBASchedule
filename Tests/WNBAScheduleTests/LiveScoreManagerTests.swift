@@ -135,10 +135,6 @@ final class LiveScoreManagerTests: XCTestCase {
     }
     
     func testUpdateLiveScoresForAllTeams() async {
-        // Setup mock user preferences
-        let mockUserPreferences = UserPreferences()
-        mockUserPreferences.allTeamsDaysToShow = 3
-        
         // Setup mock schedule response
         let today = Date()
         guard let tomorrow = Calendar.current.date(byAdding: .day, value: 1, to: today) else {
@@ -156,9 +152,13 @@ final class LiveScoreManagerTests: XCTestCase {
             "game1": createMockBoxscoreResponse(gameId: "game1", homeScore: 45, awayScore: 42, status: "Q2")
         ]
         
+        // Create ScheduleManager with mock client
+        let mockUserPreferences = UserPreferences()
+        let scheduleManager = ScheduleManager(client: mockClient!, userPreferences: mockUserPreferences)
+        
         // Execute
         let expectation = XCTestExpectation(description: "All teams live scores updated")
-        await liveScoreManager?.updateLiveScoresForAllTeams(userPreferences: mockUserPreferences) { result in
+        await liveScoreManager?.updateLiveScoresForAllTeams(scheduleManager: scheduleManager) { result in
             switch result {
             case .success(let data):
                 XCTAssertEqual(data.inProgressGames.count, 1)
