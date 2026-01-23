@@ -147,14 +147,19 @@ final class LiveScoreManagerTests: XCTestCase {
             createTestGame(gid: "game2", state: 1, timestamp: Int64(tomorrow.timeIntervalSince1970 * 1000))
         ]
         
-        mockClient?.mockScheduleResponse = ScheduleResponse(results: Results(schedule: games))
-        mockClient?.mockBoxscoreResponses = [
+        guard let mockClient = mockClient else {
+            XCTFail("Mock client not initialized")
+            return
+        }
+        
+        mockClient.mockScheduleResponse = ScheduleResponse(results: Results(schedule: games))
+        mockClient.mockBoxscoreResponses = [
             "game1": createMockBoxscoreResponse(gameId: "game1", homeScore: 45, awayScore: 42, status: "Q2")
         ]
         
         // Create ScheduleManager with mock client
         let mockUserPreferences = UserPreferences()
-        let scheduleManager = ScheduleManager(client: mockClient!, userPreferences: mockUserPreferences)
+        let scheduleManager = ScheduleManager(client: mockClient, userPreferences: mockUserPreferences)
         
         // Execute
         let expectation = XCTestExpectation(description: "All teams live scores updated")
