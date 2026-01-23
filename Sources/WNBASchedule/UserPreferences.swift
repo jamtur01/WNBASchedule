@@ -71,7 +71,7 @@ class UserPreferences {
     }
     
     // MARK: - Constants
-    private let defaultFavoriteTeam = TeamSelection.defaultTeam
+    private let defaultFavoriteTeam = "NYL" // TeamSelection.defaultTeam
     private let defaultPastGamesToShow = 5
     private let defaultUpcomingGamesToShow = 5
     private let defaultAllTeamsDaysToShow = 3
