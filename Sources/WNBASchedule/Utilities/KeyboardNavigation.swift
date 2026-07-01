@@ -1,62 +1,6 @@
 import SwiftUI
 import AppKit
 
-/// Enhanced keyboard navigation and shortcuts for the menu bar app
-struct KeyboardNavigation {
-    
-    // MARK: - Keyboard Shortcuts
-    
-    enum Shortcut: CaseIterable {
-        case refresh
-        case showAllTeams
-        case nextTeam
-        case previousTeam
-        case quit
-        case toggleTeamPicker
-        
-        var keyEquivalent: KeyEquivalent {
-            switch self {
-            case .refresh:
-                return KeyEquivalent("r")
-            case .showAllTeams:
-                return KeyEquivalent("a")
-            case .nextTeam:
-                return KeyEquivalent("]")
-            case .previousTeam:
-                return KeyEquivalent("[")
-            case .quit:
-                return KeyEquivalent("q")
-            case .toggleTeamPicker:
-                return KeyEquivalent("t")
-            }
-        }
-        
-        var modifiers: EventModifiers {
-            switch self {
-            case .refresh, .showAllTeams, .toggleTeamPicker:
-                return .command
-            case .nextTeam, .previousTeam:
-                return [.command, .shift]
-            case .quit:
-                return .command
-            }
-        }
-    }
-}
-
-// MARK: - Keyboard Shortcut Modifier
-
-extension View {
-    /// Add keyboard shortcut with consistent styling
-    /// - Parameters:
-    ///   - shortcut: The keyboard shortcut to add
-    ///   - action: Action to perform when shortcut is triggered
-    /// - Returns: View with keyboard shortcut
-    func keyboardShortcut(_ shortcut: KeyboardNavigation.Shortcut, action: @escaping () -> Void) -> some View {
-        self.keyboardShortcut(shortcut.keyEquivalent, modifiers: shortcut.modifiers)
-    }
-}
-
 // MARK: - Context Menu Support
 
 struct ContextMenuSupport {
@@ -73,13 +17,13 @@ struct ContextMenuSupport {
         onOpenBroadcast: (() -> Void)? = nil
     ) -> some View {
         Group {
-            Button("Open Game Details") {
+            Button("context.open_game".localized) {
                 onOpenGame()
             }
             .keyboardShortcut(.return, modifiers: [])
             
             if let onOpenBroadcast = onOpenBroadcast {
-                Button("Watch Game") {
+                Button("context.watch_game".localized) {
                     onOpenBroadcast()
                 }
                 .keyboardShortcut("w", modifiers: .command)
@@ -87,7 +31,7 @@ struct ContextMenuSupport {
             
             Divider()
             
-            Button("Copy Game Info") {
+            Button("context.copy_game".localized) {
                 copyGameInfo(game)
             }
             .keyboardShortcut("c", modifiers: .command)
@@ -115,7 +59,7 @@ struct ContextMenuSupport {
             
             if teams.count > 5 {
                 Divider()
-                Button("Show All Teams...") {
+                Button("context.show_all_teams".localized) {
                     onTeamSelected(TeamSelection.allTeams)
                 }
             }

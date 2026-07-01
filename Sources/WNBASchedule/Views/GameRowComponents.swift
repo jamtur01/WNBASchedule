@@ -13,14 +13,29 @@ struct PreviousGameRow: View {
     @Environment(\.colorScheme)
     var colorScheme
     
-    private var homeWon: Bool {
-        return (game.home.score ?? 0) > (game.visitor.score ?? 0)
+    /// Whether the home team won. `nil` when either score is missing, so a completed
+    /// game with absent scores stays neutral instead of being mislabelled as a win/loss.
+    private var homeWon: Bool? {
+        guard let home = game.home.score, let visitor = game.visitor.score else { return nil }
+        return home > visitor
     }
-    
-    private func openGameURL() {
-        if let url = URL(string: "https://www.wnba.com/game/\(game.gid)/") {
-            NSWorkspace.shared.open(url)
+
+    private func scoreColor(isHome: Bool) -> Color {
+        guard let homeWon = homeWon else {
+            return ColorManager.adaptiveSecondaryText(colorScheme: colorScheme)
         }
+        let teamWon = isHome ? homeWon : !homeWon
+        return teamWon ? ColorManager.winColor(colorScheme) : ColorManager.lossColor(colorScheme)
+    }
+
+    private func scoreWeight(isHome: Bool) -> Font.Weight {
+        guard let homeWon = homeWon else { return .medium }
+        let teamWon = isHome ? homeWon : !homeWon
+        return teamWon ? .bold : .medium
+    }
+
+    private func openGameURL() {
+        LinkOpener.open(game.gameURL)
     }
     
     var body: some View {
@@ -34,7 +49,7 @@ struct PreviousGameRow: View {
                         .fontWeight(.medium)
                     
                     // Game status chip
-                    Text("FINAL")
+                    Text("game.status.final_short".localized)
                         .font(DesignSystem.Typography.caption)
                         .foregroundColor(.white)
                         .padding(.horizontal, 3)
@@ -57,10 +72,10 @@ struct PreviousGameRow: View {
                             .font(DesignSystem.Typography.caption)
                             .foregroundColor(ColorManager.adaptiveSecondaryText(colorScheme: colorScheme))
                         
-                        Text("\(game.visitor.score ?? 0)")
+                        Text(game.visitor.score.map(String.init) ?? "–")
                             .font(DesignSystem.Typography.bodyBold)
-                            .foregroundColor(homeWon ? ColorManager.lossColor : ColorManager.winColor)
-                            .fontWeight(homeWon ? .medium : .bold)
+                            .foregroundColor(scoreColor(isHome: false))
+                            .fontWeight(scoreWeight(isHome: false))
                     }
                     
                     // VS indicator with subtle styling
@@ -75,10 +90,10 @@ struct PreviousGameRow: View {
                             .font(DesignSystem.Typography.caption)
                             .foregroundColor(ColorManager.adaptiveSecondaryText(colorScheme: colorScheme))
                         
-                        Text("\(game.home.score ?? 0)")
+                        Text(game.home.score.map(String.init) ?? "–")
                             .font(DesignSystem.Typography.bodyBold)
-                            .foregroundColor(homeWon ? ColorManager.winColor : ColorManager.lossColor)
-                            .fontWeight(homeWon ? .bold : .medium)
+                            .foregroundColor(scoreColor(isHome: true))
+                            .fontWeight(scoreWeight(isHome: true))
                     }
                 }
                 .frame(minWidth: 100, alignment: .center)
@@ -100,8 +115,8 @@ struct PreviousGameRow: View {
             )
         }
         .accessibilityButton(
-            label: "\(game.visitor.abbr) \(game.visitor.score ?? 0) vs \(game.home.abbr) \(game.home.score ?? 0), \(game.formattedGameDate)",
-            hint: "Open game details"
+            label: "accessibility.previous_game".localized(with: game.visitor.abbr, game.visitor.score ?? 0, game.home.abbr, game.home.score ?? 0, game.formattedGameDate),
+            hint: "accessibility.previous_game_hint".localized
         )
         .smoothAppearance(true)
     }
@@ -120,11 +135,9 @@ struct InProgressGameRow: View {
     private var homeWinning: Bool {
         return (game.currentHomeScore ?? 0) > (game.currentVisitorScore ?? 0)
     }
-    
+
     private func openGameURL() {
-        if let url = URL(string: "https://www.wnba.com/game/\(game.gid)/") {
-            NSWorkspace.shared.open(url)
-        }
+        LinkOpener.open(game.gameURL)
     }
     
     @State private var pulseAnimation = false
@@ -136,16 +149,16 @@ struct InProgressGameRow: View {
                 VStack(alignment: .leading, spacing: 1) {
                     HStack(spacing: 1) {
                         Circle()
-                            .fill(ColorManager.liveColor)
+                            .fill(ColorManager.liveColor(colorScheme))
                             .frame(width: 8, height: 8)
                             .scaleEffect(pulseAnimation ? 1.2 : 1.0)
                             .opacity(pulseAnimation ? 0.6 : 1.0)
                             .animation(DesignSystem.Animation.loading, value: pulseAnimation)
                         
-                        Text("LIVE")
+                        Text("game.status.live".localized)
                             .font(DesignSystem.Typography.caption)
                             .fontWeight(.bold)
-                            .foregroundColor(ColorManager.liveColor)
+                            .foregroundColor(ColorManager.liveColor(colorScheme))
                     }
                     
                     Text(game.gameStatusText?.trimmingCharacters(in: .whitespaces) ?? game.statusDescription)
@@ -167,7 +180,7 @@ struct InProgressGameRow: View {
                         
                         Text("\(game.currentVisitorScore ?? 0)")
                             .font(DesignSystem.Typography.title)
-                            .foregroundColor(homeWinning ? ColorManager.lossColor : ColorManager.winColor)
+                            .foregroundColor(homeWinning ? ColorManager.lossColor(colorScheme) : ColorManager.winColor(colorScheme))
                             .fontWeight(homeWinning ? .medium : .bold)
                             .contentTransition(.numericText())
                     }
@@ -176,10 +189,10 @@ struct InProgressGameRow: View {
                     VStack(spacing: DesignSystem.Spacing.xxxs) {
                         Text("–")
                             .font(DesignSystem.Typography.callout)
-                            .foregroundColor(ColorManager.liveColor)
+                            .foregroundColor(ColorManager.liveColor(colorScheme))
                         
                         Circle()
-                            .fill(ColorManager.liveColor)
+                            .fill(ColorManager.liveColor(colorScheme))
                             .frame(width: 4, height: 4)
                             .opacity(pulseAnimation ? 0.3 : 1.0)
                     }
@@ -192,7 +205,7 @@ struct InProgressGameRow: View {
                         
                         Text("\(game.currentHomeScore ?? 0)")
                             .font(DesignSystem.Typography.title)
-                            .foregroundColor(homeWinning ? ColorManager.winColor : ColorManager.lossColor)
+                            .foregroundColor(homeWinning ? ColorManager.winColor(colorScheme) : ColorManager.lossColor(colorScheme))
                             .fontWeight(homeWinning ? .bold : .medium)
                             .contentTransition(.numericText())
                     }
@@ -206,8 +219,8 @@ struct InProgressGameRow: View {
                     .fill(
                         LinearGradient(
                             colors: [
-                                isHovered ? ColorManager.liveColor.opacity(0.15) : ColorManager.liveColor.opacity(0.05),
-                                isHovered ? ColorManager.liveColor.opacity(0.1) : Color.clear
+                                isHovered ? ColorManager.liveColor(colorScheme).opacity(0.15) : ColorManager.liveColor(colorScheme).opacity(0.05),
+                                isHovered ? ColorManager.liveColor(colorScheme).opacity(0.1) : Color.clear
                             ],
                             startPoint: .leading,
                             endPoint: .trailing
@@ -217,7 +230,7 @@ struct InProgressGameRow: View {
             )
             .overlay(
                 RoundedRectangle(cornerRadius: DesignSystem.CornerRadius.sm)
-                    .stroke(ColorManager.liveColor.opacity(0.3), lineWidth: 1)
+                    .stroke(ColorManager.liveColor(colorScheme).opacity(0.3), lineWidth: 1)
             )
         }
         .buttonStyle(PlainButtonStyle())
@@ -229,8 +242,8 @@ struct InProgressGameRow: View {
             )
         }
         .accessibilityButton(
-            label: "Live game: \(game.visitor.abbr) \(game.currentVisitorScore ?? 0) vs \(game.home.abbr) \(game.currentHomeScore ?? 0)",
-            hint: "Open live game details"
+            label: "accessibility.live_game".localized(with: game.visitor.abbr, game.currentVisitorScore ?? 0, game.home.abbr, game.currentHomeScore ?? 0),
+            hint: "accessibility.live_game_hint".localized
         )
         .onAppear {
             pulseAnimation = true
@@ -250,12 +263,6 @@ struct UpcomingGameRow: View {
     @Environment(\.colorScheme)
     var colorScheme
     
-    private func openGameURL() {
-        if let url = URL(string: "https://www.wnba.com/game/\(game.gid)/") {
-            NSWorkspace.shared.open(url)
-        }
-    }
-    
     private var timeUntilGame: String {
         let now = Date()
         let gameDate = game.localGameTime
@@ -273,6 +280,10 @@ struct UpcomingGameRow: View {
             let minutes = Int(timeInterval / 60)
             return "\(minutes)m"
         }
+    }
+
+    private func openGameURL() {
+        LinkOpener.open(game.gameURL)
     }
     
     var body: some View {
@@ -341,35 +352,36 @@ struct UpcomingGameRow: View {
 
             // Enhanced broadcast button with better feedback
             if let provider = game.primaryBroadcastProvider,
-               !provider.videoLink.isEmpty,
-               let url = URL(string: provider.videoLink) {
+               let broadcastURL = game.broadcastURL {
                 Button(
                     action: {
-                        NSWorkspace.shared.open(url)
+                        LinkOpener.open(broadcastURL)
                     },
                     label: {
+                        let broadcastColor = ColorManager.broadcastColor(colorScheme)
+                        let broadcastFill = ColorManager.broadcastFill
                         VStack(spacing: DesignSystem.Spacing.xxxs) {
                             Image(systemName: provider.isLeaguePass ? "play.tv.fill" : "tv.fill")
                                 .font(.system(size: DesignSystem.ComponentSize.iconMedium))
-                                .foregroundColor(isBroadcastHovered ? .white : .purple)
+                                .foregroundColor(isBroadcastHovered ? .white : broadcastColor)
                                 .scaleEffect(isBroadcastHovered ? 1.1 : 1.0)
                             
-                            Text(provider.isLeaguePass ? "LP" : "TV")
+                            Text(provider.isLeaguePass ? "broadcast.lp_short".localized : "broadcast.tv".localized)
                                 .font(DesignSystem.Typography.caption2)
-                                .foregroundColor(isBroadcastHovered ? .white : .purple)
+                                .foregroundColor(isBroadcastHovered ? .white : broadcastColor)
                         }
                         .frame(width: DesignSystem.ComponentSize.iconXLarge, height: DesignSystem.ComponentSize.iconXLarge)
                         .background(
                             RoundedRectangle(cornerRadius: DesignSystem.CornerRadius.xs)
-                                .fill(isBroadcastHovered ? Color.purple : Color.purple.opacity(0.1))
+                                .fill(isBroadcastHovered ? broadcastFill : broadcastColor.opacity(0.12))
                         )
                     }
                 )
                 .buttonStyle(PlainButtonStyle())
                 .interactiveHoverBouncy($isBroadcastHovered)
                 .accessibilityButton(
-                    label: "Watch on \(provider.isLeaguePass ? "League Pass" : "TV")",
-                    hint: "Open broadcast link"
+                    label: "accessibility.watch_on".localized(with: provider.isLeaguePass ? "broadcast.league_pass".localized : "broadcast.tv".localized),
+                    hint: "accessibility.watch_on_hint".localized
                 )
             }
         }
@@ -377,17 +389,12 @@ struct UpcomingGameRow: View {
             ContextMenuSupport.gameRowContextMenu(
                 game: game,
                 onOpenGame: openGameURL,
-                onOpenBroadcast: game.primaryBroadcastProvider != nil ? {
-                    if let provider = game.primaryBroadcastProvider,
-                       let url = URL(string: provider.videoLink) {
-                        NSWorkspace.shared.open(url)
-                    }
-                } : nil
+                onOpenBroadcast: game.broadcastURL != nil ? { LinkOpener.open(game.broadcastURL) } : nil
             )
         }
         .accessibilityButton(
-            label: "Upcoming: \(game.visitor.abbr) at \(game.home.abbr), \(game.formattedGameDate) \(game.formattedGameTime)",
-            hint: "Open game details"
+            label: "accessibility.upcoming_game".localized(with: game.visitor.abbr, game.home.abbr, game.formattedGameDate, game.formattedGameTime),
+            hint: "accessibility.upcoming_game_hint".localized
         )
         .smoothAppearance(true)
         .padding(.vertical, 3)

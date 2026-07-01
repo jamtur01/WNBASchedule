@@ -41,7 +41,7 @@ struct TeamPickerView: View {
                     .font(.system(size: 13, weight: .semibold))
                     .foregroundColor(ColorManager.adaptivePrimaryText(colorScheme: colorScheme))
                 Spacer()
-                Text("\(filteredTeams.count) teams")
+                Text("team_picker.count".localized(with: filteredTeams.count))
                     .font(.system(size: 11))
                     .foregroundColor(ColorManager.adaptiveSecondaryText(colorScheme: colorScheme))
             }
@@ -55,7 +55,7 @@ struct TeamPickerView: View {
                     .font(.system(size: 12))
                     .foregroundColor(ColorManager.adaptiveSecondaryText(colorScheme: colorScheme))
                 
-                TextField("Search teams...", text: $searchText)
+                TextField("team_picker.search_placeholder".localized, text: $searchText)
                     .textFieldStyle(.plain)
                     .font(.system(size: 12))
                     .focused($isSearchFocused)
@@ -99,10 +99,10 @@ struct TeamPickerView: View {
                     Image(systemName: "magnifyingglass")
                         .font(.system(size: 20))
                         .foregroundColor(ColorManager.adaptiveSecondaryText(colorScheme: colorScheme))
-                    Text("No teams found")
+                    Text("team_picker.no_results_title".localized)
                         .font(.system(size: 13))
                         .foregroundColor(ColorManager.adaptiveSecondaryText(colorScheme: colorScheme))
-                    Text("Try a different search term")
+                    Text("team_picker.no_results_hint".localized)
                         .font(.system(size: 11))
                         .foregroundColor(ColorManager.adaptiveLightText(colorScheme: colorScheme))
                 }
@@ -131,7 +131,7 @@ struct TeamPickerView: View {
                 .padding(.horizontal, 12)
             
             HStack(spacing: 8) {
-                Button("All Teams") {
+                Button("action.all_teams".localized) {
                     onTeamSelected(TeamSelection.allTeams)
                 }
                 .font(.system(size: 11))
@@ -141,7 +141,7 @@ struct TeamPickerView: View {
                 Spacer()
                 
                 if !searchText.isEmpty {
-                    Button("Clear") {
+                    Button("team_picker.clear".localized) {
                         searchText = ""
                         isSearchFocused = true
                     }
@@ -186,7 +186,7 @@ private struct TeamRowButton: View {
             HStack(spacing: 10) {
                 // Team logo area
                 AsyncImage(
-                    url: URL(string: "https://cdn.wnba.com/static/next/teams/favicons/\(team.abbreviation)/icon-16.png"),
+                    url: TeamManager.faviconURL(abbreviation: team.abbreviation, size: 16),
                     content: { image in
                         image
                             .resizable()

@@ -63,3 +63,40 @@
 "NO_GAMES_SCHEDULED" = "No games scheduled in this range.";
 // Added for All Teams menu title localization
 "menu.title.all_teams" = "WNBA All Teams";
+
+// MARK: - UI State
+"menu.loading" = "Loading...";
+"menu.error" = "Error";
+"action.retry" = "Retry";
+"action.all_teams" = "All Teams";
+
+// MARK: - Game Status Chips
+"game.status.live" = "LIVE";
+"game.status.final_short" = "FINAL";
+
+// MARK: - Team Picker
+"team_picker.search_placeholder" = "Search teams...";
+"team_picker.count" = "%d teams";
+"team_picker.no_results_title" = "No teams found";
+"team_picker.no_results_hint" = "Try a different search term";
+"team_picker.clear" = "Clear";
+
+// MARK: - Context Menu
+"context.open_game" = "Open Game Details";
+"context.watch_game" = "Watch Game";
+"context.copy_game" = "Copy Game Info";
+"context.show_all_teams" = "Show All Teams...";
+
+// MARK: - Accessibility (dynamic)
+"accessibility.previous_game" = "%1$@ %2$d vs %3$@ %4$d, %5$@";
+"accessibility.previous_game_hint" = "Open game details";
+"accessibility.live_game" = "Live game: %1$@ %2$d vs %3$@ %4$d";
+"accessibility.live_game_hint" = "Open live game details";
+"accessibility.upcoming_game" = "Upcoming: %1$@ at %2$@, %3$@ %4$@";
+"accessibility.upcoming_game_hint" = "Open game details";
+"accessibility.watch_on" = "Watch on %@";
+"accessibility.watch_on_hint" = "Open broadcast link";
+"broadcast.league_pass" = "League Pass";
+"broadcast.tv" = "TV";
+"help.back_to" = "Back to %@";
+"broadcast.lp_short" = "LP";

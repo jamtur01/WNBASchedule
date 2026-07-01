@@ -1,6 +1,5 @@
 import Foundation
 import os.log
-import SwiftUI
 
 /// Protocol for schedule management functionality
 protocol ScheduleManagerProtocol {
@@ -193,23 +192,5 @@ struct MarkedGame: Identifiable {
             return false
         }
         return opponentScore > teamScore
-    }
-    
-    /// Get the color for the team name and score
-    func getTeamColor(teamColor: Color) -> Color {
-        // Only apply win/loss colors for completed games
-        if !game.isCompleted {
-            return teamColor
-        }
-        return teamWon ? teamColor : .red
-    }
-    
-    /// Get the color for the opponent name and score
-    func getOpponentColor() -> Color {
-        // Only apply win/loss colors for completed games
-        if !game.isCompleted {
-            return .gray
-        }
-        return opponentWon ? .green : .red
     }
 }

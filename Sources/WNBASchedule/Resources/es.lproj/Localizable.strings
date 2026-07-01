@@ -63,3 +63,40 @@
 "NO_GAMES_SCHEDULED" = "No hay partidos programados en este rango.";
 // Añadido para la localización del título "Todos los equipos"
 "menu.title.all_teams" = "WNBA Todos los equipos";
+
+// MARK: - Estado de la interfaz
+"menu.loading" = "Cargando...";
+"menu.error" = "Error";
+"action.retry" = "Reintentar";
+"action.all_teams" = "Todos los equipos";
+
+// MARK: - Indicadores de estado del partido
+"game.status.live" = "EN VIVO";
+"game.status.final_short" = "FINAL";
+
+// MARK: - Selector de equipo
+"team_picker.search_placeholder" = "Buscar equipos...";
+"team_picker.count" = "%d equipos";
+"team_picker.no_results_title" = "No se encontraron equipos";
+"team_picker.no_results_hint" = "Prueba con otro término de búsqueda";
+"team_picker.clear" = "Limpiar";
+
+// MARK: - Menú contextual
+"context.open_game" = "Ver detalles del partido";
+"context.watch_game" = "Ver partido";
+"context.copy_game" = "Copiar información del partido";
+"context.show_all_teams" = "Mostrar todos los equipos...";
+
+// MARK: - Accesibilidad (dinámica)
+"accessibility.previous_game" = "%1$@ %2$d vs %3$@ %4$d, %5$@";
+"accessibility.previous_game_hint" = "Ver detalles del partido";
+"accessibility.live_game" = "Partido en vivo: %1$@ %2$d vs %3$@ %4$d";
+"accessibility.live_game_hint" = "Ver detalles del partido en vivo";
+"accessibility.upcoming_game" = "Próximo: %1$@ en %2$@, %3$@ %4$@";
+"accessibility.upcoming_game_hint" = "Ver detalles del partido";
+"accessibility.watch_on" = "Ver en %@";
+"accessibility.watch_on_hint" = "Abrir enlace de transmisión";
+"broadcast.league_pass" = "League Pass";
+"broadcast.tv" = "TV";
+"help.back_to" = "Volver a %@";
+"broadcast.lp_short" = "LP";

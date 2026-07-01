@@ -1,250 +1,237 @@
 import SwiftUI
 import AppKit
 
-/// Manages color schemes for better readability while maintaining team color identity
+/// Manages color schemes for better readability while maintaining team color identity.
+///
+/// Every foreground color is tuned to meet WCAG AA contrast (>= 4.5:1) against the menu's
+/// light and dark backgrounds. Team colors keep brand identity while staying legible.
 struct ColorManager {
-    
-    // MARK: - Team Colors with Improved Readability
-    
-    /// Enhanced team colors optimized for readability while preserving brand identity
-    private static let enhancedTeamColors: [String: String] = [
-        "ATL": "#E31E45",    // Brightened from #C8102E (Atlanta red)
-        "CHI": "#4A9EF2",    // Lightened from #418FDE (Chicago blue)
-        "CON": "#FF6B35",    // Warmed from #E03A3E (Connecticut red-orange)
-        "DAL": "#8BA614",    // Darkened from #D4E815 for better readability (Dallas lime)
-        "GSV": "#B8A8E8",    // Lightened from #AD96DC (Golden State purple)
-        "IND": "#1A4B8C",    // Lightened from #041E42 (Indiana navy)
-        "LAS": "#8A4FA8",    // Lightened from #702F8A (LA Sparks purple)
-        "LVA": "#2A2A2A",    // Lightened from pure black #010101 (Vegas)
-        "MIN": "#3A7BB8",    // Brightened from #236192 (Minnesota blue)
-        "NYL": "#2D8A72",    // Darkened from #7FD6C2 for better readability (NY Liberty teal)
-        "PDX": "#DC143C",    // Portland Fire crimson red (primary brand color)
-        "PHX": "#3D2A65",    // Lightened from #211747 (Phoenix purple)
-        "SEA": "#4A6B52",    // Lightened from #2C5234 (Seattle green)
-        "TOR": "#6B1C3D",    // Toronto Tempo bordeaux/burgundy (primary brand color)
-        "WAS": "#E31E45"     // Same as Atlanta - brightened from #C8102E (Washington red)
+
+    // MARK: - Team Colors (Light Mode)
+
+    /// Team colors tuned for >= 4.5:1 contrast on the light menu background.
+    private static let lightTeamColors: [String: String] = [
+        "ATL": "#E31E45",
+        "CHI": "#1F6FBF",
+        "CON": "#C2410C",
+        "DAL": "#5C6E0E",
+        "GSV": "#6B5BA6",
+        "IND": "#1A4B8C",
+        "LAS": "#8A4FA8",
+        "LVA": "#2A2A2A",
+        "MIN": "#2E6699",
+        "NYL": "#1F7A63",
+        "PDX": "#C31333",
+        "PHX": "#3D2A65",
+        "SEA": "#4A6B52",
+        "TOR": "#6B1C3D",
+        "WAS": "#B01E3C"
     ]
-    
-    // MARK: - WNBA Brand Colors
-    
-    /// Main WNBA brand orange with better contrast
-    static let wnbaOrange = "#FF5722"  // Slightly adjusted from #FA4616 for better readability
-    
-    /// Secondary WNBA colors
-    static let wnbaNavy = "#1A365D"
-    static let wnbaGray = "#4A5568"
-    
-    // MARK: - State Colors
-    
-    /// Win/loss state colors optimized for accessibility
-    static let winGreen = "#22C55E"     // More vibrant than default green
-    static let lossRed = "#EF4444"      // Softer than harsh red
-    static let inProgressOrange = "#F59E0B"  // Warmer orange for live games
-    
-    // MARK: - UI Colors
-    
-    /// Text colors with improved contrast
-    static let primaryText = "#1F2937"   // Dark gray instead of pure black
-    static let secondaryText = "#6B7280" // Medium gray for secondary info
-    static let lightText = "#9CA3AF"     // Light gray for timestamps
-    
-    /// Background colors
-    static let cardBackground = "#F9FAFB"
-    static let separatorColor = "#E5E7EB"
-    
-    // MARK: - Dark Mode Colors
-    
-    /// Dark mode variants of team colors with adjusted brightness for contrast
-    private static let darkModeTeamColors: [String: String] = [
-        "ATL": "#FF4A70",    // Brighter red for dark backgrounds
-        "CHI": "#6BB6FF",    // Lighter blue for dark backgrounds
-        "CON": "#FF8A5B",    // Warmer red-orange for dark backgrounds
-        "DAL": "#C4D630",    // Moderately bright lime for dark backgrounds (readable)
-        "GSV": "#D4C4F0",    // Lighter purple for dark backgrounds
-        "IND": "#4A7BC8",    // Brighter navy for dark backgrounds
-        "LAS": "#B970D4",    // Lighter purple for dark backgrounds
-        "LVA": "#6A6A6A",    // Lighter gray for dark backgrounds
-        "MIN": "#5A9AE0",    // Brighter blue for dark backgrounds
-        "NYL": "#4DBBA3",    // Moderately bright teal for dark backgrounds (readable)
-        "PDX": "#FF4757",    // Portland Fire brighter red for dark backgrounds
-        "PHX": "#6A4A9A",    // Lighter purple for dark backgrounds
-        "SEA": "#7A9B82",    // Lighter green for dark backgrounds
-        "TOR": "#9D3A5E",    // Toronto Tempo lighter bordeaux for dark backgrounds
-        "WAS": "#FF4A70"     // Same as Atlanta for dark backgrounds
+
+    // MARK: - Team Colors (Dark Mode)
+
+    /// Team colors tuned for >= 4.5:1 contrast on the dark menu background.
+    private static let darkTeamColors: [String: String] = [
+        "ATL": "#FF4A70",
+        "CHI": "#6BB6FF",
+        "CON": "#FF8A5B",
+        "DAL": "#C4D630",
+        "GSV": "#D4C4F0",
+        "IND": "#5A8AD8",
+        "LAS": "#B970D4",
+        "LVA": "#8A8A8A",
+        "MIN": "#5A9AE0",
+        "NYL": "#4DBBA3",
+        "PDX": "#FF4757",
+        "PHX": "#9A7BC8",
+        "SEA": "#7A9B82",
+        "TOR": "#D46A8A",
+        "WAS": "#FF6A88"
     ]
-    
-    /// Dark mode UI colors
-    static let darkPrimaryText = "#F9FAFB"      // Light text for dark backgrounds
-    static let darkSecondaryText = "#D1D5DB"    // Medium light text for dark backgrounds
-    static let darkLightText = "#9CA3AF"        // Gray text for dark backgrounds
-    static let darkCardBackground = "#1F2937"   // Dark background for cards
-    static let darkSeparatorColor = "#374151"   // Dark separator lines
-    
-    // MARK: - Color Access Methods
-    
-    /// Get enhanced team color that maintains brand identity while improving readability
+
+    // MARK: - Brand Colors
+
+    /// WNBA brand orange used as text / section-header color (light mode).
+    private static let brandTextLight = "#C2410C"
+    /// WNBA brand orange used as text / section-header color (dark mode).
+    private static let brandTextDark = "#FF7043"
+    /// Fixed deep orange for filled buttons drawing white text (>= 4.5:1 with white).
+    private static let brandButtonFillHex = "#C2410C"
+    /// Broadcast (League Pass / TV) accent — text color, light mode.
+    private static let broadcastLight = "#7C3AED"
+    /// Broadcast accent — text color, dark mode.
+    private static let broadcastDark = "#C4B5FD"
+    /// Fixed broadcast fill for the hovered button drawing white text.
+    private static let broadcastFillHex = "#7C3AED"
+
+    // MARK: - State Colors (Win / Loss / Live)
+
+    private static let winLight = "#15803D"
+    private static let winDark = "#4ADE80"
+    private static let lossLight = "#DC2626"
+    private static let lossDark = "#F87171"
+    private static let liveLight = "#C2410C"
+    private static let liveDark = "#FB923C"
+
+    // MARK: - Text Colors
+
+    private static let primaryTextLight = "#1F2937"
+    private static let primaryTextDark = "#F9FAFB"
+    private static let secondaryTextLight = "#4B5563"
+    private static let secondaryTextDark = "#D1D5DB"
+    private static let lightTextLight = "#6B7280"
+    private static let lightTextDark = "#9CA3AF"
+
+    // MARK: - Surfaces
+
+    private static let cardBackgroundLight = "#F9FAFB"
+    private static let cardBackgroundDark = "#1F2937"
+    private static let separatorLight = "#E5E7EB"
+    private static let separatorDark = "#374151"
+
+    // MARK: - Team Colors
+
+    /// Team color tuned for the given scheme, preserving brand identity while staying legible.
     /// - Parameters:
-    ///   - teamAbbreviation: Team abbreviation (e.g., "NYL")
-    ///   - colorScheme: Current color scheme (light or dark)
-    /// - Returns: SwiftUI Color with enhanced readability for the current theme
-    static func teamColor(for teamAbbreviation: String, colorScheme: ColorScheme = .light) -> Color {
-        let colorMap = colorScheme == .dark ? darkModeTeamColors : enhancedTeamColors
-        let fallbackColor = colorScheme == .dark ? "#FF8A5B" : wnbaOrange
-        
-        if let hexColor = colorMap[teamAbbreviation] {
-            return Color(hex: hexColor) ?? (colorScheme == .dark ? .orange : .blue)
+    ///   - teamAbbreviation: Team abbreviation (e.g. "NYL").
+    ///   - colorScheme: Current color scheme.
+    /// - Returns: A legible SwiftUI color for the team.
+    static func teamColor(for teamAbbreviation: String, colorScheme: ColorScheme) -> Color {
+        let map = colorScheme == .dark ? darkTeamColors : lightTeamColors
+        if let hex = map[teamAbbreviation], let color = Color(hex: hex) {
+            return color
         }
-        return Color(hex: fallbackColor) ?? .orange
+        return wnbaBrandColor(colorScheme)
     }
-    
-    /// Get enhanced team color that maintains brand identity while improving readability (legacy method)
-    /// - Parameter teamAbbreviation: Team abbreviation (e.g., "NYL")
-    /// - Returns: SwiftUI Color with enhanced readability
-    static func teamColor(for teamAbbreviation: String) -> Color {
-        return teamColor(for: teamAbbreviation, colorScheme: .light)
-    }
-    
-    /// WNBA brand color as SwiftUI Color
-    static var wnbaBrandColor: Color {
-        Color(hex: wnbaOrange) ?? .orange
-    }
-    
-    /// Win state color
-    static var winColor: Color {
-        Color(hex: winGreen) ?? .green
-    }
-    
-    /// Loss state color  
-    static var lossColor: Color {
-        Color(hex: lossRed) ?? .red
-    }
-    
-    /// In-progress game color
-    static var liveColor: Color {
-        Color(hex: inProgressOrange) ?? .orange
-    }
-    
-    /// Primary text color
-    static var textPrimary: Color {
-        Color(hex: primaryText) ?? .primary
-    }
-    
-    /// Secondary text color
-    static var textSecondary: Color {
-        Color(hex: secondaryText) ?? .secondary
-    }
-    
-    /// Light text color for timestamps
-    static var textLight: Color {
-        Color(hex: lightText) ?? .gray
-    }
-    
-    // MARK: - Adaptive Colors (Color Scheme Aware)
-    
-    /// Adaptive team color that responds to color scheme
-    /// - Parameters:
-    ///   - teamAbbreviation: Team abbreviation
-    ///   - colorScheme: Current color scheme
-    /// - Returns: Adaptive color for the team
+
+    /// Adaptive team color (alias kept for call-site clarity).
     static func adaptiveTeamColor(for teamAbbreviation: String, colorScheme: ColorScheme) -> Color {
         return teamColor(for: teamAbbreviation, colorScheme: colorScheme)
     }
-    
-    /// Adaptive primary text color
-    /// - Parameter colorScheme: Current color scheme
-    /// - Returns: Adaptive primary text color
+
+    // MARK: - Brand
+
+    /// WNBA brand color for text and section headers.
+    static func wnbaBrandColor(_ colorScheme: ColorScheme) -> Color {
+        Color(hex: colorScheme == .dark ? brandTextDark : brandTextLight) ?? .orange
+    }
+
+    /// Fixed brand fill for buttons that draw white text on top.
+    static var brandButtonFill: Color {
+        Color(hex: brandButtonFillHex) ?? .orange
+    }
+
+    /// Broadcast (League Pass / TV) accent for the given scheme.
+    static func broadcastColor(_ colorScheme: ColorScheme) -> Color {
+        Color(hex: colorScheme == .dark ? broadcastDark : broadcastLight) ?? .purple
+    }
+
+    /// Fixed broadcast fill for the hovered button drawing white text on top.
+    static var broadcastFill: Color {
+        Color(hex: broadcastFillHex) ?? .purple
+    }
+
+    // MARK: - State
+
+    /// Win color for the given scheme.
+    static func winColor(_ colorScheme: ColorScheme) -> Color {
+        Color(hex: colorScheme == .dark ? winDark : winLight) ?? .green
+    }
+
+    /// Loss color for the given scheme.
+    static func lossColor(_ colorScheme: ColorScheme) -> Color {
+        Color(hex: colorScheme == .dark ? lossDark : lossLight) ?? .red
+    }
+
+    /// Live / in-progress color for the given scheme.
+    static func liveColor(_ colorScheme: ColorScheme) -> Color {
+        Color(hex: colorScheme == .dark ? liveDark : liveLight) ?? .orange
+    }
+
+    // MARK: - Adaptive Text
+
+    /// Adaptive primary text color.
     static func adaptivePrimaryText(colorScheme: ColorScheme) -> Color {
-        let colorHex = colorScheme == .dark ? darkPrimaryText : primaryText
-        return Color(hex: colorHex) ?? .primary
+        Color(hex: colorScheme == .dark ? primaryTextDark : primaryTextLight) ?? .primary
     }
-    
-    /// Adaptive secondary text color
-    /// - Parameter colorScheme: Current color scheme
-    /// - Returns: Adaptive secondary text color
+
+    /// Adaptive secondary text color.
     static func adaptiveSecondaryText(colorScheme: ColorScheme) -> Color {
-        let colorHex = colorScheme == .dark ? darkSecondaryText : secondaryText
-        return Color(hex: colorHex) ?? .secondary
+        Color(hex: colorScheme == .dark ? secondaryTextDark : secondaryTextLight) ?? .secondary
     }
-    
-    /// Adaptive light text color
-    /// - Parameter colorScheme: Current color scheme
-    /// - Returns: Adaptive light text color
+
+    /// Adaptive light text color for timestamps and metadata.
     static func adaptiveLightText(colorScheme: ColorScheme) -> Color {
-        let colorHex = colorScheme == .dark ? darkLightText : lightText
-        return Color(hex: colorHex) ?? .gray
+        Color(hex: colorScheme == .dark ? lightTextDark : lightTextLight) ?? .gray
     }
-    
-    /// Adaptive card background color
-    /// - Parameter colorScheme: Current color scheme
-    /// - Returns: Adaptive card background color
+
+    // MARK: - Adaptive Surfaces
+
+    /// Adaptive card background color.
     static func adaptiveCardBackground(colorScheme: ColorScheme) -> Color {
-        let colorHex = colorScheme == .dark ? darkCardBackground : cardBackground
-        return Color(hex: colorHex) ?? .clear
+        Color(hex: colorScheme == .dark ? cardBackgroundDark : cardBackgroundLight) ?? .clear
     }
-    
-    /// Adaptive separator color
-    /// - Parameter colorScheme: Current color scheme
-    /// - Returns: Adaptive separator color
+
+    /// Adaptive separator color.
     static func adaptiveSeparator(colorScheme: ColorScheme) -> Color {
-        let colorHex = colorScheme == .dark ? darkSeparatorColor : separatorColor
-        return Color(hex: colorHex) ?? .gray
+        Color(hex: colorScheme == .dark ? separatorDark : separatorLight) ?? .gray
     }
-    
-    // MARK: - NSColor Support for Legacy Code
-    
-    /// Convert hex string to NSColor for AppKit/attributed strings
-    /// - Parameter hex: Hex color string
-    /// - Returns: NSColor or default color
-    static func nsColor(hex: String) -> NSColor {
-        let color = Color(hex: hex) ?? .primary
-        return NSColor(color)
-    }
-    
-    /// Get team color as NSColor
-    /// - Parameter teamAbbreviation: Team abbreviation
-    /// - Returns: NSColor for team
-    static func teamNSColor(for teamAbbreviation: String) -> NSColor {
-        if let hexColor = enhancedTeamColors[teamAbbreviation] {
-            return nsColor(hex: hexColor)
+
+    // MARK: - Contrast Helper
+
+    /// Returns black or white, whichever is more legible on top of the given fill color.
+    /// - Parameter color: The background fill.
+    /// - Returns: `.black` or `.white` for maximum contrast.
+    static func contrastingText(on color: Color) -> Color {
+        guard let srgb = NSColor(color).usingColorSpace(.sRGB) else { return .white }
+        func channel(_ value: CGFloat) -> Double {
+            let normalized = Double(value)
+            return normalized <= 0.03928 ? normalized / 12.92 : pow((normalized + 0.055) / 1.055, 2.4)
         }
-        return nsColor(hex: wnbaOrange)
-    }
-    
-    /// Win color as NSColor
-    static var winNSColor: NSColor {
-        nsColor(hex: winGreen)
-    }
-    
-    /// Loss color as NSColor  
-    static var lossNSColor: NSColor {
-        nsColor(hex: lossRed)
-    }
-    
-    /// WNBA brand color as NSColor
-    static var wnbaNSColor: NSColor {
-        nsColor(hex: wnbaOrange)
+        let luminance = 0.2126 * channel(srgb.redComponent)
+            + 0.7152 * channel(srgb.greenComponent)
+            + 0.0722 * channel(srgb.blueComponent)
+        return luminance > 0.179 ? .black : .white
     }
 }
 
 // MARK: - Color Extension (Enhanced)
 
 extension Color {
-    /// Initialize Color from hex string
-    /// - Parameter hex: Hex color string (with or without #)
+    /// Initialize a color from a hex string.
+    ///
+    /// Accepts `#RGB`, `#RRGGBB`, and `#RRGGBBAA` (with or without a leading `#`).
+    /// Returns `nil` for malformed input or unexpected lengths.
+    /// - Parameter hex: Hex color string.
     init?(hex: String) {
-        var hexSanitized = hex.trimmingCharacters(in: .whitespacesAndNewlines)
-        hexSanitized = hexSanitized.replacingOccurrences(of: "#", with: "")
-        
-        var rgb: UInt64 = 0
-        
-        guard Scanner(string: hexSanitized).scanHexInt64(&rgb) else {
+        let sanitized = hex
+            .trimmingCharacters(in: .whitespacesAndNewlines)
+            .replacingOccurrences(of: "#", with: "")
+
+        var value: UInt64 = 0
+        guard Scanner(string: sanitized).scanHexInt64(&value) else { return nil }
+
+        let red, green, blue, alpha: Double
+        switch sanitized.count {
+        case 3: // RGB (4 bits per channel)
+            red = Double((value & 0xF00) >> 8) / 15.0
+            green = Double((value & 0x0F0) >> 4) / 15.0
+            blue = Double(value & 0x00F) / 15.0
+            alpha = 1.0
+        case 6: // RRGGBB
+            red = Double((value & 0xFF0000) >> 16) / 255.0
+            green = Double((value & 0x00FF00) >> 8) / 255.0
+            blue = Double(value & 0x0000FF) / 255.0
+            alpha = 1.0
+        case 8: // RRGGBBAA
+            red = Double((value & 0xFF000000) >> 24) / 255.0
+            green = Double((value & 0x00FF0000) >> 16) / 255.0
+            blue = Double((value & 0x0000FF00) >> 8) / 255.0
+            alpha = Double(value & 0x000000FF) / 255.0
+        default:
             return nil
         }
-        
-        let red = Double((rgb & 0xFF0000) >> 16) / 255.0
-        let green = Double((rgb & 0x00FF00) >> 8) / 255.0
-        let blue = Double(rgb & 0x0000FF) / 255.0
-        
-        self.init(red: red, green: green, blue: blue)
+
+        self.init(.sRGB, red: red, green: green, blue: blue, opacity: alpha)
     }
 }

@@ -28,7 +28,7 @@ struct MenuActions: View {
                     Button {
                         changeTeamAction(TeamSelection.allTeams)
                     } label: {
-                        Text("All Teams")
+                        Text("action.all_teams".localized)
                             .font(.system(size: 10, weight: .medium))
                             .frame(minWidth: 65)
                             .padding(.horizontal, 8)
@@ -47,7 +47,7 @@ struct MenuActions: View {
                                 .font(.system(size: 9))
                                 .rotationEffect(.degrees(isRefreshLoading ? 360 : 0))
                                 .animation(isRefreshLoading ? .linear(duration: 1).repeatForever(autoreverses: false) : .default, value: isRefreshLoading)
-                            Text("Refresh")
+                            Text("action.refresh".localized)
                                 .font(.system(size: 10, weight: .medium))
                         }
                         .frame(minWidth: 55)
@@ -55,7 +55,7 @@ struct MenuActions: View {
                         .padding(.vertical, 4)
                     }
                     .background(teamColor)
-                    .foregroundColor(.white)
+                    .foregroundColor(ColorManager.contrastingText(on: teamColor))
                     .cornerRadius(4)
                     .disabled(isRefreshLoading)
                     
@@ -63,7 +63,7 @@ struct MenuActions: View {
                     Button {
                         NSApplication.shared.terminate(nil)
                     } label: {
-                        Text("Quit")
+                        Text("action.quit".localized)
                             .font(.system(size: 10, weight: .medium))
                             .frame(minWidth: 35)
                             .padding(.horizontal, 8)
@@ -100,21 +100,7 @@ struct MenuActions: View {
     // MARK: - Private Methods
     
     private func performRefresh() {
-        isRefreshLoading = true
-        
-        // Add haptic feedback for enhanced interaction
-        let feedback = NSHapticFeedbackManager.defaultPerformer
-        feedback.perform(.alignment, performanceTime: .now)
-        
-        // Perform the actual refresh
-        refreshAction()
-        
-        // Reset loading state after a short delay to show feedback
-        DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) {
-            withAnimation(DesignSystem.Animation.standard) {
-                isRefreshLoading = false
-            }
-        }
+        RefreshFeedback.perform(isLoading: $isRefreshLoading, action: refreshAction)
     }
 }
 
@@ -144,14 +130,14 @@ struct AllTeamsMenuActions: View {
                                 .font(.system(size: 9))
                                 .rotationEffect(.degrees(isRefreshLoading ? 360 : 0))
                                 .animation(isRefreshLoading ? .linear(duration: 1).repeatForever(autoreverses: false) : .default, value: isRefreshLoading)
-                            Text("Refresh")
+                            Text("action.refresh".localized)
                                 .font(.system(size: 10, weight: .medium))
                         }
                         .frame(minWidth: 55)
                         .padding(.horizontal, 8)
                         .padding(.vertical, 4)
                     }
-                    .background(ColorManager.wnbaBrandColor)
+                    .background(ColorManager.brandButtonFill)
                     .foregroundColor(.white)
                     .cornerRadius(4)
                     .disabled(isRefreshLoading)
@@ -160,7 +146,7 @@ struct AllTeamsMenuActions: View {
                     Button {
                         NSApplication.shared.terminate(nil)
                     } label: {
-                        Text("Quit")
+                        Text("action.quit".localized)
                             .font(.system(size: 10, weight: .medium))
                             .frame(minWidth: 35)
                             .padding(.horizontal, 8)
@@ -197,19 +183,22 @@ struct AllTeamsMenuActions: View {
     // MARK: - Private Methods
     
     private func performRefresh() {
-        isRefreshLoading = true
-        
-        // Add haptic feedback for enhanced interaction
-        let feedback = NSHapticFeedbackManager.defaultPerformer
-        feedback.perform(.alignment, performanceTime: .now)
-        
-        // Perform the actual refresh
-        refreshAction()
-        
-        // Reset loading state after a short delay to show feedback
+        RefreshFeedback.perform(isLoading: $isRefreshLoading, action: refreshAction)
+    }
+}
+
+// MARK: - Refresh Feedback
+
+/// Shared refresh behaviour for the action bars: fire haptic feedback, run the
+/// refresh, then reset the spinner after a short delay so the feedback is visible.
+enum RefreshFeedback {
+    static func perform(isLoading: Binding<Bool>, action: @escaping () -> Void) {
+        isLoading.wrappedValue = true
+        NSHapticFeedbackManager.defaultPerformer.perform(.alignment, performanceTime: .now)
+        action()
         DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) {
             withAnimation(DesignSystem.Animation.standard) {
-                isRefreshLoading = false
+                isLoading.wrappedValue = false
             }
         }
     }

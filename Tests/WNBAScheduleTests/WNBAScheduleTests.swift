@@ -40,9 +40,6 @@ final class WNBAScheduleTests: XCTestCase {
         )
         XCTAssertNil(teamWithoutRecord.wins)
         XCTAssertNil(teamWithoutRecord.losses)
-        
-        // Test primary color (this depends on TeamManager)
-        XCTAssertFalse(homeTeam.primaryColor.isEmpty)
     }
     
     // MARK: - Game Tests

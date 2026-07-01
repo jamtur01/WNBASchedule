@@ -22,7 +22,7 @@ struct MenuView: View {
     }
     
     private var teamColor: Color {
-        return ColorManager.teamColor(for: teamAbbreviation)
+        return ColorManager.teamColor(for: teamAbbreviation, colorScheme: colorScheme)
     }
     
     // MARK: - Body
@@ -72,7 +72,7 @@ struct MenuView: View {
                         if !games.inProgressGames.isEmpty {
                             GameSection(
                                 title: "menu.section.in_progress".localized,
-                                titleColor: ColorManager.liveColor,
+                                titleColor: ColorManager.liveColor(colorScheme),
                                 colorScheme: colorScheme
                             ) {
                                 LazyVStack(alignment: .leading, spacing: 2) {

@@ -20,14 +20,12 @@ struct MenuHeader: View {
         return ColorManager.adaptiveTeamColor(for: teamAbbreviation, colorScheme: colorScheme)
     }
     
-    @State private var isSettingsHovered = false
-    
     var body: some View {
         HStack(alignment: .center, spacing: DesignSystem.Spacing.xs) {
             // Team logo
             if let abbr = teamInfo?.abbreviation {
                 AsyncImage(
-                    url: URL(string: "https://cdn.wnba.com/static/next/teams/favicons/\(abbr)/icon-32.png"),
+                    url: TeamManager.faviconURL(abbreviation: abbr, size: 32),
                     content: { image in
                         image
                             .resizable()
@@ -63,34 +61,12 @@ struct MenuHeader: View {
             Spacer(minLength: DesignSystem.Spacing.sm)
             
             // Settings button with enhanced styling
-            Button(
-                action: {
-                    showingTeamPicker.toggle()
-                },
-                label: {
-                    Image(systemName: "gear")
-                        .font(.system(size: DesignSystem.ComponentSize.iconSmall))
-                        .foregroundColor(isSettingsHovered ? .primary : ColorManager.adaptiveSecondaryText(colorScheme: colorScheme))
-                        .frame(width: DesignSystem.ComponentSize.iconLarge, height: DesignSystem.ComponentSize.iconLarge)
-                        .background(
-                            Circle()
-                                .fill(isSettingsHovered ? ColorManager.adaptiveSeparator(colorScheme: colorScheme).opacity(0.3) : Color.clear)
-                        )
-                }
+            SettingsPopoverButton(
+                showingTeamPicker: $showingTeamPicker,
+                selectedTeam: teamAbbreviation,
+                onTeamSelected: changeTeamAction,
+                colorScheme: colorScheme
             )
-            .buttonStyle(PlainButtonStyle())
-            .interactiveHover($isSettingsHovered)
-            .popover(isPresented: $showingTeamPicker, arrowEdge: .top) {
-                TeamPickerView(
-                    selectedTeam: teamAbbreviation,
-                    onTeamSelected: { newTeam in
-                        changeTeamAction(newTeam)
-                        showingTeamPicker = false
-                    }
-                )
-                .frame(width: 320, height: 400)
-                .designSystemCard(colorScheme: colorScheme)
-            }
         }
         .padding(.vertical, DesignSystem.Spacing.xxs)
     }
@@ -108,7 +84,6 @@ struct AllTeamsMenuHeader: View {
     var colorScheme
     
     @State private var isBackHovered = false
-    @State private var isSettingsHovered = false
     
     var body: some View {
         HStack(alignment: .center, spacing: DesignSystem.Spacing.sm) {
@@ -121,7 +96,7 @@ struct AllTeamsMenuHeader: View {
             // Title with improved typography
             Text("menu.title.all_teams".localized)
                 .font(DesignSystem.Typography.title)
-                .foregroundColor(ColorManager.wnbaBrandColor)
+                .foregroundColor(ColorManager.wnbaBrandColor(colorScheme))
                 .lineLimit(1)
                 .layoutPriority(1)
                 .fixedSize(horizontal: true, vertical: false)
@@ -143,50 +118,71 @@ struct AllTeamsMenuHeader: View {
                                 .font(DesignSystem.Typography.caption)
                                 .fontWeight(.medium)
                         }
-                        .foregroundColor(isBackHovered ? .white : ColorManager.wnbaBrandColor)
+                        .foregroundColor(isBackHovered ? .white : ColorManager.wnbaBrandColor(colorScheme))
                         .padding(.horizontal, DesignSystem.Spacing.xs)
                         .padding(.vertical, DesignSystem.Spacing.xxxs)
                         .background(
                             RoundedRectangle(cornerRadius: DesignSystem.CornerRadius.sm)
-                                .fill(isBackHovered ? ColorManager.wnbaBrandColor : ColorManager.wnbaBrandColor.opacity(0.1))
+                                .fill(isBackHovered ? ColorManager.brandButtonFill : ColorManager.wnbaBrandColor(colorScheme).opacity(0.12))
                         )
                     }
                 )
                 .buttonStyle(PlainButtonStyle())
                 .interactiveHover($isBackHovered)
-                .help("Back to \(teamInfo.fullName)")
+                .help("help.back_to".localized(with: teamInfo.fullName))
             }
             
             // Settings button with enhanced styling
-            Button(
-                action: {
-                    showingTeamPicker.toggle()
-                },
-                label: {
-                    Image(systemName: "gear")
-                        .font(.system(size: DesignSystem.ComponentSize.iconSmall))
-                        .foregroundColor(isSettingsHovered ? .primary : ColorManager.adaptiveSecondaryText(colorScheme: colorScheme))
-                        .frame(width: DesignSystem.ComponentSize.iconLarge, height: DesignSystem.ComponentSize.iconLarge)
-                        .background(
-                            Circle()
-                                .fill(isSettingsHovered ? ColorManager.adaptiveSeparator(colorScheme: colorScheme).opacity(0.3) : Color.clear)
-                        )
-                }
+            SettingsPopoverButton(
+                showingTeamPicker: $showingTeamPicker,
+                selectedTeam: TeamSelection.allTeams,
+                onTeamSelected: changeTeamAction,
+                colorScheme: colorScheme
             )
-            .buttonStyle(PlainButtonStyle())
-            .interactiveHover($isSettingsHovered)
-            .popover(isPresented: $showingTeamPicker, arrowEdge: .top) {
-                TeamPickerView(
-                    selectedTeam: TeamSelection.allTeams,
-                    onTeamSelected: { newTeam in
-                        changeTeamAction(newTeam)
-                        showingTeamPicker = false
-                    }
-                )
-                .frame(width: 320, height: 400)
-                .designSystemCard(colorScheme: colorScheme)
-            }
         }
         .padding(.vertical, DesignSystem.Spacing.xxs)
+    }
+}
+
+// MARK: - Settings Popover Button
+
+/// Gear button shared by both headers that toggles the team-picker popover.
+struct SettingsPopoverButton: View {
+    @Binding var showingTeamPicker: Bool
+    let selectedTeam: String
+    let onTeamSelected: (String) -> Void
+    let colorScheme: ColorScheme
+
+    @State private var isSettingsHovered = false
+
+    var body: some View {
+        Button(
+            action: {
+                showingTeamPicker.toggle()
+            },
+            label: {
+                Image(systemName: "gear")
+                    .font(.system(size: DesignSystem.ComponentSize.iconSmall))
+                    .foregroundColor(isSettingsHovered ? .primary : ColorManager.adaptiveSecondaryText(colorScheme: colorScheme))
+                    .frame(width: DesignSystem.ComponentSize.iconLarge, height: DesignSystem.ComponentSize.iconLarge)
+                    .background(
+                        Circle()
+                            .fill(isSettingsHovered ? ColorManager.adaptiveSeparator(colorScheme: colorScheme).opacity(0.3) : Color.clear)
+                    )
+            }
+        )
+        .buttonStyle(PlainButtonStyle())
+        .interactiveHover($isSettingsHovered)
+        .popover(isPresented: $showingTeamPicker, arrowEdge: .top) {
+            TeamPickerView(
+                selectedTeam: selectedTeam,
+                onTeamSelected: { newTeam in
+                    onTeamSelected(newTeam)
+                    showingTeamPicker = false
+                }
+            )
+            .frame(width: 320, height: 400)
+            .designSystemCard(colorScheme: colorScheme)
+        }
     }
 }

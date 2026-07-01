@@ -1,5 +1,4 @@
 import Foundation
-import SwiftDate
 import os.log
 
 // MARK: - API Response Models
@@ -130,16 +129,6 @@ struct Game: Codable, Identifiable {
         return Date(timeIntervalSince1970: Double(timestamp) / 1000.0)
     }
     
-    /// The game time as a DateInRegion for easier formatting
-    var gameTimeInRegion: DateInRegion {
-        let userPreferences = DependencyContainer.shared.userPreferences
-        if userPreferences.useLocalTimeZone {
-            return localGameTime.in(region: Region.current)
-        } else {
-            return localGameTime.in(region: Region(zone: Zones.americaNewYork))
-        }
-    }
-    
     /// Formatted game date for display
     var formattedGameDate: String {
         let userPreferences = DependencyContainer.shared.userPreferences
@@ -208,6 +197,12 @@ struct Game: Codable, Identifiable {
     /// URL for the game on the WNBA website
     var gameURL: URL? {
         return URL(string: "https://www.wnba.com/game/\(gid)/")
+    }
+
+    /// URL of the primary broadcast (League Pass / TV), if one is available.
+    var broadcastURL: URL? {
+        guard let link = primaryBroadcastProvider?.videoLink, !link.isEmpty else { return nil }
+        return URL(string: link)
     }
     
     /// Current home team score (live score for in-progress games, otherwise original score)
@@ -287,11 +282,6 @@ struct Team: Codable {
     /// Full team name (city + name)
     var fullName: String {
         return "\(city) \(name)"
-    }
-    
-    /// Team color from TeamManager
-    var primaryColor: String {
-        return TeamManager.getTeamColor(abbreviation: abbr)
     }
 }
 

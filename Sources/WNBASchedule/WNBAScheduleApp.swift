@@ -28,7 +28,6 @@ class AppCoordinator: ObservableObject {
     
     private let scheduleManager: ScheduleManagerProtocol
     private let userPreferences: UserPreferences
-    private let apiCache: APICacheProtocol
     private let logger = Logger(subsystem: "net.kartar.wnbaschedule", category: "AppCoordinator")
     
     // Managers
@@ -36,16 +35,15 @@ class AppCoordinator: ObservableObject {
     private var cancellables = Set<AnyCancellable>()
     private var refreshTimerCancellable: AnyCancellable?
     private var liveScoreTimerCancellable: AnyCancellable?
+    private var refreshTask: Task<Void, Never>?
     
     // MARK: - Initialization
     init(
         scheduleManager: ScheduleManagerProtocol = DependencyContainer.shared.scheduleManager,
-        userPreferences: UserPreferences = DependencyContainer.shared.userPreferences,
-        apiCache: APICacheProtocol = DependencyContainer.shared.apiCache
+        userPreferences: UserPreferences = DependencyContainer.shared.userPreferences
     ) {
         self.scheduleManager = scheduleManager
         self.userPreferences = userPreferences
-        self.apiCache = apiCache
         self.liveScoreManager = LiveScoreManager()
         
         setupTimers()
@@ -54,22 +52,28 @@ class AppCoordinator: ObservableObject {
     
     // MARK: - Public Methods
     func refreshGames() {
+        // Cancel any in-flight refresh so a rapid team switch can't let a stale
+        // response overwrite the latest selection.
+        refreshTask?.cancel()
         isLoading = true
         errorMessage = nil
-        
-        Task {
+
+        refreshTask = Task { [weak self] in
+            guard let self = self else { return }
             do {
-                if TeamSelection.isAllTeams(userPreferences.favoriteTeam) {
-                    try await handleAllTeamsMode()
+                if TeamSelection.isAllTeams(self.userPreferences.favoriteTeam) {
+                    try await self.handleAllTeamsMode()
                 } else {
-                    try await handleIndividualTeamMode()
+                    try await self.handleIndividualTeamMode()
                 }
-                
+
+                if Task.isCancelled { return }
                 await MainActor.run {
                     self.isLoading = false
                     self.setupLiveScoreTimerIfNeeded()
                 }
             } catch {
+                if Task.isCancelled || error is CancellationError { return }
                 await MainActor.run {
                     self.isLoading = false
                     self.errorMessage = error.localizedDescription
@@ -87,7 +91,6 @@ class AppCoordinator: ObservableObject {
         
         userPreferences.favoriteTeam = teamAbbreviation
         userPreferences.savePreferences()
-        apiCache.clearCache()
         refreshGames()
     }
     
@@ -130,9 +133,7 @@ class AppCoordinator: ObservableObject {
     }
     
     private func setupLiveScoreTimerIfNeeded() {
-        let hasInProgressGames = games?.inProgressGames.isEmpty == false
-        
-        if hasInProgressGames {
+        if shouldPollLiveScores {
             liveScoreTimerCancellable?.cancel()
             liveScoreTimerCancellable = Timer.publish(every: 30, on: .main, in: .common)
                 .autoconnect()
@@ -143,16 +144,70 @@ class AppCoordinator: ObservableObject {
             liveScoreTimerCancellable?.cancel()
         }
     }
+
+    /// Whether the live-score timer should run: a game is in progress, or one is about to
+    /// tip off (start time within the next 30 minutes, or already passed but not yet flipped
+    /// to in-progress by the API). This lets a game that starts between the 15-minute
+    /// refreshes appear live within 30 seconds instead of waiting for the next refresh.
+    private var shouldPollLiveScores: Bool {
+        guard let games = games else { return false }
+        if !games.inProgressGames.isEmpty { return true }
+        let imminentThreshold = Date().addingTimeInterval(30 * 60)
+        return games.upcomingGames.contains { $0.game.localGameTime <= imminentThreshold }
+    }
     
     private func updateLiveScores() {
-        guard let currentGames = games else { return }
-        
+        guard games != nil else { return }
+
+        if TeamSelection.isAllTeams(userPreferences.favoriteTeam) {
+            updateAllTeamsLiveScores()
+        } else {
+            updateIndividualTeamLiveScores()
+        }
+    }
+
+    private func updateAllTeamsLiveScores() {
         Task { @MainActor [weak self] in
             guard let self = self else { return }
-            
+
+            await self.liveScoreManager.updateLiveScoresForAllTeams(
+                scheduleManager: self.scheduleManager
+            ) { [weak self] result in
+                guard let self = self else { return }
+
+                switch result {
+                case .success(let data):
+                    if data.gameFinished {
+                        self.refreshGames()
+                        return
+                    }
+
+                    self.games = FilteredGames(
+                        pastGames: [],
+                        inProgressGames: data.inProgressGames.map { MarkedGame(game: $0, isHomeGame: false) },
+                        upcomingGames: data.upcomingGames.map { MarkedGame(game: $0, isHomeGame: false) }
+                    )
+
+                    if data.inProgressGames.isEmpty {
+                        self.liveScoreTimerCancellable?.cancel()
+                    }
+
+                case .failure(let error):
+                    self.logger.error("Error updating all-teams live scores: \(error.localizedDescription)")
+                }
+            }
+        }
+    }
+
+    private func updateIndividualTeamLiveScores() {
+        guard let currentGames = games else { return }
+
+        Task { @MainActor [weak self] in
+            guard let self = self else { return }
+
             await self.liveScoreManager.updateLiveScoresForTeam(currentGames: currentGames) { [weak self] result in
                 guard let self = self else { return }
-                
+
                 switch result {
                 case .success(let data):
                     if data.gameFinished {
@@ -160,11 +215,11 @@ class AppCoordinator: ObservableObject {
                     } else {
                         self.games = data.updatedGames
                     }
-                    
+
                     if data.updatedGames.inProgressGames.isEmpty {
                         self.liveScoreTimerCancellable?.cancel()
                     }
-                    
+
                 case .failure(let error):
                     self.logger.error("Error updating live scores: \(error.localizedDescription)")
                 }
@@ -175,6 +230,7 @@ class AppCoordinator: ObservableObject {
     deinit {
         refreshTimerCancellable?.cancel()
         liveScoreTimerCancellable?.cancel()
+        refreshTask?.cancel()
         cancellables.removeAll()
     }
 }
@@ -189,7 +245,7 @@ struct MenuBarContentView: View {
                 VStack(spacing: 8) {
                     ProgressView()
                         .scaleEffect(0.8)
-                    Text("Loading...")
+                    Text("menu.loading".localized)
                         .font(.caption)
                         .foregroundColor(.secondary)
                 }
@@ -197,7 +253,7 @@ struct MenuBarContentView: View {
                 .padding()
             } else if let errorMessage = appCoordinator.errorMessage {
                 VStack(alignment: .leading, spacing: 8) {
-                    Text("Error")
+                    Text("menu.error".localized)
                         .font(.headline)
                         .foregroundColor(.red)
                     
@@ -205,7 +261,7 @@ struct MenuBarContentView: View {
                         .font(.caption)
                         .foregroundColor(.secondary)
                     
-                    Button("Retry") {
+                    Button("action.retry".localized) {
                         appCoordinator.refreshGames()
                     }
                     .buttonStyle(.borderedProminent)
@@ -239,7 +295,7 @@ struct MenuBarContentView: View {
                 }
             } else {
                 VStack(spacing: 8) {
-                    Text("Loading...")
+                    Text("menu.loading".localized)
                         .font(.caption)
                         .foregroundColor(.secondary)
                     ProgressView()

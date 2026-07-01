@@ -29,6 +29,8 @@ struct AllTeamsMenuView: View {
     let previouslySelectedTeam: String?
 
     @State private var showingTeamPicker = false
+    @Environment(\.colorScheme)
+    var colorScheme
 
     var body: some View {
         StandardMenuLayout(
@@ -46,7 +48,7 @@ struct AllTeamsMenuView: View {
                 Text("menu.section.in_progress".localized)
                     .font(DesignSystem.Typography.headline)
                     .fontWeight(.semibold)
-                    .foregroundColor(ColorManager.liveColor)
+                    .foregroundColor(ColorManager.liveColor(colorScheme))
                     .padding(.top, 2)
 
                 LazyVStack(alignment: .leading, spacing: 2) {
@@ -63,7 +65,7 @@ struct AllTeamsMenuView: View {
                 Text("menu.section.upcoming".localized)
                     .font(DesignSystem.Typography.headline)
                     .fontWeight(.semibold)
-                    .foregroundColor(ColorManager.wnbaBrandColor)
+                    .foregroundColor(ColorManager.wnbaBrandColor(colorScheme))
                     .padding(.top, 2)
 
                 LazyVStack(alignment: .leading, spacing: 2) {
